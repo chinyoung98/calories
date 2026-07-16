@@ -1,0 +1,1400 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#F7F5EF">
+<title>卡路里记账本</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧾</text></svg>">
+<style>
+:root{
+  --forest:#2F5D45;
+  --forest-soft:#E6EFE9;
+  --gold:#B4842C;
+  --gold-soft:#F6EEDC;
+  --rust:#A6432C;
+  --rust-soft:#F7E7E2;
+  --line:#DCD8CC;
+  --line-soft:#EDEAE1;
+  --paper:#F7F5EF;
+  --card:#FFFFFF;
+  --ink:#22201B;
+  --ink-2:#5C574C;
+  --ink-3:#918B7C;
+  --radius:14px;
+  --tabh:64px;
+  --safe-b:env(safe-area-inset-bottom, 0px);
+  --safe-t:env(safe-area-inset-top, 0px);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0;height:100%}
+body{
+  background:var(--paper);
+  color:var(--ink);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+  font-size:16px;line-height:1.5;
+  overscroll-behavior-y:none;
+}
+button,input,select,textarea{font-family:inherit;font-size:16px;color:inherit}
+button{cursor:pointer;border:none;background:none}
+input,textarea{-webkit-appearance:none;appearance:none}
+.mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-variant-numeric:tabular-nums}
+
+/* ---------- barcode ornament ---------- */
+.barcode{display:flex;gap:2px;align-items:flex-end;height:22px;opacity:.5;overflow:hidden}
+.barcode i{display:block;background:var(--ink);width:2px;height:100%;border-radius:1px}
+.barcode i.w{width:4px}
+.barcode i.s{height:60%}
+.barcode i.t{height:80%}
+
+/* ---------- layout ---------- */
+#app{min-height:100%;display:flex;flex-direction:column}
+.screen{display:none;flex:1;flex-direction:column}
+.screen.on{display:flex}
+.page{display:none;padding:calc(var(--safe-t) + 12px) 16px calc(var(--tabh) + var(--safe-b) + 84px)}
+.page.on{display:block}
+
+.hd{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:14px;gap:12px}
+.hd h1{margin:0;font-size:26px;letter-spacing:-.4px}
+.hd .sub{color:var(--ink-3);font-size:13px;margin-top:2px}
+
+.card{
+  background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+  padding:16px;margin-bottom:14px;
+}
+.card.flat{padding:0;overflow:hidden}
+.sect-t{
+  display:flex;align-items:center;justify-content:space-between;
+  font-size:12px;letter-spacing:1.6px;color:var(--ink-3);text-transform:uppercase;
+  margin:22px 2px 8px;font-weight:600;
+}
+
+/* ---------- receipt summary ---------- */
+.receipt{position:relative}
+.receipt .rc-top{display:flex;justify-content:space-between;align-items:center;padding-bottom:12px;border-bottom:1px dashed var(--line)}
+.receipt .rc-title{font-size:13px;letter-spacing:2px;color:var(--ink-3);font-weight:600}
+.rc-row{display:flex;justify-content:space-between;align-items:baseline;padding:9px 0;border-bottom:1px dotted var(--line-soft)}
+.rc-row:last-of-type{border-bottom:none}
+.rc-row .k{color:var(--ink-2);font-size:15px}
+.rc-row .v{font-size:17px;font-weight:600}
+.rc-total{margin-top:10px;padding-top:14px;border-top:2px solid var(--ink);display:flex;justify-content:space-between;align-items:baseline}
+.rc-total .k{font-size:14px;letter-spacing:1.4px;color:var(--ink-2);font-weight:600}
+.rc-total .v{font-size:34px;font-weight:700;letter-spacing:-1px}
+.rc-total .u{font-size:14px;color:var(--ink-3);font-weight:500;margin-left:4px}
+.pos{color:var(--forest)} .warn{color:var(--gold)} .neg{color:var(--rust)}
+.bar{height:8px;border-radius:99px;background:var(--line-soft);overflow:hidden;margin-top:14px}
+.bar>i{display:block;height:100%;border-radius:99px;background:var(--forest);transition:width .35s ease}
+.bar>i.warn{background:var(--gold)} .bar>i.neg{background:var(--rust)}
+
+/* ---------- list rows ---------- */
+.row{display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid var(--line-soft);text-align:left;width:100%;background:none}
+.row:last-child{border-bottom:none}
+.row:active{background:var(--paper)}
+.row .ic{width:38px;height:38px;flex:none;border-radius:10px;display:grid;place-items:center;font-size:19px;background:var(--forest-soft)}
+.row .ic.ex{background:var(--gold-soft)}
+.row .mid{flex:1;min-width:0}
+.row .nm{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row .mt{font-size:12px;color:var(--ink-3);margin-top:2px}
+.row .val{font-weight:700;font-size:16px;white-space:nowrap}
+.row .del{flex:none;width:32px;height:32px;border-radius:8px;color:var(--ink-3);display:grid;place-items:center;font-size:18px;line-height:1}
+.row .del:active{background:var(--rust-soft);color:var(--rust)}
+.chips{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}
+.chip{font-size:11px;padding:2px 8px;border-radius:99px;background:var(--paper);border:1px solid var(--line);color:var(--ink-2)}
+.empty{padding:30px 16px;text-align:center;color:var(--ink-3);font-size:14px}
+
+/* ---------- tab bar ---------- */
+.tabs{
+  position:fixed;left:0;right:0;bottom:0;z-index:40;
+  height:calc(var(--tabh) + var(--safe-b));padding-bottom:var(--safe-b);
+  background:rgba(247,245,239,.94);backdrop-filter:blur(12px);
+  border-top:1px solid var(--line);display:flex;
+}
+.tabs button{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;color:var(--ink-3);font-size:11px;font-weight:600}
+.tabs button .g{font-size:20px;line-height:1}
+.tabs button.on{color:var(--forest)}
+
+/* ---------- FAB ---------- */
+.fab{
+  position:fixed;right:18px;bottom:calc(var(--tabh) + var(--safe-b) + 18px);z-index:41;
+  width:60px;height:60px;border-radius:50%;background:var(--forest);color:#fff;
+  font-size:32px;line-height:1;display:grid;place-items:center;
+  box-shadow:0 8px 22px rgba(47,93,69,.36);
+}
+.fab:active{transform:scale(.94)}
+
+/* ---------- sheet / modal ---------- */
+.mask{position:fixed;inset:0;z-index:50;background:rgba(34,32,27,.42);display:none}
+.mask.on{display:block}
+.sheet{
+  position:fixed;left:0;right:0;bottom:0;z-index:51;
+  background:var(--paper);border-radius:20px 20px 0 0;
+  padding:8px 16px calc(20px + var(--safe-b));
+  max-height:92vh;overflow-y:auto;display:none;
+  box-shadow:0 -8px 40px rgba(0,0,0,.16);
+}
+.sheet.on{display:block;animation:up .24s cubic-bezier(.2,.8,.3,1)}
+@keyframes up{from{transform:translateY(18px);opacity:.4}to{transform:none;opacity:1}}
+.grab{width:38px;height:4px;border-radius:99px;background:var(--line);margin:6px auto 12px}
+.sh-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.sh-hd h2{margin:0;font-size:20px}
+.x{width:34px;height:34px;border-radius:50%;background:var(--line-soft);display:grid;place-items:center;font-size:16px;color:var(--ink-2)}
+
+.opt{display:flex;align-items:center;gap:14px;width:100%;padding:16px;background:var(--card);border:1px solid var(--line);border-radius:var(--radius);margin-bottom:10px;text-align:left}
+.opt:active{background:var(--forest-soft)}
+.opt .g{font-size:24px;width:44px;height:44px;flex:none;border-radius:12px;background:var(--forest-soft);display:grid;place-items:center}
+.opt .t{font-weight:600}
+.opt .d{font-size:12px;color:var(--ink-3);margin-top:1px}
+
+label.f{display:block;margin-bottom:12px}
+label.f .lb{font-size:12px;letter-spacing:1px;color:var(--ink-3);font-weight:600;margin-bottom:5px;display:block;text-transform:uppercase}
+.in{
+  width:100%;padding:13px 14px;border:1px solid var(--line);border-radius:11px;
+  background:var(--card);font-size:16px;outline:none;
+}
+.in:focus{border-color:var(--forest);box-shadow:0 0 0 3px var(--forest-soft)}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.btn{
+  width:100%;padding:15px;border-radius:12px;background:var(--forest);color:#fff;
+  font-size:16px;font-weight:600;margin-top:6px;
+}
+.btn:active{opacity:.85}
+.btn[disabled]{opacity:.45}
+.btn.ghost{background:none;border:1px solid var(--line);color:var(--ink-2)}
+.btn.danger{background:none;border:1px solid var(--rust);color:var(--rust);margin-top:10px}
+.note{font-size:12px;color:var(--ink-3);text-align:center;margin-top:10px;line-height:1.5}
+.tag{display:inline-block;font-size:11px;font-weight:700;padding:3px 9px;border-radius:99px;letter-spacing:.5px}
+.tag.hi{background:var(--forest-soft);color:var(--forest)}
+.tag.md{background:var(--gold-soft);color:var(--gold)}
+.tag.lo{background:var(--rust-soft);color:var(--rust)}
+
+/* activity picker */
+.acts{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px}
+.act{padding:11px 3px;border:1px solid var(--line);border-radius:12px;background:var(--card);text-align:center}
+.act .g{font-size:21px;display:block;line-height:1.2}
+.act .n{font-size:10.5px;color:var(--ink-2);margin-top:3px;display:block}
+.act.on{border-color:var(--forest);background:var(--forest-soft)}
+.act.on .n{color:var(--forest);font-weight:700}
+
+/* loading */
+.load{padding:46px 16px;text-align:center}
+.spin{width:38px;height:38px;border:3px solid var(--line);border-top-color:var(--forest);border-radius:50%;margin:0 auto 16px;animation:sp .8s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+.prev{width:100%;max-height:190px;object-fit:cover;border-radius:12px;border:1px solid var(--line);margin-bottom:14px;display:block}
+
+/* calendar */
+.cal-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.cal-nav .m{font-size:18px;font-weight:700}
+.cal-nav button{width:38px;height:38px;border-radius:10px;border:1px solid var(--line);background:var(--card);font-size:16px;color:var(--ink-2)}
+.dow{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;margin-bottom:5px}
+.dow span{text-align:center;font-size:11px;color:var(--ink-3);font-weight:600}
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:5px}
+.cell{aspect-ratio:1;border-radius:9px;background:var(--line-soft);display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:12px;color:var(--ink-3);border:1px solid transparent}
+.cell.void{background:none}
+.cell.d-g{background:var(--forest);color:#fff}
+.cell.d-y{background:var(--gold);color:#fff}
+.cell.d-r{background:var(--rust);color:#fff}
+.cell.today{border-color:var(--ink)}
+.cell b{font-size:13px;font-weight:700}
+.cell i{font-size:9px;font-style:normal;opacity:.85;margin-top:1px}
+.legend{display:flex;gap:14px;justify-content:center;margin-top:12px;font-size:11px;color:var(--ink-3);flex-wrap:wrap}
+.legend span{display:flex;align-items:center;gap:5px}
+.legend em{width:9px;height:9px;border-radius:3px;display:block}
+
+/* onboarding */
+#ob{padding:calc(var(--safe-t) + 56px) 22px 40px;justify-content:center;max-width:460px;margin:0 auto;width:100%}
+#ob .logo{font-size:46px;text-align:center;margin-bottom:6px}
+#ob h1{text-align:center;font-size:28px;margin:0 0 6px;letter-spacing:-.5px}
+#ob .tl{text-align:center;color:var(--ink-3);font-size:14px;margin-bottom:30px}
+.ob-step{display:none}
+.ob-step.on{display:block}
+.code-in{text-align:center;font-size:30px;letter-spacing:8px;font-weight:700;padding:16px;text-transform:uppercase}
+.err{color:var(--rust);font-size:13px;text-align:center;margin-top:10px;min-height:18px}
+.code-box{background:var(--ink);color:var(--paper);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px}
+.code-box .cl{font-size:11px;letter-spacing:2px;opacity:.6;margin-bottom:8px}
+.code-box .cv{font-size:34px;letter-spacing:8px;font-weight:700}
+.toast{
+  position:fixed;left:50%;bottom:calc(var(--tabh) + var(--safe-b) + 90px);transform:translateX(-50%);
+  background:var(--ink);color:var(--paper);padding:11px 20px;border-radius:99px;font-size:14px;
+  z-index:80;opacity:0;pointer-events:none;transition:opacity .2s;white-space:nowrap;
+}
+.toast.on{opacity:1}
+</style>
+</head>
+<body>
+
+<div id="app">
+
+  <!-- ============ ONBOARDING ============ -->
+  <div class="screen on" id="scr-ob">
+    <div id="ob">
+      <div class="logo">🧾</div>
+      <h1>卡路里记账本</h1>
+      <div class="tl">和朋友一起打卡吃饭 · 运动 · 记账</div>
+
+      <div class="ob-step on" id="ob1">
+        <div class="card">
+          <label class="f">
+            <span class="lb">你的名字</span>
+            <input class="in" id="obName" placeholder="例如：小明" maxlength="12" autocomplete="off">
+          </label>
+          <button class="btn" id="obNext">下一步</button>
+        </div>
+        <div class="note">名字会显示给小组里的朋友</div>
+      </div>
+
+      <div class="ob-step" id="ob2">
+        <button class="opt" id="obCreate">
+          <span class="g">✨</span>
+          <span><span class="t">创建小组</span><span class="d">生成一个代码，分享给朋友</span></span>
+        </button>
+        <button class="opt" id="obJoinBtn">
+          <span class="g">🔑</span>
+          <span><span class="t">加入小组</span><span class="d">输入朋友给你的 6 位代码</span></span>
+        </button>
+        <button class="btn ghost" id="obBack1" style="margin-top:8px">返回</button>
+      </div>
+
+      <div class="ob-step" id="ob3">
+        <div class="card">
+          <label class="f">
+            <span class="lb">小组代码</span>
+            <input class="in code-in" id="obCode" placeholder="ABC234" maxlength="6" autocomplete="off" autocapitalize="characters">
+          </label>
+          <div class="err" id="obErr"></div>
+          <button class="btn" id="obJoinGo">加入小组</button>
+          <button class="btn ghost" id="obBack2">返回</button>
+        </div>
+      </div>
+
+      <div class="ob-step" id="ob4">
+        <div class="code-box">
+          <div class="cl">你的小组代码</div>
+          <div class="cv mono" id="obNewCode">------</div>
+        </div>
+        <div class="card">
+          <button class="btn" id="obCopy">复制代码</button>
+          <button class="btn ghost" id="obDone">开始记账</button>
+        </div>
+        <div class="note">把代码分享给朋友，他们就能加入你的小组</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ MAIN ============ -->
+  <div class="screen" id="scr-main">
+
+    <!-- ---- 今日 ---- -->
+    <div class="page on" id="pg-today">
+      <div class="hd">
+        <div>
+          <h1>今日</h1>
+          <div class="sub" id="todayDate">—</div>
+        </div>
+        <div class="barcode" id="bc1"></div>
+      </div>
+
+      <div class="card receipt">
+        <div class="rc-top">
+          <span class="rc-title">今日结算</span>
+          <span class="mono" style="font-size:12px;color:var(--ink-3)" id="rcNo">#000000</span>
+        </div>
+        <div class="rc-row"><span class="k">每日目标</span><span class="v mono" id="sGoal">0</span></div>
+        <div class="rc-row"><span class="k">已摄入</span><span class="v mono" id="sIn">0</span></div>
+        <div class="rc-row"><span class="k">已消耗</span><span class="v mono neg" id="sOut">0</span></div>
+        <div class="rc-row"><span class="k">净值</span><span class="v mono" id="sNet">0</span></div>
+        <div class="rc-total">
+          <span class="k">剩余</span>
+          <span><span class="v mono" id="sLeft">0</span><span class="u">kcal</span></span>
+        </div>
+        <div class="bar"><i id="sBar" style="width:0%"></i></div>
+      </div>
+
+      <div class="sect-t"><span>饮食记录</span><span class="mono" id="cntFood">0</span></div>
+      <div class="card flat" id="listFood"></div>
+
+      <div class="sect-t"><span>运动记录</span><span class="mono" id="cntEx">0</span></div>
+      <div class="card flat" id="listEx"></div>
+    </div>
+
+    <!-- ---- 月度 ---- -->
+    <div class="page" id="pg-month">
+      <div class="hd">
+        <div><h1>月度</h1><div class="sub">每日净卡路里概览</div></div>
+        <div class="barcode" id="bc2"></div>
+      </div>
+
+      <div class="card">
+        <div class="cal-nav">
+          <button id="mPrev">‹</button>
+          <span class="m" id="mLabel">—</span>
+          <button id="mNext">›</button>
+        </div>
+        <div class="dow"><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span><span>日</span></div>
+        <div class="cal" id="cal"></div>
+        <div class="legend">
+          <span><em style="background:var(--forest)"></em>低于目标</span>
+          <span><em style="background:var(--gold)"></em>接近目标</span>
+          <span><em style="background:var(--rust)"></em>超出目标</span>
+          <span><em style="background:var(--line-soft)"></em>无记录</span>
+        </div>
+      </div>
+
+      <div class="sect-t"><span>净卡路里趋势</span></div>
+      <div class="card" id="chartWrap"></div>
+
+      <div class="sect-t"><span>本月统计</span></div>
+      <div class="card">
+        <div class="rc-row"><span class="k">记录天数</span><span class="v mono" id="mDays">0</span></div>
+        <div class="rc-row"><span class="k">日均净值</span><span class="v mono" id="mAvg">0</span></div>
+        <div class="rc-row"><span class="k">达标天数</span><span class="v mono pos" id="mOk">0</span></div>
+        <div class="rc-row"><span class="k">总运动消耗</span><span class="v mono" id="mBurn">0</span></div>
+      </div>
+    </div>
+
+    <!-- ---- 身材 ---- -->
+    <div class="page" id="pg-body">
+      <div class="hd">
+        <div><h1>身材</h1><div class="sub">仅自己可见</div></div>
+        <div class="barcode" id="bc3"></div>
+      </div>
+
+      <div class="card receipt">
+        <div class="rc-top"><span class="rc-title">最新记录</span><span class="mono" style="font-size:12px;color:var(--ink-3)" id="bLast">—</span></div>
+        <div class="rc-row"><span class="k">体重</span><span class="v mono" id="bW">—</span></div>
+        <div class="rc-row"><span class="k">体脂率</span><span class="v mono" id="bF">—</span></div>
+        <div class="rc-row"><span class="k">腰围</span><span class="v mono" id="bWa">—</span></div>
+      </div>
+
+      <div class="sect-t"><span>体重趋势</span></div>
+      <div class="card" id="bodyChart"></div>
+
+      <div class="sect-t"><span>本月记录</span></div>
+      <div class="card flat" id="listBody"></div>
+
+      <div class="note" style="margin-top:16px">🔒 身材数据只保存在你自己的账户中，不会分享给小组成员</div>
+    </div>
+
+    <!-- ---- 好友 ---- -->
+    <div class="page" id="pg-friends">
+      <div class="hd">
+        <div><h1>好友</h1><div class="sub" id="fSub">—</div></div>
+        <div class="barcode" id="bc4"></div>
+      </div>
+
+      <div class="card">
+        <div class="rc-top" style="border:none;padding:0 0 10px">
+          <span class="rc-title">小组代码</span>
+          <button class="tag hi" id="fCopy" style="cursor:pointer">复制</button>
+        </div>
+        <div class="mono" style="font-size:28px;letter-spacing:6px;font-weight:700" id="fCode">------</div>
+      </div>
+
+      <div class="sect-t"><span>今日战况</span><span class="mono" id="fCnt">0 人</span></div>
+      <div class="card flat" id="listRoster"></div>
+
+      <div class="sect-t"><span>设定</span></div>
+      <div class="card">
+        <label class="f">
+          <span class="lb">名字</span>
+          <input class="in" id="stName" maxlength="12">
+        </label>
+        <div class="g2">
+          <label class="f">
+            <span class="lb">每日目标 kcal</span>
+            <input class="in mono" id="stGoal" type="number" inputmode="numeric">
+          </label>
+          <label class="f">
+            <span class="lb">体重 kg</span>
+            <input class="in mono" id="stW" type="number" inputmode="decimal">
+          </label>
+        </div>
+        <button class="btn" id="stSave">保存设定</button>
+        <div class="note">体重用于估算运动消耗卡路里</div>
+      </div>
+    </div>
+
+    <!-- tab bar -->
+    <nav class="tabs">
+      <button class="on" data-tab="today"><span class="g">🧾</span>今日</button>
+      <button data-tab="month"><span class="g">📅</span>月度</button>
+      <button data-tab="body"><span class="g">⚖️</span>身材</button>
+      <button data-tab="friends"><span class="g">👥</span>好友</button>
+    </nav>
+    <button class="fab" id="fab">+</button>
+  </div>
+</div>
+
+<div class="mask" id="mask"></div>
+<div class="sheet" id="sheet"><div class="grab"></div><div id="sheetBody"></div></div>
+<div class="toast" id="toast"></div>
+
+<input type="file" accept="image/*" capture="environment" id="fileCam" hidden>
+<input type="file" accept="image/*" id="fileLib" hidden>
+
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+<script>
+/* ============================================================
+   卡路里记账本 — single-file vanilla app
+   Firebase RTDB (v8 compat) + Netlify Function AI proxy
+   ============================================================ */
+
+/* ---------- Firebase ---------- */
+const firebaseConfig = {
+  apiKey: "AIzaSyCfqefF8V8a9r-qTTxjzwW_Nc1otv1lmck",
+  authDomain: "gcl-client-portal.firebaseapp.com",
+  databaseURL: "https://gcl-client-portal-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "gcl-client-portal",
+  storageBucket: "gcl-client-portal.firebasestorage.app",
+  messagingSenderId: "338046241097",
+  appId: "1:338046241097:web:7a23cce07f41103515b298"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+const ROOT = 'calorie_ledger';
+
+/* ---------- constants ---------- */
+const CODE_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // no I/O/0/1
+const ACTIVITIES = [
+  { id:'walk',   name:'走路',     icon:'🚶', met:4.3 },
+  { id:'run',    name:'跑步',     icon:'🏃', met:9.8 },
+  { id:'bike',   name:'骑行',     icon:'🚴', met:7.5 },
+  { id:'swim',   name:'游泳',     icon:'🏊', met:8.0 },
+  { id:'lift',   name:'力量训练', icon:'🏋️', met:6.0 },
+  { id:'yoga',   name:'瑜伽',     icon:'🧘', met:3.0 },
+  { id:'rope',   name:'跳绳',     icon:'🤸', met:11.0 },
+  { id:'stairs', name:'爬楼梯',   icon:'🪜', met:8.8 },
+  { id:'ball',   name:'球类运动', icon:'⚽', met:7.0 },
+  { id:'custom', name:'自定义',   icon:'✎',  met:null }
+];
+const actById = id => ACTIVITIES.find(a => a.id === id) || ACTIVITIES[ACTIVITIES.length - 1];
+
+/* ---------- helpers ---------- */
+const $  = s => document.querySelector(s);
+const $$ = s => Array.from(document.querySelectorAll(s));
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c =>
+  ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+const pad2 = n => String(n).padStart(2, '0');
+const dKeyOf = d => `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`;
+const ymOf   = d => `${d.getFullYear()}-${pad2(d.getMonth()+1)}`;
+const ymOfKey = k => k.slice(0, 7);
+const hhmm = d => `${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
+const num = (v, dflt = 0) => { const n = parseFloat(v); return Number.isFinite(n) ? n : dflt; };
+const uid = () => Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4);
+
+function toast(msg) {
+  const t = $('#toast');
+  t.textContent = msg; t.classList.add('on');
+  clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove('on'), 1900);
+}
+async function copyText(text) {
+  try {
+    if (navigator.clipboard && window.isSecureContext) { await navigator.clipboard.writeText(text); }
+    else {
+      const ta = document.createElement('textarea');
+      ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+      document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove();
+    }
+    toast('已复制：' + text);
+  } catch (e) { toast('复制失败，请手动选取'); }
+}
+function makeBarcode(el) {
+  if (!el) return;
+  let h = '';
+  for (let i = 0; i < 22; i++) {
+    const c = ['', 'w', 's', 't'][Math.floor(Math.random() * 4)];
+    h += `<i class="${c}"></i>`;
+  }
+  el.innerHTML = h;
+}
+function genCode() {
+  let s = '';
+  for (let i = 0; i < 6; i++) s += CODE_ALPHABET[Math.floor(Math.random() * CODE_ALPHABET.length)];
+  return s;
+}
+
+/* ---------- identity + profile (localStorage only) ---------- */
+function getMemberId() {
+  let id = localStorage.getItem('cl_memberId');
+  if (!id) { id = 'm_' + uid() + uid(); localStorage.setItem('cl_memberId', id); }
+  return id;
+}
+const MEMBER_ID = getMemberId();
+
+function loadProfile() {
+  try {
+    const p = JSON.parse(localStorage.getItem('cl_profile') || 'null');
+    if (p && p.displayName && p.groupCode) {
+      return { displayName: p.displayName, groupCode: p.groupCode,
+               dailyGoal: num(p.dailyGoal, 2000), weightKg: num(p.weightKg, 65) };
+    }
+  } catch (e) {}
+  return null;
+}
+function saveProfile(p) { localStorage.setItem('cl_profile', JSON.stringify(p)); }
+
+/* ---------- app state ---------- */
+const state = {
+  profile: null,
+  roster: {},                 // memberId -> {name, joinedAt}
+  food: {},                   // ym -> { dKey -> { memberId -> [rec] } }
+  exercise: {},               // ym -> { dKey -> { memberId -> [rec] } }
+  body: {},                   // ym -> { dKey -> rec }
+  listeners: {},              // path -> ref (for detach)
+  monthCursor: new Date(),    // month page cursor
+  tab: 'today'
+};
+
+/* ---------- firebase paths ---------- */
+const P = {
+  roster:   c => `${ROOT}/groups/${c}/roster`,
+  foodYm:   (c, ym) => `${ROOT}/groups/${c}/food/${ym}`,
+  exYm:     (c, ym) => `${ROOT}/groups/${c}/exercise/${ym}`,
+  foodDay:  (c, ym, dk, m) => `${ROOT}/groups/${c}/food/${ym}/${dk}/${m}`,
+  exDay:    (c, ym, dk, m) => `${ROOT}/groups/${c}/exercise/${ym}/${dk}/${m}`,
+  bodyYm:   (m, ym) => `${ROOT}/members/${m}/body/${ym}`,
+  bodyDay:  (m, ym, dk) => `${ROOT}/members/${m}/body/${ym}/${dk}`
+};
+
+/* ---------- realtime listeners (.on('value')) ---------- */
+function listen(path, cb) {
+  if (state.listeners[path]) return;
+  const ref = db.ref(path);
+  ref.on('value', snap => cb(snap.val()), err => {
+    console.error('[rtdb]', path, err);
+    toast('同步失败：' + (err && err.code ? err.code : '未知错误'));
+  });
+  state.listeners[path] = ref;
+}
+function detachAll() {
+  Object.values(state.listeners).forEach(r => r.off());
+  state.listeners = {};
+}
+
+function attachRoster() {
+  listen(P.roster(state.profile.groupCode), val => {
+    state.roster = val || {};
+    renderFriends();
+  });
+}
+function attachMonth(ym) {
+  const c = state.profile.groupCode;
+  listen(P.foodYm(c, ym), val => { state.food[ym] = val || {}; renderAll(); });
+  listen(P.exYm(c, ym),   val => { state.exercise[ym] = val || {}; renderAll(); });
+  listen(P.bodyYm(MEMBER_ID, ym), val => { state.body[ym] = val || {}; renderBody(); });
+}
+
+/* ---------- data accessors ---------- */
+function foodOf(dKey, memberId) {
+  const m = state.food[ymOfKey(dKey)];
+  const d = m && m[dKey];
+  const a = d && d[memberId];
+  return Array.isArray(a) ? a : [];
+}
+function exOf(dKey, memberId) {
+  const m = state.exercise[ymOfKey(dKey)];
+  const d = m && m[dKey];
+  const a = d && d[memberId];
+  return Array.isArray(a) ? a : [];
+}
+function bodyOf(dKey) {
+  const m = state.body[ymOfKey(dKey)];
+  return (m && m[dKey]) || null;
+}
+const sumCal   = arr => arr.reduce((s, r) => s + num(r.calories), 0);
+const dayIn    = (dk, m) => sumCal(foodOf(dk, m));
+const dayOut   = (dk, m) => sumCal(exOf(dk, m));
+
+/* ---------- writes ---------- */
+async function writeFood(dKey, list) {
+  const ym = ymOfKey(dKey);
+  await db.ref(P.foodDay(state.profile.groupCode, ym, dKey, MEMBER_ID))
+          .set(list.length ? list : null);
+}
+async function writeEx(dKey, list) {
+  const ym = ymOfKey(dKey);
+  await db.ref(P.exDay(state.profile.groupCode, ym, dKey, MEMBER_ID))
+          .set(list.length ? list : null);
+}
+async function writeBody(dKey, rec) {
+  const ym = ymOfKey(dKey);
+  await db.ref(P.bodyDay(MEMBER_ID, ym, dKey)).set(rec);
+}
+
+async function upsertFood(dKey, rec) {
+  const list = foodOf(dKey, MEMBER_ID).slice();
+  const i = list.findIndex(r => r.id === rec.id);
+  if (i >= 0) list[i] = rec; else list.push(rec);
+  list.sort((a, b) => String(a.time).localeCompare(String(b.time)));
+  await writeFood(dKey, list);
+}
+async function removeFood(dKey, id) {
+  await writeFood(dKey, foodOf(dKey, MEMBER_ID).filter(r => r.id !== id));
+}
+async function upsertEx(dKey, rec) {
+  const list = exOf(dKey, MEMBER_ID).slice();
+  const i = list.findIndex(r => r.id === rec.id);
+  if (i >= 0) list[i] = rec; else list.push(rec);
+  list.sort((a, b) => String(a.time).localeCompare(String(b.time)));
+  await writeEx(dKey, list);
+}
+async function removeEx(dKey, id) {
+  await writeEx(dKey, exOf(dKey, MEMBER_ID).filter(r => r.id !== id));
+}
+
+/* ============================================================
+   ONBOARDING
+   ============================================================ */
+let obName = '', obNewCode = '';
+const obStep = n => { $$('.ob-step').forEach(e => e.classList.remove('on')); $('#ob' + n).classList.add('on'); };
+
+$('#obNext').onclick = () => {
+  const v = $('#obName').value.trim();
+  if (!v) { $('#obName').focus(); toast('请输入名字'); return; }
+  obName = v; obStep(2);
+};
+$('#obBack1').onclick = () => obStep(1);
+$('#obBack2').onclick = () => obStep(2);
+$('#obJoinBtn').onclick = () => { $('#obErr').textContent = ''; obStep(3); setTimeout(() => $('#obCode').focus(), 120); };
+
+$('#obCreate').onclick = async () => {
+  const btn = $('#obCreate'); btn.disabled = true;
+  try {
+    // retry a few times in the (very unlikely) event of a collision
+    let code = null;
+    for (let i = 0; i < 5; i++) {
+      const c = genCode();
+      const snap = await db.ref(P.roster(c)).once('value');
+      if (!snap.exists()) { code = c; break; }
+    }
+    if (!code) throw new Error('code');
+    await db.ref(`${P.roster(code)}/${MEMBER_ID}`).set({ name: obName, joinedAt: Date.now() });
+    obNewCode = code;
+    $('#obNewCode').textContent = code;
+    obStep(4);
+  } catch (e) {
+    console.error(e); toast('创建失败，请检查网络');
+  } finally { btn.disabled = false; }
+};
+$('#obCopy').onclick = () => copyText(obNewCode);
+$('#obDone').onclick = () => finishOnboarding(obName, obNewCode);
+
+$('#obCode').addEventListener('input', e => {
+  e.target.value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6);
+});
+$('#obJoinGo').onclick = async () => {
+  const code = $('#obCode').value.trim().toUpperCase();
+  const err = $('#obErr');
+  if (code.length !== 6) { err.textContent = '请输入 6 位小组代码'; return; }
+  const btn = $('#obJoinGo'); btn.disabled = true; err.textContent = '';
+  try {
+    const snap = await db.ref(P.roster(code)).once('value');
+    if (!snap.exists()) { err.textContent = '未找到该小组代码'; return; }
+    await db.ref(`${P.roster(code)}/${MEMBER_ID}`).set({ name: obName, joinedAt: Date.now() });
+    finishOnboarding(obName, code);
+  } catch (e) {
+    console.error(e); err.textContent = '加入失败，请检查网络';
+  } finally { btn.disabled = false; }
+};
+
+function finishOnboarding(name, code) {
+  const p = { displayName: name, groupCode: code, dailyGoal: 2000, weightKg: 65 };
+  saveProfile(p); state.profile = p;
+  boot();
+}
+
+/* ============================================================
+   BOOT
+   ============================================================ */
+function boot() {
+  $('#scr-ob').classList.remove('on');
+  $('#scr-main').classList.add('on');
+  ['#bc1','#bc2','#bc3','#bc4'].forEach(s => makeBarcode($(s)));
+
+  detachAll();
+  state.monthCursor = new Date();
+  attachRoster();
+  attachMonth(ymOf(new Date()));
+  attachMonth(ymOf(state.monthCursor));
+
+  $('#stName').value = state.profile.displayName;
+  $('#stGoal').value = state.profile.dailyGoal;
+  $('#stW').value    = state.profile.weightKg;
+  $('#fCode').textContent = state.profile.groupCode;
+  $('#rcNo').textContent = '#' + state.profile.groupCode;
+
+  renderAll();
+}
+
+/* ---------- tabs ---------- */
+$$('.tabs button').forEach(b => {
+  b.onclick = () => {
+    state.tab = b.dataset.tab;
+    $$('.tabs button').forEach(x => x.classList.toggle('on', x === b));
+    $$('.page').forEach(p => p.classList.toggle('on', p.id === 'pg-' + state.tab));
+    window.scrollTo(0, 0);
+    renderAll();
+  };
+});
+
+/* ============================================================
+   RENDER — TODAY
+   ============================================================ */
+function renderAll() { renderToday(); renderMonth(); renderBody(); renderFriends(); }
+
+function renderToday() {
+  if (!state.profile) return;
+  const now = new Date(), dk = dKeyOf(now);
+  $('#todayDate').textContent = now.toLocaleDateString('zh-CN',
+    { month:'long', day:'numeric', weekday:'long' });
+
+  const goal = num(state.profile.dailyGoal, 2000);
+  const consumed = dayIn(dk, MEMBER_ID);
+  const burned = dayOut(dk, MEMBER_ID);
+  const net = consumed - burned;
+  const left = goal - net;
+
+  $('#sGoal').textContent = Math.round(goal);
+  $('#sIn').textContent = Math.round(consumed);
+  $('#sOut').textContent = burned ? '-' + Math.round(burned) : '0';
+  $('#sNet').textContent = Math.round(net);
+  const lEl = $('#sLeft');
+  lEl.textContent = Math.round(left);
+  lEl.className = 'v mono ' + (left < 0 ? 'neg' : left < goal * 0.15 ? 'warn' : 'pos');
+
+  const ratio = goal > 0 ? net / goal : 0;
+  const bar = $('#sBar');
+  bar.style.width = Math.max(0, Math.min(100, ratio * 100)) + '%';
+  bar.className = ratio > 1.05 ? 'neg' : ratio >= 0.85 ? 'warn' : '';
+
+  // food list
+  const foods = foodOf(dk, MEMBER_ID);
+  $('#cntFood').textContent = foods.length;
+  $('#listFood').innerHTML = foods.length ? foods.map(r => {
+    const chips = Array.isArray(r.items) && r.items.length > 1
+      ? `<div class="chips">${r.items.map(i =>
+          `<span class="chip">${esc(i.name)} · ${Math.round(num(i.calories))}</span>`).join('')}</div>` : '';
+    return `<div class="row" data-food="${esc(r.id)}">
+      <span class="ic">🍽️</span>
+      <span class="mid">
+        <span class="nm">${esc(r.name)}</span>
+        <span class="mt">${esc(r.time)} · P ${Math.round(num(r.protein))}g · C ${Math.round(num(r.carbs))}g · F ${Math.round(num(r.fat))}g</span>
+        ${chips}
+      </span>
+      <span class="val">${Math.round(num(r.calories))}</span>
+      <button class="del" data-delfood="${esc(r.id)}">✕</button>
+    </div>`;
+  }).join('') : `<div class="empty">还没有饮食记录<br>点右下角 + 开始记录</div>`;
+
+  // exercise list
+  const exs = exOf(dk, MEMBER_ID);
+  $('#cntEx').textContent = exs.length;
+  $('#listEx').innerHTML = exs.length ? exs.map(r => {
+    const a = actById(r.activity);
+    return `<div class="row" data-ex="${esc(r.id)}">
+      <span class="ic ex">${a.icon}</span>
+      <span class="mid">
+        <span class="nm">${esc(r.activityName || a.name)}</span>
+        <span class="mt">${esc(r.time)} · ${Math.round(num(r.duration))} 分钟</span>
+      </span>
+      <span class="val neg">-${Math.round(num(r.calories))}</span>
+      <button class="del" data-delex="${esc(r.id)}">✕</button>
+    </div>`;
+  }).join('') : `<div class="empty">还没有运动记录</div>`;
+}
+
+// delegated taps on today lists
+$('#pg-today').addEventListener('click', async e => {
+  const dk = dKeyOf(new Date());
+  const df = e.target.closest('[data-delfood]');
+  if (df) { e.stopPropagation(); await removeFood(dk, df.dataset.delfood); toast('已删除'); return; }
+  const de = e.target.closest('[data-delex]');
+  if (de) { e.stopPropagation(); await removeEx(dk, de.dataset.delex); toast('已删除'); return; }
+  const rf = e.target.closest('[data-food]');
+  if (rf) { const r = foodOf(dk, MEMBER_ID).find(x => x.id === rf.dataset.food); if (r) sheetFoodForm(r); return; }
+  const rx = e.target.closest('[data-ex]');
+  if (rx) { const r = exOf(dk, MEMBER_ID).find(x => x.id === rx.dataset.ex); if (r) sheetExForm(r); return; }
+});
+
+/* ============================================================
+   RENDER — MONTH
+   ============================================================ */
+$('#mPrev').onclick = () => shiftMonth(-1);
+$('#mNext').onclick = () => shiftMonth(1);
+function shiftMonth(d) {
+  const c = state.monthCursor;
+  state.monthCursor = new Date(c.getFullYear(), c.getMonth() + d, 1);
+  attachMonth(ymOf(state.monthCursor));
+  renderMonth();
+}
+
+function renderMonth() {
+  if (!state.profile) return;
+  const cur = state.monthCursor;
+  const y = cur.getFullYear(), m = cur.getMonth();
+  const ym = ymOf(cur);
+  $('#mLabel').textContent = `${y} 年 ${m + 1} 月`;
+
+  const goal = num(state.profile.dailyGoal, 2000);
+  const first = new Date(y, m, 1);
+  const lead = (first.getDay() + 6) % 7;           // Monday-first
+  const days = new Date(y, m + 1, 0).getDate();
+  const todayKey = dKeyOf(new Date());
+
+  let html = '';
+  for (let i = 0; i < lead; i++) html += '<div class="cell void"></div>';
+
+  const series = [];
+  let recDays = 0, sumNet = 0, okDays = 0, burnTotal = 0;
+
+  for (let d = 1; d <= days; d++) {
+    const dk = `${ym}-${pad2(d)}`;
+    const inC = dayIn(dk, MEMBER_ID), outC = dayOut(dk, MEMBER_ID);
+    const has = foodOf(dk, MEMBER_ID).length > 0 || exOf(dk, MEMBER_ID).length > 0;
+    const net = inC - outC;
+    burnTotal += outC;
+
+    let cls = '';
+    if (has) {
+      recDays++; sumNet += net; series.push({ d, net });
+      const ratio = goal > 0 ? net / goal : 0;
+      if (ratio < 0.85) { cls = 'd-g'; okDays++; }
+      else if (ratio <= 1.05) { cls = 'd-y'; okDays++; }
+      else cls = 'd-r';
+    }
+    html += `<div class="cell ${cls} ${dk === todayKey ? 'today' : ''}">
+      <b>${d}</b>${has ? `<i>${Math.round(net)}</i>` : ''}</div>`;
+  }
+  $('#cal').innerHTML = html;
+
+  $('#mDays').textContent = recDays;
+  $('#mAvg').textContent  = recDays ? Math.round(sumNet / recDays) : 0;
+  $('#mOk').textContent   = okDays;
+  $('#mBurn').textContent = Math.round(burnTotal);
+
+  $('#chartWrap').innerHTML = lineChart(series, goal, days);
+}
+
+/* hand-rolled inline SVG line chart (no chart library) */
+function lineChart(series, goal, daysInMonth) {
+  if (series.length < 1) return `<div class="empty">本月还没有记录</div>`;
+  const W = 320, H = 160, PL = 34, PR = 8, PT = 12, PB = 22;
+  const iw = W - PL - PR, ih = H - PT - PB;
+
+  const vals = series.map(p => p.net).concat([goal, 0]);
+  let lo = Math.min.apply(null, vals), hi = Math.max.apply(null, vals);
+  if (hi - lo < 100) { hi = lo + 100; }
+  const padv = (hi - lo) * 0.12; lo -= padv; hi += padv;
+
+  const X = d => PL + ((d - 1) / Math.max(1, daysInMonth - 1)) * iw;
+  const Y = v => PT + (1 - (v - lo) / (hi - lo)) * ih;
+
+  const pts = series.map(p => `${X(p.d).toFixed(1)},${Y(p.net).toFixed(1)}`).join(' ');
+  const area = series.length > 1
+    ? `<polygon points="${X(series[0].d).toFixed(1)},${(PT+ih).toFixed(1)} ${pts} ${X(series[series.length-1].d).toFixed(1)},${(PT+ih).toFixed(1)}"
+        fill="var(--forest)" opacity=".08"/>` : '';
+
+  const gy = Y(goal);
+  const ticks = [hi, (hi + lo) / 2, lo].map(v =>
+    `<text x="${PL - 6}" y="${(Y(v) + 3.5).toFixed(1)}" text-anchor="end"
+       font-size="9" fill="var(--ink-3)">${Math.round(v)}</text>
+     <line x1="${PL}" y1="${Y(v).toFixed(1)}" x2="${W - PR}" y2="${Y(v).toFixed(1)}"
+       stroke="var(--line-soft)" stroke-width="1"/>`).join('');
+
+  const dots = series.map(p => {
+    const r = goal > 0 ? p.net / goal : 0;
+    const c = r > 1.05 ? 'var(--rust)' : r >= 0.85 ? 'var(--gold)' : 'var(--forest)';
+    return `<circle cx="${X(p.d).toFixed(1)}" cy="${Y(p.net).toFixed(1)}" r="2.8" fill="${c}"/>`;
+  }).join('');
+
+  const xlab = [1, Math.round(daysInMonth / 2), daysInMonth].map(d =>
+    `<text x="${X(d).toFixed(1)}" y="${H - 6}" text-anchor="middle"
+       font-size="9" fill="var(--ink-3)">${d}</text>`).join('');
+
+  return `<svg viewBox="0 0 ${W} ${H}" width="100%" height="${H}" role="img" aria-label="当月每日净卡路里趋势">
+    ${ticks}
+    ${gy > PT && gy < PT + ih ? `<line x1="${PL}" y1="${gy.toFixed(1)}" x2="${W - PR}" y2="${gy.toFixed(1)}"
+      stroke="var(--gold)" stroke-width="1.4" stroke-dasharray="4 3"/>
+      <text x="${W - PR}" y="${(gy - 4).toFixed(1)}" text-anchor="end" font-size="9"
+        fill="var(--gold)">目标 ${Math.round(goal)}</text>` : ''}
+    ${area}
+    <polyline points="${pts}" fill="none" stroke="var(--forest)" stroke-width="2"
+      stroke-linejoin="round" stroke-linecap="round"/>
+    ${dots}${xlab}
+  </svg>`;
+}
+
+/* ============================================================
+   RENDER — BODY
+   ============================================================ */
+function renderBody() {
+  if (!state.profile) return;
+  const ym = ymOf(new Date());
+  const map = state.body[ym] || {};
+  const keys = Object.keys(map).sort();
+
+  const lastKey = keys[keys.length - 1];
+  const last = lastKey ? map[lastKey] : null;
+  $('#bLast').textContent = lastKey || '—';
+  $('#bW').textContent  = last && last.weight  ? num(last.weight).toFixed(1) + ' kg' : '—';
+  $('#bF').textContent  = last && last.bodyFat ? num(last.bodyFat).toFixed(1) + ' %' : '—';
+  $('#bWa').textContent = last && last.waist   ? num(last.waist).toFixed(1) + ' cm' : '—';
+
+  const series = keys.map(k => ({ d: parseInt(k.slice(8), 10), net: num(map[k].weight) }))
+                     .filter(p => p.net > 0);
+  $('#bodyChart').innerHTML = series.length
+    ? weightChart(series, new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate())
+    : `<div class="empty">本月还没有身材记录</div>`;
+
+  $('#listBody').innerHTML = keys.length ? keys.slice().reverse().map(k => {
+    const r = map[k];
+    const meta = [
+      r.bodyFat ? '体脂 ' + num(r.bodyFat).toFixed(1) + '%' : null,
+      r.waist ? '腰围 ' + num(r.waist).toFixed(1) + 'cm' : null,
+      r.note ? esc(r.note) : null
+    ].filter(Boolean).join(' · ');
+    return `<div class="row" data-body="${esc(k)}">
+      <span class="ic">⚖️</span>
+      <span class="mid">
+        <span class="nm">${esc(k)}</span>
+        <span class="mt">${meta || '仅体重'}</span>
+      </span>
+      <span class="val">${num(r.weight).toFixed(1)}<span style="font-size:11px;color:var(--ink-3)"> kg</span></span>
+    </div>`;
+  }).join('') : `<div class="empty">还没有身材记录</div>`;
+}
+$('#listBody').addEventListener('click', e => {
+  const el = e.target.closest('[data-body]');
+  if (el) sheetBodyForm(el.dataset.body);
+});
+
+function weightChart(series, daysInMonth) {
+  const W = 320, H = 150, PL = 34, PR = 8, PT = 12, PB = 22;
+  const iw = W - PL - PR, ih = H - PT - PB;
+  const vals = series.map(p => p.net);
+  let lo = Math.min.apply(null, vals), hi = Math.max.apply(null, vals);
+  if (hi - lo < 2) { lo -= 1; hi += 1; }
+  const padv = (hi - lo) * 0.15; lo -= padv; hi += padv;
+  const X = d => PL + ((d - 1) / Math.max(1, daysInMonth - 1)) * iw;
+  const Y = v => PT + (1 - (v - lo) / (hi - lo)) * ih;
+  const pts = series.map(p => `${X(p.d).toFixed(1)},${Y(p.net).toFixed(1)}`).join(' ');
+  const ticks = [hi, lo].map(v =>
+    `<text x="${PL - 6}" y="${(Y(v) + 3.5).toFixed(1)}" text-anchor="end" font-size="9"
+       fill="var(--ink-3)">${v.toFixed(1)}</text>
+     <line x1="${PL}" y1="${Y(v).toFixed(1)}" x2="${W - PR}" y2="${Y(v).toFixed(1)}"
+       stroke="var(--line-soft)"/>`).join('');
+  const dots = series.map(p =>
+    `<circle cx="${X(p.d).toFixed(1)}" cy="${Y(p.net).toFixed(1)}" r="2.8" fill="var(--gold)"/>`).join('');
+  return `<svg viewBox="0 0 ${W} ${H}" width="100%" height="${H}" role="img" aria-label="本月体重趋势">
+    ${ticks}
+    <polyline points="${pts}" fill="none" stroke="var(--gold)" stroke-width="2"
+      stroke-linejoin="round" stroke-linecap="round"/>
+    ${dots}
+  </svg>`;
+}
+
+/* ============================================================
+   RENDER — FRIENDS
+   ============================================================ */
+function renderFriends() {
+  if (!state.profile) return;
+  const dk = dKeyOf(new Date());
+  const ids = Object.keys(state.roster);
+  $('#fCnt').textContent = ids.length + ' 人';
+  $('#fSub').textContent = '小组 ' + state.profile.groupCode + ' · 实时同步';
+
+  const rows = ids.map(id => {
+    const inC = dayIn(dk, id), outC = dayOut(dk, id);
+    return { id, name: (state.roster[id] && state.roster[id].name) || '匿名', inC, outC, net: inC - outC };
+  }).sort((a, b) => b.net - a.net);
+
+  $('#listRoster').innerHTML = rows.length ? rows.map(r => `
+    <div class="row">
+      <span class="ic">${esc(r.name.slice(0, 1))}</span>
+      <span class="mid">
+        <span class="nm">${esc(r.name)}${r.id === MEMBER_ID ? ' <span class="tag hi">我</span>' : ''}</span>
+        <span class="mt">摄入 ${Math.round(r.inC)} · 消耗 ${Math.round(r.outC)}</span>
+      </span>
+      <span class="val">${Math.round(r.net)}</span>
+    </div>`).join('') : `<div class="empty">小组里还没有人</div>`;
+}
+$('#fCopy').onclick = () => copyText(state.profile.groupCode);
+
+/* ---------- settings ---------- */
+$('#stSave').onclick = async () => {
+  const name = $('#stName').value.trim();
+  if (!name) { toast('名字不能为空'); return; }
+  const p = {
+    displayName: name,
+    groupCode: state.profile.groupCode,
+    dailyGoal: Math.max(1, num($('#stGoal').value, 2000)),
+    weightKg: Math.max(1, num($('#stW').value, 65))
+  };
+  saveProfile(p); state.profile = p;
+  try {
+    await db.ref(`${P.roster(p.groupCode)}/${MEMBER_ID}/name`).set(name);
+  } catch (e) { console.error(e); }
+  toast('设定已保存');
+  renderAll();
+};
+
+/* ============================================================
+   SHEETS
+   ============================================================ */
+function openSheet(html) {
+  $('#sheetBody').innerHTML = html;
+  $('#mask').classList.add('on'); $('#sheet').classList.add('on');
+}
+function closeSheet() {
+  $('#mask').classList.remove('on'); $('#sheet').classList.remove('on');
+  $('#sheetBody').innerHTML = '';
+}
+$('#mask').onclick = closeSheet;
+document.addEventListener('click', e => { if (e.target.closest('[data-close]')) closeSheet(); });
+
+const shHead = t => `<div class="sh-hd"><h2>${t}</h2><button class="x" data-close>✕</button></div>`;
+
+/* ---- FAB menu ---- */
+$('#fab').onclick = () => {
+  openSheet(`${shHead('添加记录')}
+    <button class="opt" id="mAddFood"><span class="g">🍽️</span>
+      <span><span class="t">加饮食</span><span class="d">拍照识别 · 相册 · 手动输入</span></span></button>
+    <button class="opt" id="mAddEx"><span class="g">🏃</span>
+      <span><span class="t">加运动</span><span class="d">选活动，自动估算消耗</span></span></button>
+    <button class="opt" id="mAddBody"><span class="g">⚖️</span>
+      <span><span class="t">记身材</span><span class="d">体重 · 体脂 · 腰围（私密）</span></span></button>`);
+  $('#mAddFood').onclick = sheetFoodEntry;
+  $('#mAddEx').onclick = () => sheetExForm(null);
+  $('#mAddBody').onclick = () => sheetBodyForm(dKeyOf(new Date()));
+};
+
+/* ---- food: entry choices ---- */
+function sheetFoodEntry() {
+  openSheet(`${shHead('加饮食')}
+    <button class="opt" id="eCam"><span class="g">📷</span>
+      <span><span class="t">拍照识别</span><span class="d">对着食物拍一张，AI 帮你估算</span></span></button>
+    <button class="opt" id="eLib"><span class="g">🖼️</span>
+      <span><span class="t">从相册选择</span><span class="d">选一张已有的食物照片</span></span></button>
+    <button class="opt" id="eMan"><span class="g">✎</span>
+      <span><span class="t">手动输入</span><span class="d">自己填写名称与营养信息</span></span></button>`);
+  $('#eCam').onclick = () => $('#fileCam').click();
+  $('#eLib').onclick = () => $('#fileLib').click();
+  $('#eMan').onclick = () => sheetFoodForm(null);
+}
+$('#fileCam').onchange = e => handlePhoto(e.target.files[0], e.target);
+$('#fileLib').onchange = e => handlePhoto(e.target.files[0], e.target);
+
+/* ---- image compression: longest edge 1024, jpeg q0.82 ---- */
+function compressImage(file) {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      const MAX = 1024;
+      let { width: w, height: h } = img;
+      const scale = Math.min(1, MAX / Math.max(w, h));
+      w = Math.max(1, Math.round(w * scale));
+      h = Math.max(1, Math.round(h * scale));
+      const cv = document.createElement('canvas');
+      cv.width = w; cv.height = h;
+      const ctx = cv.getContext('2d');
+      ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, w, h);
+      ctx.drawImage(img, 0, 0, w, h);
+      URL.revokeObjectURL(url);
+      resolve(cv.toDataURL('image/jpeg', 0.82));
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('图片读取失败')); };
+    img.src = url;
+  });
+}
+
+/* ---- AI recognition via Netlify Function proxy ---- */
+async function analyzeFood(dataUrl) {
+  const m = /^data:(image\/[a-zA-Z+]+);base64,(.+)$/.exec(dataUrl);
+  if (!m) throw new Error('图片格式错误');
+  const res = await fetch('/.netlify/functions/analyze-food', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ mediaType: m[1], imageBase64: m[2] })
+  });
+  let data = null;
+  try { data = await res.json(); } catch (e) {}
+  if (!res.ok || !data || data.error) {
+    throw new Error((data && data.error) || `识别服务错误 (${res.status})`);
+  }
+  return data;
+}
+
+async function handlePhoto(file, input) {
+  if (input) input.value = '';   // allow re-picking the same file
+  if (!file) return;
+
+  openSheet(`${shHead('识别中')}
+    <div class="load"><div class="spin"></div>
+      <div style="font-weight:600">AI 正在识别食物…</div>
+      <div class="note">正在分析照片中的食物与营养信息</div></div>`);
+
+  let dataUrl;
+  try {
+    dataUrl = await compressImage(file);
+  } catch (e) { sheetError('图片处理失败，请换一张试试'); return; }
+
+  try {
+    const r = await analyzeFood(dataUrl);
+    if (r.summary === '未识别到食物' || !num(r.totalCalories)) {
+      sheetError('未识别到食物，请换一张更清晰的照片');
+      return;
+    }
+    sheetFoodConfirm(r, dataUrl);
+  } catch (e) {
+    console.error(e);
+    sheetError(e.message || '识别失败，请稍后再试');
+  }
+}
+
+function sheetError(msg) {
+  openSheet(`${shHead('识别失败')}
+    <div class="card" style="text-align:center;padding:26px 16px">
+      <div style="font-size:34px;margin-bottom:8px">😵</div>
+      <div style="font-weight:600;margin-bottom:4px">${esc(msg)}</div>
+      <div class="note">你可以改为手动输入，或重新拍一张</div>
+    </div>
+    <button class="btn" id="errMan">改为手动输入</button>
+    <button class="btn ghost" id="errRetry">重新选择照片</button>`);
+  $('#errMan').onclick = () => sheetFoodForm(null);
+  $('#errRetry').onclick = sheetFoodEntry;
+}
+
+/* ---- food: AI confirm screen ---- */
+function sheetFoodConfirm(r, dataUrl) {
+  const conf = { high:['hi','高'], medium:['md','中'], low:['lo','低'] }[r.confidence] || ['md','中'];
+  const items = Array.isArray(r.items) ? r.items : [];
+  openSheet(`${shHead('确认结果')}
+    <img class="prev" src="${dataUrl}" alt="食物照片">
+    <div class="card" style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+      <div style="min-width:0">
+        <div style="font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(r.summary || '识别结果')}</div>
+        <div class="note" style="text-align:left;margin-top:2px">识别到 ${items.length} 项食物</div>
+      </div>
+      <span class="tag ${conf[0]}" style="flex:none">置信度 ${conf[1]}</span>
+    </div>
+    ${items.length ? `<div class="chips" style="margin:-4px 2px 12px">${items.map(i =>
+      `<span class="chip">${esc(i.name)} · ${Math.round(num(i.calories))} kcal</span>`).join('')}</div>` : ''}
+    <div class="card">
+      <label class="f"><span class="lb">名称</span>
+        <input class="in" id="fName" value="${esc(r.summary || '')}"></label>
+      <label class="f"><span class="lb">总卡路里 kcal</span>
+        <input class="in mono" id="fCal" type="number" inputmode="numeric" value="${Math.round(num(r.totalCalories))}"></label>
+      <div class="g3">
+        <label class="f"><span class="lb">蛋白 g</span>
+          <input class="in mono" id="fP" type="number" inputmode="numeric" value="${Math.round(num(r.protein))}"></label>
+        <label class="f"><span class="lb">碳水 g</span>
+          <input class="in mono" id="fC" type="number" inputmode="numeric" value="${Math.round(num(r.carbs))}"></label>
+        <label class="f"><span class="lb">脂肪 g</span>
+          <input class="in mono" id="fF" type="number" inputmode="numeric" value="${Math.round(num(r.fat))}"></label>
+      </div>
+      <button class="btn" id="fSave">确认并保存</button>
+    </div>
+    <div class="note">⚠️ AI 估算仅供参考，可自行修改后再保存</div>`);
+
+  $('#fSave').onclick = async () => {
+    const rec = readFoodForm(null, items);
+    if (!rec) return;
+    await upsertFood(dKeyOf(new Date()), rec);
+    closeSheet(); toast('已记录 ' + Math.round(rec.calories) + ' kcal');
+  };
+}
+
+/* ---- food: manual / edit form ---- */
+function sheetFoodForm(existing) {
+  const e = existing || {};
+  openSheet(`${shHead(existing ? '编辑饮食' : '手动输入')}
+    <div class="card">
+      <label class="f"><span class="lb">名称</span>
+        <input class="in" id="fName" placeholder="例如：鸡胸肉沙拉" value="${esc(e.name || '')}"></label>
+      <label class="f"><span class="lb">总卡路里 kcal</span>
+        <input class="in mono" id="fCal" type="number" inputmode="numeric" placeholder="0"
+          value="${existing ? Math.round(num(e.calories)) : ''}"></label>
+      <div class="g3">
+        <label class="f"><span class="lb">蛋白 g</span>
+          <input class="in mono" id="fP" type="number" inputmode="numeric" placeholder="0"
+            value="${existing ? Math.round(num(e.protein)) : ''}"></label>
+        <label class="f"><span class="lb">碳水 g</span>
+          <input class="in mono" id="fC" type="number" inputmode="numeric" placeholder="0"
+            value="${existing ? Math.round(num(e.carbs)) : ''}"></label>
+        <label class="f"><span class="lb">脂肪 g</span>
+          <input class="in mono" id="fF" type="number" inputmode="numeric" placeholder="0"
+            value="${existing ? Math.round(num(e.fat)) : ''}"></label>
+      </div>
+      <button class="btn" id="fSave">${existing ? '保存修改' : '保存'}</button>
+      ${existing ? `<button class="btn danger" id="fDel">删除这条记录</button>` : ''}
+    </div>`);
+
+  $('#fSave').onclick = async () => {
+    const rec = readFoodForm(existing, existing ? existing.items : null);
+    if (!rec) return;
+    await upsertFood(dKeyOf(new Date()), rec);
+    closeSheet(); toast(existing ? '已更新' : '已记录');
+  };
+  if (existing) $('#fDel').onclick = async () => {
+    await removeFood(dKeyOf(new Date()), existing.id);
+    closeSheet(); toast('已删除');
+  };
+}
+
+function readFoodForm(existing, items) {
+  const name = $('#fName').value.trim();
+  const cal = num($('#fCal').value, NaN);
+  if (!name) { toast('请输入名称'); $('#fName').focus(); return null; }
+  if (!Number.isFinite(cal) || cal < 0) { toast('请输入有效的卡路里'); $('#fCal').focus(); return null; }
+  return {
+    id: existing ? existing.id : uid(),
+    time: existing ? existing.time : hhmm(new Date()),
+    name,
+    calories: Math.round(cal),
+    protein: Math.round(num($('#fP').value)),
+    carbs: Math.round(num($('#fC').value)),
+    fat: Math.round(num($('#fF').value)),
+    items: Array.isArray(items) && items.length
+      ? items.map(i => ({ name: String(i.name || ''), calories: Math.round(num(i.calories)) }))
+      : []
+  };
+}
+
+/* ---- exercise form ---- */
+function sheetExForm(existing) {
+  const e = existing || {};
+  const selId = e.activity || 'walk';
+  openSheet(`${shHead(existing ? '编辑运动' : '加运动')}
+    <div class="acts" id="acts">
+      ${ACTIVITIES.map(a => `<button class="act ${a.id === selId ? 'on' : ''}" data-act="${a.id}">
+        <span class="g">${a.icon}</span><span class="n">${a.name}</span></button>`).join('')}
+    </div>
+    <div class="card">
+      <label class="f" id="wrapCustom" style="display:${selId === 'custom' ? 'block' : 'none'}">
+        <span class="lb">活动名称</span>
+        <input class="in" id="xName" placeholder="例如：爬山" value="${esc(e.activityName && selId === 'custom' ? e.activityName : '')}">
+      </label>
+      <div class="g2">
+        <label class="f"><span class="lb">时长（分钟）</span>
+          <input class="in mono" id="xMin" type="number" inputmode="numeric" placeholder="30"
+            value="${existing ? Math.round(num(e.duration)) : ''}"></label>
+        <label class="f"><span class="lb">消耗 kcal</span>
+          <input class="in mono" id="xCal" type="number" inputmode="numeric" placeholder="0"
+            value="${existing ? Math.round(num(e.calories)) : ''}"></label>
+      </div>
+      <button class="btn" id="xSave">${existing ? '保存修改' : '保存'}</button>
+      ${existing ? `<button class="btn danger" id="xDel">删除这条记录</button>` : ''}
+    </div>
+    <div class="note" id="xHint">消耗 = MET × 3.5 × 体重(${num(state.profile.weightKg, 65)}kg) ÷ 200 × 分钟，可手动覆盖</div>`);
+
+  let cur = selId;
+  let calTouched = !!existing;   // don't overwrite a value the user typed / an existing record
+
+  const recalc = () => {
+    const a = actById(cur);
+    if (!a.met || calTouched) return;
+    const mins = num($('#xMin').value);
+    if (mins > 0) {
+      $('#xCal').value = Math.round((a.met * 3.5 * num(state.profile.weightKg, 65) / 200) * mins);
+    }
+  };
+
+  $('#acts').addEventListener('click', ev => {
+    const b = ev.target.closest('[data-act]'); if (!b) return;
+    cur = b.dataset.act;
+    $$('#acts .act').forEach(x => x.classList.toggle('on', x === b));
+    $('#wrapCustom').style.display = cur === 'custom' ? 'block' : 'none';
+    $('#xHint').textContent = actById(cur).met
+      ? `消耗 = MET ${actById(cur).met} × 3.5 × 体重(${num(state.profile.weightKg, 65)}kg) ÷ 200 × 分钟，可手动覆盖`
+      : '自定义活动没有 MET 值，请手动填写消耗卡路里';
+    calTouched = false; recalc();
+  });
+  $('#xMin').addEventListener('input', recalc);
+  $('#xCal').addEventListener('input', () => { calTouched = true; });
+
+  $('#xSave').onclick = async () => {
+    const a = actById(cur);
+    const mins = num($('#xMin').value, NaN);
+    const cal = num($('#xCal').value, NaN);
+    const nm = cur === 'custom' ? $('#xName').value.trim() : a.name;
+    if (cur === 'custom' && !nm) { toast('请输入活动名称'); $('#xName').focus(); return; }
+    if (!Number.isFinite(mins) || mins <= 0) { toast('请输入时长'); $('#xMin').focus(); return; }
+    if (!Number.isFinite(cal) || cal < 0) { toast('请输入消耗卡路里'); $('#xCal').focus(); return; }
+    await upsertEx(dKeyOf(new Date()), {
+      id: existing ? existing.id : uid(),
+      time: existing ? existing.time : hhmm(new Date()),
+      activity: cur, activityName: nm,
+      duration: Math.round(mins), calories: Math.round(cal)
+    });
+    closeSheet(); toast(existing ? '已更新' : '已记录 -' + Math.round(cal) + ' kcal');
+  };
+  if (existing) $('#xDel').onclick = async () => {
+    await removeEx(dKeyOf(new Date()), existing.id);
+    closeSheet(); toast('已删除');
+  };
+  recalc();
+}
+
+/* ---- body form ---- */
+function sheetBodyForm(dKey) {
+  const e = bodyOf(dKey) || {};
+  const isToday = dKey === dKeyOf(new Date());
+  openSheet(`${shHead('记身材 · ' + dKey)}
+    <div class="card">
+      <label class="f"><span class="lb">体重 kg</span>
+        <input class="in mono" id="yW" type="number" inputmode="decimal" placeholder="65.0"
+          value="${e.weight ? num(e.weight) : ''}"></label>
+      <div class="g2">
+        <label class="f"><span class="lb">体脂率 %（选填）</span>
+          <input class="in mono" id="yF" type="number" inputmode="decimal" placeholder="—"
+            value="${e.bodyFat ? num(e.bodyFat) : ''}"></label>
+        <label class="f"><span class="lb">腰围 cm（选填）</span>
+          <input class="in mono" id="yWa" type="number" inputmode="decimal" placeholder="—"
+            value="${e.waist ? num(e.waist) : ''}"></label>
+      </div>
+      <label class="f"><span class="lb">备注（选填）</span>
+        <input class="in" id="yN" placeholder="例如：早上空腹" maxlength="40" value="${esc(e.note || '')}"></label>
+      <button class="btn" id="ySave">保存</button>
+      ${e.weight ? `<button class="btn danger" id="yDel">删除${isToday ? '今日' : '这天'}记录</button>` : ''}
+    </div>
+    <div class="note">🔒 身材数据只保存在你自己的账户中，不会分享给小组成员</div>`);
+
+  $('#ySave').onclick = async () => {
+    const w = num($('#yW').value, NaN);
+    if (!Number.isFinite(w) || w <= 0) { toast('请输入体重'); $('#yW').focus(); return; }
+    const rec = { weight: Math.round(w * 10) / 10, time: hhmm(new Date()) };
+    const f = num($('#yF').value, NaN), wa = num($('#yWa').value, NaN);
+    const n = $('#yN').value.trim();
+    if (Number.isFinite(f) && f > 0) rec.bodyFat = Math.round(f * 10) / 10;
+    if (Number.isFinite(wa) && wa > 0) rec.waist = Math.round(wa * 10) / 10;
+    if (n) rec.note = n;
+    await writeBody(dKey, rec);
+    closeSheet(); toast('已记录');
+  };
+  if (e.weight) $('#yDel').onclick = async () => {
+    await db.ref(P.bodyDay(MEMBER_ID, ymOfKey(dKey), dKey)).remove();
+    closeSheet(); toast('已删除');
+  };
+}
+
+/* ============================================================
+   START
+   ============================================================ */
+state.profile = loadProfile();
+if (state.profile) boot();
+else { $('#scr-ob').classList.add('on'); setTimeout(() => $('#obName').focus(), 200); }
+
+// keep "today" fresh if the app is left open across midnight
+setInterval(() => {
+  const ym = ymOf(new Date());
+  if (state.profile && !state.listeners[P.foodYm(state.profile.groupCode, ym)]) attachMonth(ym);
+  if (state.profile) renderToday();
+}, 60000);
+</script>
+</body>
+</html>

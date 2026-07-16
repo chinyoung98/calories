@@ -1,0 +1,23 @@
+[build]
+  # No build step — index.html is served straight from the repo root.
+  publish = "."
+  command = ""
+  functions = "netlify/functions"
+
+[functions]
+  node_bundler = "esbuild"
+
+# The default function timeout is 10s. Image recognition usually lands well inside
+# that, but if you see intermittent 502s, request a higher timeout from Netlify
+# support (background functions are not usable here — the client waits on the reply).
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+
+[[headers]]
+  for = "/index.html"
+  [headers.values]
+    Cache-Control = "no-cache"
