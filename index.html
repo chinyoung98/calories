@@ -211,6 +211,9 @@ label.f .lb{font-size:12px;letter-spacing:1px;color:var(--ink-3);font-weight:600
 #ob .tl{text-align:center;color:var(--ink-3);font-size:14px;margin-bottom:30px}
 .ob-step{display:none}
 .ob-step.on{display:block}
+.seg{display:flex;gap:4px;padding:4px;background:var(--line-soft);border-radius:12px;margin-bottom:14px}
+.seg button{flex:1;padding:10px;border-radius:9px;font-size:15px;font-weight:600;color:var(--ink-3)}
+.seg button.on{background:var(--card);color:var(--forest);box-shadow:0 1px 3px rgba(0,0,0,.08)}
 .code-in{text-align:center;font-size:30px;letter-spacing:8px;font-weight:700;padding:16px;text-transform:uppercase}
 .err{color:var(--rust);font-size:13px;text-align:center;margin-top:10px;min-height:18px}
 .code-box{background:var(--ink);color:var(--paper);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px}
@@ -235,15 +238,38 @@ label.f .lb{font-size:12px;letter-spacing:1px;color:var(--ink-3);font-weight:600
       <h1>卡路里记账本</h1>
       <div class="tl">和朋友一起打卡吃饭 · 运动 · 记账</div>
 
-      <div class="ob-step on" id="ob1">
+      <div class="ob-step on" id="obA">
+        <div class="seg">
+          <button class="on" id="segIn" data-mode="in">登入</button>
+          <button id="segUp" data-mode="up">注册</button>
+        </div>
         <div class="card">
           <label class="f">
-            <span class="lb">你的名字</span>
+            <span class="lb">Email</span>
+            <input class="in" id="auEmail" type="email" inputmode="email"
+                   autocomplete="email" autocapitalize="off" placeholder="you@example.com">
+          </label>
+          <label class="f">
+            <span class="lb">密码</span>
+            <input class="in" id="auPass" type="password" placeholder="至少 6 位"
+                   autocomplete="current-password">
+          </label>
+          <div class="err" id="auErr"></div>
+          <button class="btn" id="auGo">登入</button>
+        </div>
+        <div class="note" id="auNote">还没有帐号？点上方「注册」建立一个</div>
+      </div>
+
+      <div class="ob-step" id="ob1">
+        <div class="card">
+          <label class="f">
+            <span class="lb">你的暱称</span>
             <input class="in" id="obName" placeholder="例如：小明" maxlength="12" autocomplete="off">
           </label>
           <button class="btn" id="obNext">下一步</button>
+          <button class="btn ghost" id="obSignOut">换个帐号</button>
         </div>
-        <div class="note">名字会显示给小组里的朋友</div>
+        <div class="note">这是小组里的朋友会看到的名字，跟 Email 无关</div>
       </div>
 
       <div class="ob-step" id="ob2">
@@ -415,6 +441,16 @@ label.f .lb{font-size:12px;letter-spacing:1px;color:var(--ink-3);font-weight:600
         <button class="btn" id="stSave">保存设定</button>
         <div class="note">体重用于估算运动消耗卡路里</div>
       </div>
+
+      <div class="sect-t"><span>帐号</span></div>
+      <div class="card">
+        <div class="rc-row" style="padding-top:0">
+          <span class="k">已登入</span>
+          <span class="v" id="stEmail" style="font-size:14px;font-weight:500">—</span>
+        </div>
+        <button class="btn ghost" id="stOut" style="margin-top:10px">登出</button>
+        <div class="note">登出后用同一个 Email 登入，记录都还在</div>
+      </div>
     </div>
 
     <!-- tab bar -->
@@ -436,6 +472,7 @@ label.f .lb{font-size:12px;letter-spacing:1px;color:var(--ink-3);font-weight:600
 <input type="file" accept="image/*" id="fileLib" hidden>
 
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 <script>
 /* ============================================================
@@ -517,25 +554,27 @@ function genCode() {
   return s;
 }
 
-/* ---------- identity + profile (localStorage only) ---------- */
-function getMemberId() {
-  let id = localStorage.getItem('cl_memberId');
-  if (!id) { id = 'm_' + uid() + uid(); localStorage.setItem('cl_memberId', id); }
-  return id;
-}
-const MEMBER_ID = getMemberId();
+/* ---------- identity (Firebase Auth) ---------- */
+// UID is the single source of identity everywhere: roster key, food/exercise/body
+// key, and the members/{uid} subtree. Set by onAuthStateChanged, cleared on sign-out.
+let UID = null;
 
-function loadProfile() {
-  try {
-    const p = JSON.parse(localStorage.getItem('cl_profile') || 'null');
-    if (p && p.displayName && p.groupCode) {
-      return { displayName: p.displayName, groupCode: p.groupCode,
-               dailyGoal: num(p.dailyGoal, 2000), weightKg: num(p.weightKg, 65) };
-    }
-  } catch (e) {}
+/* ---------- profile (Firebase: members/{uid}/profile) ---------- */
+function normProfile(p) {
+  if (p && p.displayName && p.groupCode) {
+    return { displayName: p.displayName, groupCode: p.groupCode,
+             dailyGoal: num(p.dailyGoal, 2000), weightKg: num(p.weightKg, 65) };
+  }
   return null;
 }
-function saveProfile(p) { localStorage.setItem('cl_profile', JSON.stringify(p)); }
+async function fetchProfile() {
+  const snap = await db.ref(P.profile(UID)).once('value');
+  return normProfile(snap.val());
+}
+async function saveProfile(p) {
+  await db.ref(P.profile(UID)).set(p);
+  state.profile = p;
+}
 
 /* ---------- app state ---------- */
 const state = {
@@ -557,7 +596,8 @@ const P = {
   foodDay:  (c, ym, dk, m) => `${ROOT}/groups/${c}/food/${ym}/${dk}/${m}`,
   exDay:    (c, ym, dk, m) => `${ROOT}/groups/${c}/exercise/${ym}/${dk}/${m}`,
   bodyYm:   (m, ym) => `${ROOT}/members/${m}/body/${ym}`,
-  bodyDay:  (m, ym, dk) => `${ROOT}/members/${m}/body/${ym}/${dk}`
+  bodyDay:  (m, ym, dk) => `${ROOT}/members/${m}/body/${ym}/${dk}`,
+  profile:  m => `${ROOT}/members/${m}/profile`
 };
 
 /* ---------- realtime listeners (.on('value')) ---------- */
@@ -585,7 +625,7 @@ function attachMonth(ym) {
   const c = state.profile.groupCode;
   listen(P.foodYm(c, ym), val => { state.food[ym] = val || {}; renderAll(); });
   listen(P.exYm(c, ym),   val => { state.exercise[ym] = val || {}; renderAll(); });
-  listen(P.bodyYm(MEMBER_ID, ym), val => { state.body[ym] = val || {}; renderBody(); });
+  listen(P.bodyYm(UID, ym), val => { state.body[ym] = val || {}; renderBody(); });
 }
 
 /* ---------- data accessors ---------- */
@@ -612,42 +652,104 @@ const dayOut   = (dk, m) => sumCal(exOf(dk, m));
 /* ---------- writes ---------- */
 async function writeFood(dKey, list) {
   const ym = ymOfKey(dKey);
-  await db.ref(P.foodDay(state.profile.groupCode, ym, dKey, MEMBER_ID))
+  await db.ref(P.foodDay(state.profile.groupCode, ym, dKey, UID))
           .set(list.length ? list : null);
 }
 async function writeEx(dKey, list) {
   const ym = ymOfKey(dKey);
-  await db.ref(P.exDay(state.profile.groupCode, ym, dKey, MEMBER_ID))
+  await db.ref(P.exDay(state.profile.groupCode, ym, dKey, UID))
           .set(list.length ? list : null);
 }
 async function writeBody(dKey, rec) {
   const ym = ymOfKey(dKey);
-  await db.ref(P.bodyDay(MEMBER_ID, ym, dKey)).set(rec);
+  await db.ref(P.bodyDay(UID, ym, dKey)).set(rec);
 }
 
 async function upsertFood(dKey, rec) {
-  const list = foodOf(dKey, MEMBER_ID).slice();
+  const list = foodOf(dKey, UID).slice();
   const i = list.findIndex(r => r.id === rec.id);
   if (i >= 0) list[i] = rec; else list.push(rec);
   list.sort((a, b) => String(a.time).localeCompare(String(b.time)));
   await writeFood(dKey, list);
 }
 async function removeFood(dKey, id) {
-  await writeFood(dKey, foodOf(dKey, MEMBER_ID).filter(r => r.id !== id));
+  await writeFood(dKey, foodOf(dKey, UID).filter(r => r.id !== id));
 }
 async function upsertEx(dKey, rec) {
-  const list = exOf(dKey, MEMBER_ID).slice();
+  const list = exOf(dKey, UID).slice();
   const i = list.findIndex(r => r.id === rec.id);
   if (i >= 0) list[i] = rec; else list.push(rec);
   list.sort((a, b) => String(a.time).localeCompare(String(b.time)));
   await writeEx(dKey, list);
 }
 async function removeEx(dKey, id) {
-  await writeEx(dKey, exOf(dKey, MEMBER_ID).filter(r => r.id !== id));
+  await writeEx(dKey, exOf(dKey, UID).filter(r => r.id !== id));
 }
 
 /* ============================================================
-   ONBOARDING
+   AUTH (email + password)
+   ============================================================ */
+const AUTH_ERR = {
+  'auth/invalid-email': 'Email 格式不正确',
+  'auth/missing-email': '请输入 Email',
+  'auth/missing-password': '请输入密码',
+  'auth/weak-password': '密码太短，至少要 6 位',
+  'auth/email-already-in-use': '这个 Email 已经注册过了，请改用「登入」',
+  'auth/user-not-found': '找不到这个 Email，请先注册',
+  'auth/wrong-password': '密码错误',
+  'auth/invalid-credential': 'Email 或密码错误',
+  'auth/invalid-login-credentials': 'Email 或密码错误',
+  'auth/user-disabled': '这个帐号已被停用',
+  'auth/too-many-requests': '尝试次数太多，请稍后再试',
+  'auth/network-request-failed': '网路连线失败，请检查网路',
+  'auth/operation-not-allowed': '尚未在 Firebase 启用 Email/密码登入'
+};
+const authErrMsg = e => AUTH_ERR[e && e.code] || ((e && e.message) ? e.message : '发生未知错误，请再试一次');
+
+let authMode = 'in';   // 'in' = 登入, 'up' = 注册
+function setAuthMode(m) {
+  authMode = m;
+  $('#segIn').classList.toggle('on', m === 'in');
+  $('#segUp').classList.toggle('on', m === 'up');
+  $('#auGo').textContent = m === 'in' ? '登入' : '注册';
+  $('#auPass').placeholder = m === 'in' ? '你的密码' : '至少 6 位';
+  $('#auPass').autocomplete = m === 'in' ? 'current-password' : 'new-password';
+  $('#auNote').textContent = m === 'in' ? '还没有帐号？点上方「注册」建立一个' : '注册后换设备、换浏览器都能登入看到自己的记录';
+  $('#auErr').textContent = '';
+}
+$('#segIn').onclick = () => setAuthMode('in');
+$('#segUp').onclick = () => setAuthMode('up');
+
+$('#auGo').onclick = async () => {
+  const email = $('#auEmail').value.trim();
+  const pass = $('#auPass').value;
+  const err = $('#auErr');
+  err.textContent = '';
+
+  if (!email) { err.textContent = '请输入 Email'; $('#auEmail').focus(); return; }
+  if (!pass) { err.textContent = '请输入密码'; $('#auPass').focus(); return; }
+  if (authMode === 'up' && pass.length < 6) { err.textContent = '密码太短，至少要 6 位'; $('#auPass').focus(); return; }
+
+  const btn = $('#auGo');
+  btn.disabled = true;
+  btn.textContent = authMode === 'in' ? '登入中…' : '注册中…';
+  try {
+    // onAuthStateChanged does the routing — no manual navigation needed here.
+    if (authMode === 'in') await firebase.auth().signInWithEmailAndPassword(email, pass);
+    else await firebase.auth().createUserWithEmailAndPassword(email, pass);
+    $('#auPass').value = '';
+  } catch (e) {
+    console.error('[auth]', e.code, e.message);
+    err.textContent = authErrMsg(e);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = authMode === 'in' ? '登入' : '注册';
+  }
+};
+$('#auPass').addEventListener('keydown', e => { if (e.key === 'Enter') $('#auGo').click(); });
+
+/* ============================================================
+   ONBOARDING (nickname → create / join group)
    ============================================================ */
 let obName = '', obNewCode = '';
 const obStep = n => { $$('.ob-step').forEach(e => e.classList.remove('on')); $('#ob' + n).classList.add('on'); };
@@ -657,6 +759,7 @@ $('#obNext').onclick = () => {
   if (!v) { $('#obName').focus(); toast('请输入名字'); return; }
   obName = v; obStep(2);
 };
+$('#obSignOut').onclick = () => firebase.auth().signOut().catch(e => console.error(e));
 $('#obBack1').onclick = () => obStep(1);
 $('#obBack2').onclick = () => obStep(2);
 $('#obJoinBtn').onclick = () => { $('#obErr').textContent = ''; obStep(3); setTimeout(() => $('#obCode').focus(), 120); };
@@ -672,7 +775,7 @@ $('#obCreate').onclick = async () => {
       if (!snap.exists()) { code = c; break; }
     }
     if (!code) throw new Error('code');
-    await db.ref(`${P.roster(code)}/${MEMBER_ID}`).set({ name: obName, joinedAt: Date.now() });
+    await db.ref(`${P.roster(code)}/${UID}`).set({ name: obName, joinedAt: Date.now() });
     obNewCode = code;
     $('#obNewCode').textContent = code;
     obStep(4);
@@ -694,16 +797,20 @@ $('#obJoinGo').onclick = async () => {
   try {
     const snap = await db.ref(P.roster(code)).once('value');
     if (!snap.exists()) { err.textContent = '未找到该小组代码'; return; }
-    await db.ref(`${P.roster(code)}/${MEMBER_ID}`).set({ name: obName, joinedAt: Date.now() });
-    finishOnboarding(obName, code);
+    await db.ref(`${P.roster(code)}/${UID}`).set({ name: obName, joinedAt: Date.now() });
+    await finishOnboarding(obName, code);
   } catch (e) {
     console.error(e); err.textContent = '加入失败，请检查网络';
   } finally { btn.disabled = false; }
 };
 
-function finishOnboarding(name, code) {
+async function finishOnboarding(name, code) {
   const p = { displayName: name, groupCode: code, dailyGoal: 2000, weightKg: 65 };
-  saveProfile(p); state.profile = p;
+  try {
+    await saveProfile(p);   // members/{uid}/profile — read back on any device
+  } catch (e) {
+    console.error(e); toast('设定档储存失败，请检查网路'); return;
+  }
   boot();
 }
 
@@ -726,9 +833,26 @@ function boot() {
   $('#stW').value    = state.profile.weightKg;
   $('#fCode').textContent = state.profile.groupCode;
   $('#rcNo').textContent = '#' + state.profile.groupCode;
+  const u = firebase.auth().currentUser;
+  $('#stEmail').textContent = (u && u.email) || '—';
 
   renderAll();
 }
+
+/* show the onboarding screen at a given step, main screen hidden */
+function showOb(step) {
+  closeSheet();
+  $('#scr-main').classList.remove('on');
+  $('#scr-ob').classList.add('on');
+  obStep(step);
+  window.scrollTo(0, 0);
+}
+
+/* ---------- sign out ---------- */
+$('#stOut').onclick = async () => {
+  try { await firebase.auth().signOut(); }   // onAuthStateChanged routes back to the auth screen
+  catch (e) { console.error(e); toast('登出失败，请再试一次'); }
+};
 
 /* ---------- tabs ---------- */
 $$('.tabs button').forEach(b => {
@@ -753,8 +877,8 @@ function renderToday() {
     { month:'long', day:'numeric', weekday:'long' });
 
   const goal = num(state.profile.dailyGoal, 2000);
-  const consumed = dayIn(dk, MEMBER_ID);
-  const burned = dayOut(dk, MEMBER_ID);
+  const consumed = dayIn(dk, UID);
+  const burned = dayOut(dk, UID);
   const net = consumed - burned;
   const left = goal - net;
 
@@ -772,7 +896,7 @@ function renderToday() {
   bar.className = ratio > 1.05 ? 'neg' : ratio >= 0.85 ? 'warn' : '';
 
   // food list
-  const foods = foodOf(dk, MEMBER_ID);
+  const foods = foodOf(dk, UID);
   $('#cntFood').textContent = foods.length;
   $('#listFood').innerHTML = foods.length ? foods.map(r => {
     const chips = Array.isArray(r.items) && r.items.length > 1
@@ -791,7 +915,7 @@ function renderToday() {
   }).join('') : `<div class="empty">还没有饮食记录<br>点右下角 + 开始记录</div>`;
 
   // exercise list
-  const exs = exOf(dk, MEMBER_ID);
+  const exs = exOf(dk, UID);
   $('#cntEx').textContent = exs.length;
   $('#listEx').innerHTML = exs.length ? exs.map(r => {
     const a = actById(r.activity);
@@ -815,9 +939,9 @@ $('#pg-today').addEventListener('click', async e => {
   const de = e.target.closest('[data-delex]');
   if (de) { e.stopPropagation(); await removeEx(dk, de.dataset.delex); toast('已删除'); return; }
   const rf = e.target.closest('[data-food]');
-  if (rf) { const r = foodOf(dk, MEMBER_ID).find(x => x.id === rf.dataset.food); if (r) sheetFoodForm(r); return; }
+  if (rf) { const r = foodOf(dk, UID).find(x => x.id === rf.dataset.food); if (r) sheetFoodForm(r); return; }
   const rx = e.target.closest('[data-ex]');
-  if (rx) { const r = exOf(dk, MEMBER_ID).find(x => x.id === rx.dataset.ex); if (r) sheetExForm(r); return; }
+  if (rx) { const r = exOf(dk, UID).find(x => x.id === rx.dataset.ex); if (r) sheetExForm(r); return; }
 });
 
 /* ============================================================
@@ -853,8 +977,8 @@ function renderMonth() {
 
   for (let d = 1; d <= days; d++) {
     const dk = `${ym}-${pad2(d)}`;
-    const inC = dayIn(dk, MEMBER_ID), outC = dayOut(dk, MEMBER_ID);
-    const has = foodOf(dk, MEMBER_ID).length > 0 || exOf(dk, MEMBER_ID).length > 0;
+    const inC = dayIn(dk, UID), outC = dayOut(dk, UID);
+    const has = foodOf(dk, UID).length > 0 || exOf(dk, UID).length > 0;
     const net = inC - outC;
     burnTotal += outC;
 
@@ -1016,7 +1140,7 @@ function renderFriends() {
     <div class="row">
       <span class="ic">${esc(r.name.slice(0, 1))}</span>
       <span class="mid">
-        <span class="nm">${esc(r.name)}${r.id === MEMBER_ID ? ' <span class="tag hi">我</span>' : ''}</span>
+        <span class="nm">${esc(r.name)}${r.id === UID ? ' <span class="tag hi">我</span>' : ''}</span>
         <span class="mt">摄入 ${Math.round(r.inC)} · 消耗 ${Math.round(r.outC)}</span>
       </span>
       <span class="val">${Math.round(r.net)}</span>
@@ -1034,10 +1158,12 @@ $('#stSave').onclick = async () => {
     dailyGoal: Math.max(1, num($('#stGoal').value, 2000)),
     weightKg: Math.max(1, num($('#stW').value, 65))
   };
-  saveProfile(p); state.profile = p;
   try {
-    await db.ref(`${P.roster(p.groupCode)}/${MEMBER_ID}/name`).set(name);
-  } catch (e) { console.error(e); }
+    await saveProfile(p);
+    await db.ref(`${P.roster(p.groupCode)}/${UID}/name`).set(name);
+  } catch (e) {
+    console.error(e); toast('保存失败，请检查网路'); return;
+  }
   toast('设定已保存');
   renderAll();
 };
@@ -1377,23 +1503,60 @@ function sheetBodyForm(dKey) {
     closeSheet(); toast('已记录');
   };
   if (e.weight) $('#yDel').onclick = async () => {
-    await db.ref(P.bodyDay(MEMBER_ID, ymOfKey(dKey), dKey)).remove();
+    await db.ref(P.bodyDay(UID, ymOfKey(dKey), dKey)).remove();
     closeSheet(); toast('已删除');
   };
 }
 
 /* ============================================================
-   START
+   START — routing is driven entirely by auth state
    ============================================================ */
-state.profile = loadProfile();
-if (state.profile) boot();
-else { $('#scr-ob').classList.add('on'); setTimeout(() => $('#obName').focus(), 200); }
+function resetState() {
+  detachAll();
+  state.profile = null; state.roster = {};
+  state.food = {}; state.exercise = {}; state.body = {};
+  obName = ''; obNewCode = '';
+}
+
+firebase.auth().onAuthStateChanged(async user => {
+  if (!user) {
+    // signed out (or never signed in) → auth screen
+    UID = null;
+    resetState();
+    setAuthMode('in');
+    $('#auEmail').value = ''; $('#auPass').value = '';
+    showOb('A');
+    return;
+  }
+
+  UID = user.uid;
+  let profile = null;
+  try {
+    profile = await fetchProfile();
+  } catch (e) {
+    console.error('[profile]', e);
+    showOb('A');
+    $('#auErr').textContent = '读取设定档失败，请检查网路或 Firebase 规则';
+    return;
+  }
+
+  if (profile) {
+    // returning user on any device → straight to 今日
+    state.profile = profile;
+    boot();
+  } else {
+    // first time on this account → nickname, then create / join group
+    showOb(1);
+    setTimeout(() => $('#obName').focus(), 200);
+  }
+});
 
 // keep "today" fresh if the app is left open across midnight
 setInterval(() => {
+  if (!state.profile || !UID) return;
   const ym = ymOf(new Date());
-  if (state.profile && !state.listeners[P.foodYm(state.profile.groupCode, ym)]) attachMonth(ym);
-  if (state.profile) renderToday();
+  if (!state.listeners[P.foodYm(state.profile.groupCode, ym)]) attachMonth(ym);
+  renderToday();
 }, 60000);
 </script>
 </body>
