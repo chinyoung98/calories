@@ -99,6 +99,9 @@ input,textarea{-webkit-appearance:none;appearance:none}
 .row .nm{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .row .mt{font-size:12px;color:var(--ink-3);margin-top:2px}
 .row .val{font-weight:700;font-size:16px;white-space:nowrap}
+/* the user's 备注 under a today-page row (.note is the centered hint class — different thing) */
+.r-note{display:block;font-size:12.5px;color:var(--ink-3);margin-top:4px;line-height:1.45;
+  white-space:pre-wrap;overflow-wrap:anywhere}
 .row .del{flex:none;width:32px;height:32px;border-radius:8px;color:var(--ink-3);display:grid;place-items:center;font-size:18px;line-height:1}
 .row .del:active{background:var(--rust-soft);color:var(--rust)}
 .chips{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}
@@ -155,6 +158,8 @@ label.f .lb{font-size:12px;letter-spacing:1px;color:var(--ink-3);font-weight:600
   background:var(--card);font-size:16px;outline:none;
 }
 .in:focus{border-color:var(--forest);box-shadow:0 0 0 3px var(--forest-soft)}
+/* multi-line variant of .in, for the 备注 / 心情 field */
+textarea.in{min-height:74px;resize:vertical;line-height:1.45;display:block}
 .g2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
 .btn{
@@ -241,8 +246,8 @@ label.f .lb{font-size:12px;letter-spacing:1px;color:var(--ink-3);font-weight:600
 .sw{display:flex;align-items:center;gap:12px;padding:13px 14px;border:1px solid var(--line);
   border-radius:11px;background:var(--card);margin-bottom:12px;width:100%;text-align:left}
 .sw .mid{flex:1;min-width:0}
-.sw .t{font-weight:600;font-size:15px}
-.sw .d{font-size:11.5px;color:var(--ink-3);margin-top:1px}
+.sw .t{display:block;font-weight:600;font-size:15px}
+.sw .d{display:block;font-size:11.5px;color:var(--ink-3);margin-top:1px}
 .sw .kn{flex:none;width:46px;height:27px;border-radius:99px;background:var(--line);position:relative;transition:background .18s}
 .sw .kn::after{content:'';position:absolute;top:3px;left:3px;width:21px;height:21px;border-radius:50%;
   background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:transform .18s}
@@ -261,6 +266,8 @@ label.f .lb{font-size:12px;letter-spacing:1px;color:var(--ink-3);font-weight:600
 .p-ttl{font-size:15.5px}
 .p-cal{font-weight:700}
 .p-meta{font-size:12px;color:var(--ink-3);margin-top:3px}
+/* the post's own words — reads like a FB status caption. Only rendered when non-empty. */
+.p-note{font-size:15px;line-height:1.5;margin-top:9px;white-space:pre-wrap;overflow-wrap:anywhere}
 .p-stat{display:flex;align-items:center;justify-content:space-between;padding:9px 14px;
   font-size:12.5px;color:var(--ink-3);border-bottom:1px solid var(--line-soft)}
 .p-stat .lk{display:flex;align-items:center;gap:5px}
@@ -609,6 +616,7 @@ const ROOT = 'calorie_ledger';
 
 /* ---------- constants ---------- */
 const MAX_PHOTOS = 6;
+const NOTE_MAX = 200;   // 备注 / 心情 — optional free text on food & exercise records
 const CODE_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // no I/O/0/1
 const ACTIVITIES = [
   { id:'walk',   name:'走路',     icon:'🚶', met:4.3 },
@@ -636,6 +644,12 @@ const ymOfKey = k => k.slice(0, 7);
 const hhmm = d => `${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
 const num = (v, dflt = 0) => { const n = parseFloat(v); return Number.isFinite(n) ? n : dflt; };
 const uid = () => Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4);
+
+// 备注 is optional: empty stays an empty string. maxlength guards typing, this guards paste.
+const readNote = sel => {
+  const el = $(sel);
+  return el ? el.value.trim().slice(0, NOTE_MAX) : '';
+};
 
 // "3 小时前" for the feed. Records carry dKey + "HH:MM", which is enough resolution.
 function relTime(ms) {
@@ -1014,6 +1028,10 @@ $$('.tabs button').forEach(b => {
    ============================================================ */
 function renderAll() { renderToday(); renderMonth(); renderBody(); renderFriends(); renderFeed(); }
 
+// Your own 备注, shown on the today page whether or not the record is public.
+// Renders nothing at all when empty — no stray blank line.
+const noteRow = r => r && r.note ? `<span class="r-note">${esc(r.note)}</span>` : '';
+
 // The today/month pages show everything you logged; these marks just say what's also public.
 const sharedMark = r => {
   const n = Array.isArray(r.photos) ? r.photos.length : 0;
@@ -1057,6 +1075,7 @@ function renderToday() {
       <span class="mid">
         <span class="nm">${esc(r.name)}</span>
         <span class="mt">${esc(r.time)} · P ${Math.round(num(r.protein))}g · C ${Math.round(num(r.carbs))}g · F ${Math.round(num(r.fat))}g${sharedMark(r)}</span>
+        ${noteRow(r)}
         ${chips}
       </span>
       <span class="val">${Math.round(num(r.calories))}</span>
@@ -1074,6 +1093,7 @@ function renderToday() {
       <span class="mid">
         <span class="nm">${esc(r.activityName || a.name)}</span>
         <span class="mt">${esc(r.time)} · ${Math.round(num(r.duration))} 分钟${sharedMark(r)}</span>
+        ${noteRow(r)}
       </span>
       <span class="val neg">-${Math.round(num(r.calories))}</span>
       <button class="del" data-delex="${esc(r.id)}">✕</button>
@@ -1373,6 +1393,10 @@ function postHtml(p) {
     : `<div class="p-ttl">${esc(r.activityName || actById(r.activity).name)} · <span class="p-cal neg">-${Math.round(num(r.calories))} kcal</span></div>
        <div class="p-meta">${Math.round(num(r.duration))} 分钟</div>`;
 
+  // The poster's own words, like a FB status caption. Omitted entirely when empty,
+  // so a note-less post shows no empty block.
+  const note = r.note ? `<div class="p-note">${esc(r.note)}</div>` : '';
+
   const stat = (likes.length || comments.length) ? `<div class="p-stat">
     <span class="lk">${likes.length ? `<span class="bub">👍</span>${likes.length}` : ''}</span>
     <span>${comments.length ? comments.length + ' 则评论' : ''}</span>
@@ -1386,7 +1410,7 @@ function postHtml(p) {
         <span class="p-tm">${esc(relTime(p.ts))} · ${isFood ? '🍽️ 饮食' : '🏃 运动'}</span>
       </span>
     </div>
-    <div class="p-body">${body}</div>
+    <div class="p-body">${body}${note}</div>
     ${photoGrid(photos, p.pid)}
     ${stat}
     <div class="p-acts">
@@ -1773,6 +1797,8 @@ function sheetFoodConfirm(r, shots) {
         <label class="f"><span class="lb">脂肪 g</span>
           <input class="in mono" id="fF" type="number" inputmode="numeric" value="${Math.round(num(r.fat))}"></label>
       </div>
+      <label class="f" style="margin-bottom:0"><span class="lb">备注 / 心情（选填）</span>
+        <textarea class="in" id="fNote" maxlength="${NOTE_MAX}" placeholder="今天吃得很满足～"></textarea></label>
     </div>
     ${swHtml(false, '开启后这一餐会出现在小组的朋友圈')}
     <button class="btn" id="fSave">确认并保存</button>
@@ -1817,12 +1843,14 @@ function sheetFoodForm(existing, seedTray) {
     p: existing ? String(Math.round(num(e.protein))) : '',
     c: existing ? String(Math.round(num(e.carbs))) : '',
     f: existing ? String(Math.round(num(e.fat))) : '',
+    note: e.note || '',
     shared: !!e.shared
   };
   const sync = () => {
     if (!$('#fName')) return;
     v.name = $('#fName').value; v.cal = $('#fCal').value;
     v.p = $('#fP').value; v.c = $('#fC').value; v.f = $('#fF').value;
+    v.note = $('#fNote').value;
   };
 
   const draw = () => {
@@ -1841,6 +1869,8 @@ function sheetFoodForm(existing, seedTray) {
           <label class="f"><span class="lb">脂肪 g</span>
             <input class="in mono" id="fF" type="number" inputmode="numeric" placeholder="0" value="${esc(v.f)}"></label>
         </div>
+        <label class="f" style="margin-bottom:0"><span class="lb">备注 / 心情（选填）</span>
+          <textarea class="in" id="fNote" maxlength="${NOTE_MAX}" placeholder="今天吃得很满足～">${esc(v.note)}</textarea></label>
       </div>
       ${swHtml(v.shared, '开启后这一餐会出现在小组的朋友圈')}
       <button class="btn" id="fSave">${existing ? '保存修改' : '保存'}</button>
@@ -1876,6 +1906,7 @@ function readFoodForm(existing, items) {
     protein: Math.round(num($('#fP').value)),
     carbs: Math.round(num($('#fC').value)),
     fat: Math.round(num($('#fF').value)),
+    note: readNote('#fNote'),
     items: Array.isArray(items) && items.length
       ? items.map(i => ({ name: String(i.name || ''), calories: Math.round(num(i.calories)) }))
       : []
@@ -1893,12 +1924,14 @@ function sheetExForm(existing) {
     name: e.activityName && e.activity === 'custom' ? e.activityName : '',
     min: existing ? String(Math.round(num(e.duration))) : '',
     cal: existing ? String(Math.round(num(e.calories))) : '',
+    note: e.note || '',
     shared: !!e.shared,
     calTouched: !!existing   // don't overwrite a value the user typed / an existing record
   };
   const sync = () => {
     if (!$('#xMin')) return;
     v.min = $('#xMin').value; v.cal = $('#xCal').value;
+    v.note = $('#xNote').value;
     if ($('#xName')) v.name = $('#xName').value;
   };
   const hintFor = a => a.met
@@ -1922,6 +1955,8 @@ function sheetExForm(existing) {
           <label class="f"><span class="lb">消耗 kcal</span>
             <input class="in mono" id="xCal" type="number" inputmode="numeric" placeholder="0" value="${esc(v.cal)}"></label>
         </div>
+        <label class="f" style="margin-bottom:0"><span class="lb">备注 / 心情（选填）</span>
+          <textarea class="in" id="xNote" maxlength="${NOTE_MAX}" placeholder="今天状态不错，跑得很轻松～">${esc(v.note)}</textarea></label>
       </div>
       <div class="sect-t" style="margin-top:6px"><span>照片（选填）</span><span class="mono">${tray.length}/${MAX_PHOTOS}</span></div>
       ${trayHtml()}
@@ -1970,6 +2005,7 @@ function sheetExForm(existing) {
           time: existing ? existing.time : hhmm(new Date()),
           activity: v.act, activityName: nm,
           duration: Math.round(mins), calories: Math.round(cal),
+          note: readNote('#xNote'),
           photos: await uploadTray(shots),
           shared: v.shared
         });
