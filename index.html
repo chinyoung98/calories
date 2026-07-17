@@ -302,9 +302,10 @@ label.f .lb{font-size:12px;letter-spacing:1px;color:var(--ink-3);font-weight:600
 .ph.n4 .pc{aspect-ratio:1}
 
 /* ---------- lightbox ---------- */
-.lb{position:fixed;inset:0;z-index:90;background:rgba(12,11,9,.96);display:none;
+/* NOTE: .lb is already taken — it's the form-label class (label.f .lb). Hence .lbx. */
+.lbx{position:fixed;inset:0;z-index:90;background:rgba(12,11,9,.96);display:none;
   flex-direction:column;padding-top:var(--safe-t);padding-bottom:var(--safe-b)}
-.lb.on{display:flex}
+.lbx.on{display:flex}
 .lb-hd{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;color:#fff;flex:none}
 .lb-hd .n{font-size:14px;opacity:.75}
 .lb-hd .x{background:rgba(255,255,255,.14);color:#fff}
@@ -566,7 +567,7 @@ label.f .lb{font-size:12px;letter-spacing:1px;color:var(--ink-3);font-weight:600
 <div class="sheet" id="sheet"><div class="grab"></div><div id="sheetBody"></div></div>
 <div class="toast" id="toast"></div>
 
-<div class="lb" id="lb">
+<div class="lbx" id="lb">
   <div class="lb-hd">
     <span class="n" id="lbN">1 / 1</span>
     <button class="x" id="lbX">✕</button>
