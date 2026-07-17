@@ -183,7 +183,6 @@ label.f .lb{font-size:12px;letter-spacing:1px;color:var(--ink-3);font-weight:600
 .load{padding:46px 16px;text-align:center}
 .spin{width:38px;height:38px;border:3px solid var(--line);border-top-color:var(--forest);border-radius:50%;margin:0 auto 16px;animation:sp .8s linear infinite}
 @keyframes sp{to{transform:rotate(360deg)}}
-.prev{width:100%;max-height:190px;object-fit:cover;border-radius:12px;border:1px solid var(--line);margin-bottom:14px;display:block}
 
 /* calendar */
 .cal-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
@@ -225,6 +224,95 @@ label.f .lb{font-size:12px;letter-spacing:1px;color:var(--ink-3);font-weight:600
   z-index:80;opacity:0;pointer-events:none;transition:opacity .2s;white-space:nowrap;
 }
 .toast.on{opacity:1}
+
+/* ---------- photo tray (composer) ---------- */
+.tray{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px}
+.tray .th{position:relative;aspect-ratio:1;border-radius:10px;overflow:hidden;border:1px solid var(--line)}
+.tray .th img{width:100%;height:100%;object-fit:cover;display:block}
+.tray .th .rm{position:absolute;top:3px;right:3px;width:22px;height:22px;border-radius:50%;
+  background:rgba(34,32,27,.72);color:#fff;font-size:12px;line-height:1;display:grid;place-items:center}
+.tray .add{aspect-ratio:1;border:1px dashed var(--line);border-radius:10px;background:var(--card);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;color:var(--ink-3)}
+.tray .add .g{font-size:19px;line-height:1}
+.tray .add .n{font-size:10px}
+.tray .add:active{background:var(--forest-soft)}
+
+/* ---------- share switch ---------- */
+.sw{display:flex;align-items:center;gap:12px;padding:13px 14px;border:1px solid var(--line);
+  border-radius:11px;background:var(--card);margin-bottom:12px;width:100%;text-align:left}
+.sw .mid{flex:1;min-width:0}
+.sw .t{font-weight:600;font-size:15px}
+.sw .d{font-size:11.5px;color:var(--ink-3);margin-top:1px}
+.sw .kn{flex:none;width:46px;height:27px;border-radius:99px;background:var(--line);position:relative;transition:background .18s}
+.sw .kn::after{content:'';position:absolute;top:3px;left:3px;width:21px;height:21px;border-radius:50%;
+  background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:transform .18s}
+.sw.on .kn{background:var(--forest)}
+.sw.on .kn::after{transform:translateX(19px)}
+
+/* ---------- feed post (FB-style card) ---------- */
+.post{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);margin-bottom:12px;overflow:hidden}
+.p-hd{display:flex;align-items:center;gap:10px;padding:13px 14px 9px}
+.av{width:40px;height:40px;flex:none;border-radius:50%;display:grid;place-items:center;
+  background:var(--forest);color:#fff;font-weight:700;font-size:17px}
+.av.ex{background:var(--gold)}
+.p-nm{font-weight:600;font-size:15px}
+.p-tm{font-size:11.5px;color:var(--ink-3);margin-top:1px}
+.p-body{padding:0 14px 11px}
+.p-ttl{font-size:15.5px}
+.p-cal{font-weight:700}
+.p-meta{font-size:12px;color:var(--ink-3);margin-top:3px}
+.p-stat{display:flex;align-items:center;justify-content:space-between;padding:9px 14px;
+  font-size:12.5px;color:var(--ink-3);border-bottom:1px solid var(--line-soft)}
+.p-stat .lk{display:flex;align-items:center;gap:5px}
+.p-stat .bub{width:17px;height:17px;border-radius:50%;background:var(--forest);color:#fff;
+  font-size:9px;display:grid;place-items:center}
+.p-acts{display:flex;padding:3px 6px}
+.p-act{flex:1;padding:9px;border-radius:8px;font-size:14px;font-weight:600;color:var(--ink-2);
+  display:flex;align-items:center;justify-content:center;gap:6px}
+.p-act:active{background:var(--paper)}
+.p-act.on{color:var(--forest)}
+.p-cm{display:none;border-top:1px solid var(--line-soft);padding:10px 14px 12px;background:var(--paper)}
+.p-cm.on{display:block}
+.cm{display:flex;gap:8px;margin-bottom:9px}
+.cm .av{width:30px;height:30px;font-size:13px;background:var(--ink-3)}
+.cm .bd{background:var(--card);border:1px solid var(--line);border-radius:13px;padding:7px 11px;min-width:0}
+.cm .cn{display:block;font-size:12.5px;font-weight:600;color:var(--ink-2)}
+.cm .ct{display:block;font-size:14px;word-break:break-word;white-space:pre-wrap;margin-top:1px}
+.cm .cd{display:block;font-size:10.5px;color:var(--ink-3);margin-top:3px}
+.cm-in{display:flex;gap:8px;align-items:center}
+.cm-in input{flex:1;padding:10px 13px;border:1px solid var(--line);border-radius:99px;background:var(--card);outline:none;font-size:15px;min-width:0}
+.cm-in input:focus{border-color:var(--forest)}
+.cm-in button{flex:none;width:40px;height:40px;border-radius:50%;background:var(--forest);color:#fff;font-size:16px;display:grid;place-items:center}
+.cm-in button[disabled]{opacity:.4}
+.cm-none{font-size:13px;color:var(--ink-3);text-align:center;padding:4px 0 10px}
+
+/* ---------- FB-style photo grid ---------- */
+.ph{display:grid;gap:3px;background:var(--line-soft)}
+.pc{position:relative;overflow:hidden;background:var(--line-soft);padding:0;display:block}
+.pc img{width:100%;height:100%;object-fit:cover;display:block}
+.pc .more{position:absolute;inset:0;background:rgba(34,32,27,.55);color:#fff;
+  display:grid;place-items:center;font-size:26px;font-weight:700}
+.ph.n1{grid-template-columns:1fr}
+.ph.n1 .pc{aspect-ratio:4/3}
+.ph.n2{grid-template-columns:1fr 1fr}
+.ph.n2 .pc{aspect-ratio:1}
+.ph.n3{grid-template-columns:2fr 1fr;grid-template-rows:1fr 1fr;aspect-ratio:3/2}
+.ph.n3 .pc:first-child{grid-row:1 / 3}
+.ph.n4{grid-template-columns:1fr 1fr}
+.ph.n4 .pc{aspect-ratio:1}
+
+/* ---------- lightbox ---------- */
+.lb{position:fixed;inset:0;z-index:90;background:rgba(12,11,9,.96);display:none;
+  flex-direction:column;padding-top:var(--safe-t);padding-bottom:var(--safe-b)}
+.lb.on{display:flex}
+.lb-hd{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;color:#fff;flex:none}
+.lb-hd .n{font-size:14px;opacity:.75}
+.lb-hd .x{background:rgba(255,255,255,.14);color:#fff}
+.lb-bd{flex:1;display:flex;align-items:center;justify-content:center;min-height:0;padding:0 8px}
+.lb-bd img{max-width:100%;max-height:100%;object-fit:contain;border-radius:6px}
+.lb-ft{display:flex;justify-content:center;gap:8px;padding:14px;flex:none}
+.lb-ft button{width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,.14);color:#fff;font-size:19px}
+.lb-ft button[disabled]{opacity:.3}
 </style>
 </head>
 <body>
@@ -404,6 +492,15 @@ label.f .lb{font-size:12px;letter-spacing:1px;color:var(--ink-3);font-weight:600
       <div class="note" style="margin-top:16px">🔒 身材数据只保存在你自己的账户中，不会分享给小组成员</div>
     </div>
 
+    <!-- ---- 朋友圈 ---- -->
+    <div class="page" id="pg-feed">
+      <div class="hd">
+        <div><h1>朋友圈</h1><div class="sub" id="feedSub">—</div></div>
+        <div class="barcode" id="bc5"></div>
+      </div>
+      <div id="feed"></div>
+    </div>
+
     <!-- ---- 好友 ---- -->
     <div class="page" id="pg-friends">
       <div class="hd">
@@ -457,6 +554,7 @@ label.f .lb{font-size:12px;letter-spacing:1px;color:var(--ink-3);font-weight:600
     <nav class="tabs">
       <button class="on" data-tab="today"><span class="g">🧾</span>今日</button>
       <button data-tab="month"><span class="g">📅</span>月度</button>
+      <button data-tab="feed"><span class="g">🌏</span>朋友圈</button>
       <button data-tab="body"><span class="g">⚖️</span>身材</button>
       <button data-tab="friends"><span class="g">👥</span>好友</button>
     </nav>
@@ -468,12 +566,25 @@ label.f .lb{font-size:12px;letter-spacing:1px;color:var(--ink-3);font-weight:600
 <div class="sheet" id="sheet"><div class="grab"></div><div id="sheetBody"></div></div>
 <div class="toast" id="toast"></div>
 
+<div class="lb" id="lb">
+  <div class="lb-hd">
+    <span class="n" id="lbN">1 / 1</span>
+    <button class="x" id="lbX">✕</button>
+  </div>
+  <div class="lb-bd"><img id="lbImg" alt="照片"></div>
+  <div class="lb-ft">
+    <button id="lbP">‹</button>
+    <button id="lbNx">›</button>
+  </div>
+</div>
+
 <input type="file" accept="image/*" capture="environment" id="fileCam" hidden>
-<input type="file" accept="image/*" id="fileLib" hidden>
+<input type="file" accept="image/*" id="fileLib" multiple hidden>
 
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
 <script>
 /* ============================================================
    卡路里记账本 — single-file vanilla app
@@ -492,9 +603,11 @@ const firebaseConfig = {
 };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
+const storage = firebase.storage();
 const ROOT = 'calorie_ledger';
 
 /* ---------- constants ---------- */
+const MAX_PHOTOS = 6;
 const CODE_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // no I/O/0/1
 const ACTIVITIES = [
   { id:'walk',   name:'走路',     icon:'🚶', met:4.3 },
@@ -522,6 +635,26 @@ const ymOfKey = k => k.slice(0, 7);
 const hhmm = d => `${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
 const num = (v, dflt = 0) => { const n = parseFloat(v); return Number.isFinite(n) ? n : dflt; };
 const uid = () => Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4);
+
+// "3 小时前" for the feed. Records carry dKey + "HH:MM", which is enough resolution.
+function relTime(ms) {
+  const diff = Date.now() - ms;
+  if (!Number.isFinite(diff)) return '';
+  if (diff < 0) return '刚刚';
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return '刚刚';
+  if (mins < 60) return mins + ' 分钟前';
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return hrs + ' 小时前';
+  const days = Math.floor(hrs / 24);
+  if (days < 7) return days + ' 天前';
+  const d = new Date(ms);
+  return `${d.getMonth() + 1} 月 ${d.getDate()} 日`;
+}
+const tsOf = (dKey, hm) => new Date(`${dKey}T${/^\d{2}:\d{2}$/.test(hm || '') ? hm : '00:00'}:00`).getTime();
+// Stable across re-renders and devices, so a post and its likes/comments always line up.
+const postIdOf = (type, dKey, id) => `${type}_${dKey}_${id}`;
+const initial = n => String(n || '?').trim().slice(0, 1).toUpperCase();
 
 function toast(msg) {
   const t = $('#toast');
@@ -583,6 +716,10 @@ const state = {
   food: {},                   // ym -> { dKey -> { memberId -> [rec] } }
   exercise: {},               // ym -> { dKey -> { memberId -> [rec] } }
   body: {},                   // ym -> { dKey -> rec }
+  social: {},                 // postId -> { likes:{uid:true}, comments:{cid:{...}} }
+  openComments: {},           // postId -> true (comment drawer expanded)
+  cmDraft: {},                // postId -> unsent comment text (survives re-render)
+  feedPhotos: {},             // postId -> [url] (backs the lightbox)
   listeners: {},              // path -> ref (for detach)
   monthCursor: new Date(),    // month page cursor
   tab: 'today'
@@ -591,6 +728,8 @@ const state = {
 /* ---------- firebase paths ---------- */
 const P = {
   roster:   c => `${ROOT}/groups/${c}/roster`,
+  social:   c => `${ROOT}/groups/${c}/social`,
+  post:     (c, pid) => `${ROOT}/groups/${c}/social/${pid}`,
   foodYm:   (c, ym) => `${ROOT}/groups/${c}/food/${ym}`,
   exYm:     (c, ym) => `${ROOT}/groups/${c}/exercise/${ym}`,
   foodDay:  (c, ym, dk, m) => `${ROOT}/groups/${c}/food/${ym}/${dk}/${m}`,
@@ -626,6 +765,9 @@ function attachMonth(ym) {
   listen(P.foodYm(c, ym), val => { state.food[ym] = val || {}; renderAll(); });
   listen(P.exYm(c, ym),   val => { state.exercise[ym] = val || {}; renderAll(); });
   listen(P.bodyYm(UID, ym), val => { state.body[ym] = val || {}; renderBody(); });
+}
+function attachSocial() {
+  listen(P.social(state.profile.groupCode), val => { state.social = val || {}; renderFeed(); });
 }
 
 /* ---------- data accessors ---------- */
@@ -820,11 +962,12 @@ async function finishOnboarding(name, code) {
 function boot() {
   $('#scr-ob').classList.remove('on');
   $('#scr-main').classList.add('on');
-  ['#bc1','#bc2','#bc3','#bc4'].forEach(s => makeBarcode($(s)));
+  ['#bc1','#bc2','#bc3','#bc4','#bc5'].forEach(s => makeBarcode($(s)));
 
   detachAll();
   state.monthCursor = new Date();
   attachRoster();
+  attachSocial();
   attachMonth(ymOf(new Date()));
   attachMonth(ymOf(state.monthCursor));
 
@@ -868,7 +1011,13 @@ $$('.tabs button').forEach(b => {
 /* ============================================================
    RENDER — TODAY
    ============================================================ */
-function renderAll() { renderToday(); renderMonth(); renderBody(); renderFriends(); }
+function renderAll() { renderToday(); renderMonth(); renderBody(); renderFriends(); renderFeed(); }
+
+// The today/month pages show everything you logged; these marks just say what's also public.
+const sharedMark = r => {
+  const n = Array.isArray(r.photos) ? r.photos.length : 0;
+  return (n ? ` · 📷 ${n}` : '') + (r.shared === true ? ' · 🌏 已分享' : '');
+};
 
 function renderToday() {
   if (!state.profile) return;
@@ -906,7 +1055,7 @@ function renderToday() {
       <span class="ic">🍽️</span>
       <span class="mid">
         <span class="nm">${esc(r.name)}</span>
-        <span class="mt">${esc(r.time)} · P ${Math.round(num(r.protein))}g · C ${Math.round(num(r.carbs))}g · F ${Math.round(num(r.fat))}g</span>
+        <span class="mt">${esc(r.time)} · P ${Math.round(num(r.protein))}g · C ${Math.round(num(r.carbs))}g · F ${Math.round(num(r.fat))}g${sharedMark(r)}</span>
         ${chips}
       </span>
       <span class="val">${Math.round(num(r.calories))}</span>
@@ -923,7 +1072,7 @@ function renderToday() {
       <span class="ic ex">${a.icon}</span>
       <span class="mid">
         <span class="nm">${esc(r.activityName || a.name)}</span>
-        <span class="mt">${esc(r.time)} · ${Math.round(num(r.duration))} 分钟</span>
+        <span class="mt">${esc(r.time)} · ${Math.round(num(r.duration))} 分钟${sharedMark(r)}</span>
       </span>
       <span class="val neg">-${Math.round(num(r.calories))}</span>
       <button class="del" data-delex="${esc(r.id)}">✕</button>
@@ -1148,6 +1297,223 @@ function renderFriends() {
 }
 $('#fCopy').onclick = () => copyText(state.profile.groupCode);
 
+/* ============================================================
+   RENDER — 朋友圈 (feed)
+
+   Sources: every group member's food/exercise records with shared === true,
+   drawn from the months already loaded by attachMonth(). Body records are
+   never read here — they live under members/{uid} and are private by rule.
+   ============================================================ */
+const nameOf = id => (state.roster[id] && state.roster[id].name) || '匿名';
+
+function feedPosts() {
+  const out = [];
+  const scan = (bucket, type) => {
+    Object.keys(bucket).forEach(ym => {
+      const days = bucket[ym] || {};
+      Object.keys(days).forEach(dKey => {
+        const byMember = days[dKey] || {};
+        Object.keys(byMember).forEach(mid => {
+          const list = byMember[mid];
+          if (!Array.isArray(list)) return;
+          list.forEach(r => {
+            if (!r || r.shared !== true) return;      // privacy gate: opt-in only
+            out.push({ type, dKey, mid, r, ts: tsOf(dKey, r.time), pid: postIdOf(type, dKey, r.id) });
+          });
+        });
+      });
+    });
+  };
+  scan(state.food, 'food');
+  scan(state.exercise, 'exercise');
+  return out.sort((a, b) => b.ts - a.ts);
+}
+
+/* FB-style photo layout: 1 big / 2 side-by-side / 3 = one big + two stacked / 4+ grid with +N */
+function photoGrid(photos, pid) {
+  const n = photos.length;
+  if (!n) return '';
+  const cls = n === 1 ? 'n1' : n === 2 ? 'n2' : n === 3 ? 'n3' : 'n4';
+  const show = n <= 3 ? photos : photos.slice(0, 4);
+  return `<div class="ph ${cls}">${show.map((u, i) => `<button class="pc" data-lb="${esc(pid)}" data-i="${i}">
+    <img src="${esc(u)}" loading="lazy" alt="照片 ${i + 1}">
+    ${n > 4 && i === 3 ? `<span class="more">+${n - 4}</span>` : ''}
+  </button>`).join('')}</div>`;
+}
+
+function commentHtml(c) {
+  return `<div class="cm">
+    <span class="av">${esc(initial(c.name))}</span>
+    <span class="bd">
+      <span class="cn">${esc(c.name || '匿名')}</span>
+      <span class="ct">${esc(c.text)}</span>
+      <span class="cd">${esc(relTime(num(c.time)))}</span>
+    </span>
+  </div>`;
+}
+
+function postHtml(p) {
+  const r = p.r;
+  const social = state.social[p.pid] || {};
+  const likes = Object.keys(social.likes || {});
+  const comments = Object.keys(social.comments || {})
+    .map(k => social.comments[k])
+    .filter(c => c && c.text)
+    .sort((a, b) => num(a.time) - num(b.time));
+  const mine = likes.indexOf(UID) >= 0;
+  const isFood = p.type === 'food';
+  const photos = Array.isArray(r.photos) ? r.photos : [];
+  const open = !!state.openComments[p.pid];
+
+  const body = isFood
+    ? `<div class="p-ttl">${esc(r.name)} · <span class="p-cal">${Math.round(num(r.calories))} kcal</span></div>
+       <div class="p-meta">P ${Math.round(num(r.protein))}g · C ${Math.round(num(r.carbs))}g · F ${Math.round(num(r.fat))}g${
+         Array.isArray(r.items) && r.items.length > 1 ? ' · ' + r.items.length + ' 项' : ''}</div>`
+    : `<div class="p-ttl">${esc(r.activityName || actById(r.activity).name)} · <span class="p-cal neg">-${Math.round(num(r.calories))} kcal</span></div>
+       <div class="p-meta">${Math.round(num(r.duration))} 分钟</div>`;
+
+  const stat = (likes.length || comments.length) ? `<div class="p-stat">
+    <span class="lk">${likes.length ? `<span class="bub">👍</span>${likes.length}` : ''}</span>
+    <span>${comments.length ? comments.length + ' 则评论' : ''}</span>
+  </div>` : '';
+
+  return `<div class="post" data-post="${esc(p.pid)}">
+    <div class="p-hd">
+      <span class="av ${isFood ? '' : 'ex'}">${esc(initial(nameOf(p.mid)))}</span>
+      <span>
+        <span class="p-nm">${esc(nameOf(p.mid))}${p.mid === UID ? ' <span class="tag hi">我</span>' : ''}</span>
+        <span class="p-tm">${esc(relTime(p.ts))} · ${isFood ? '🍽️ 饮食' : '🏃 运动'}</span>
+      </span>
+    </div>
+    <div class="p-body">${body}</div>
+    ${photoGrid(photos, p.pid)}
+    ${stat}
+    <div class="p-acts">
+      <button class="p-act ${mine ? 'on' : ''}" data-like="${esc(p.pid)}">${mine ? '👍' : '👍🏻'} 赞${likes.length ? ' ' + likes.length : ''}</button>
+      <button class="p-act" data-cm="${esc(p.pid)}">💬 评论${comments.length ? ' ' + comments.length : ''}</button>
+    </div>
+    <div class="p-cm ${open ? 'on' : ''}">
+      ${comments.length ? comments.map(commentHtml).join('') : '<div class="cm-none">还没有评论，来说第一句</div>'}
+      <div class="cm-in">
+        <input id="cmi_${esc(p.pid)}" data-cmin="${esc(p.pid)}" placeholder="留个言…" maxlength="200"
+               value="${esc(state.cmDraft[p.pid] || '')}">
+        <button data-send="${esc(p.pid)}">↑</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+function renderFeed() {
+  if (!state.profile || state.tab !== 'feed') return;
+  const posts = feedPosts();
+  $('#feedSub').textContent = posts.length
+    ? `小组 ${state.profile.groupCode} · ${posts.length} 则公开动态`
+    : `小组 ${state.profile.groupCode} · 实时同步`;
+
+  // Remote updates re-render the whole list; keep whatever the user was typing.
+  const act = document.activeElement;
+  const focusPid = act && act.dataset && act.dataset.cmin;
+
+  $('#feed').innerHTML = posts.length
+    ? posts.map(postHtml).join('')
+    : `<div class="card"><div class="empty">朋友圈还没有动态<br><br>
+        记录饮食或运动时打开「分享到朋友圈」<br>就会出现在这里，小组成员都看得到</div></div>`;
+
+  state.feedPhotos = {};
+  posts.forEach(p => { state.feedPhotos[p.pid] = Array.isArray(p.r.photos) ? p.r.photos : []; });
+
+  if (focusPid) {
+    const el = $(`[data-cmin="${focusPid}"]`);
+    if (el) { el.focus(); el.setSelectionRange(el.value.length, el.value.length); }
+  }
+}
+
+$('#feed').addEventListener('input', e => {
+  const el = e.target.closest('[data-cmin]');
+  if (el) state.cmDraft[el.dataset.cmin] = el.value;
+});
+$('#feed').addEventListener('keydown', e => {
+  const el = e.target.closest('[data-cmin]');
+  if (el && e.key === 'Enter') { e.preventDefault(); sendComment(el.dataset.cmin); }
+});
+$('#feed').addEventListener('click', async e => {
+  const ph = e.target.closest('[data-lb]');
+  if (ph) {
+    const list = (state.feedPhotos || {})[ph.dataset.lb] || [];
+    if (list.length) openLightbox(list, parseInt(ph.dataset.i, 10) || 0);
+    return;
+  }
+  const lk = e.target.closest('[data-like]');
+  if (lk) { await toggleLike(lk.dataset.like); return; }
+  const cm = e.target.closest('[data-cm]');
+  if (cm) {
+    const pid = cm.dataset.cm;
+    state.openComments[pid] = !state.openComments[pid];
+    renderFeed();
+    if (state.openComments[pid]) {
+      const el = $(`[data-cmin="${pid}"]`);
+      if (el) { el.focus(); el.scrollIntoView({ block: 'center', behavior: 'smooth' }); }
+    }
+    return;
+  }
+  const sd = e.target.closest('[data-send]');
+  if (sd) { await sendComment(sd.dataset.send); return; }
+});
+
+/* Only auth.uid may write likes/{uid} — the rules enforce that nobody likes on your behalf. */
+async function toggleLike(pid) {
+  const ref = db.ref(`${P.post(state.profile.groupCode, pid)}/likes/${UID}`);
+  const liked = !!((state.social[pid] || {}).likes || {})[UID];
+  try { await (liked ? ref.remove() : ref.set(true)); }
+  catch (err) { console.error('[like]', err); toast('按赞失败，请检查网路'); }
+}
+
+async function sendComment(pid) {
+  const el = $(`[data-cmin="${pid}"]`);
+  const text = (el ? el.value : (state.cmDraft[pid] || '')).trim();
+  if (!text) return;
+  const cid = uid();
+  try {
+    await db.ref(`${P.post(state.profile.groupCode, pid)}/comments/${cid}`).set({
+      uid: UID,                            // must equal auth.uid — the rules reject impersonation
+      name: state.profile.displayName,
+      text: text.slice(0, 200),
+      time: Date.now()
+    });
+  } catch (err) {
+    console.error('[comment]', err); toast('留言失败，请检查网路'); return;
+  }
+  state.cmDraft[pid] = '';
+  state.openComments[pid] = true;
+  if (el) el.value = '';
+  renderFeed();
+}
+
+/* ---------- lightbox ---------- */
+let lbList = [], lbIdx = 0;
+function drawLb() {
+  $('#lbImg').src = lbList[lbIdx] || '';
+  $('#lbN').textContent = `${lbIdx + 1} / ${lbList.length}`;
+  $('#lbP').disabled = lbIdx <= 0;
+  $('#lbNx').disabled = lbIdx >= lbList.length - 1;
+}
+function openLightbox(list, i) {
+  lbList = list; lbIdx = Math.max(0, Math.min(i, list.length - 1));
+  drawLb();
+  $('#lb').classList.add('on');
+}
+const closeLb = () => { $('#lb').classList.remove('on'); $('#lbImg').src = ''; };
+$('#lbX').onclick = closeLb;
+$('#lbP').onclick = () => { if (lbIdx > 0) { lbIdx--; drawLb(); } };
+$('#lbNx').onclick = () => { if (lbIdx < lbList.length - 1) { lbIdx++; drawLb(); } };
+$('#lb').addEventListener('click', e => { if (e.target.id === 'lb' || e.target.classList.contains('lb-bd')) closeLb(); });
+document.addEventListener('keydown', e => {
+  if (!$('#lb').classList.contains('on')) return;
+  if (e.key === 'Escape') closeLb();
+  if (e.key === 'ArrowLeft') $('#lbP').click();
+  if (e.key === 'ArrowRight') $('#lbNx').click();
+});
+
 /* ---------- settings ---------- */
 $('#stSave').onclick = async () => {
   const name = $('#stName').value.trim();
@@ -1178,6 +1544,7 @@ function openSheet(html) {
 function closeSheet() {
   $('#mask').classList.remove('on'); $('#sheet').classList.remove('on');
   $('#sheetBody').innerHTML = '';
+  tray = []; onTrayChange = null;   // drop any composer draft
 }
 $('#mask').onclick = closeSheet;
 document.addEventListener('click', e => { if (e.target.closest('[data-close]')) closeSheet(); });
@@ -1198,29 +1565,111 @@ $('#fab').onclick = () => {
   $('#mAddBody').onclick = () => sheetBodyForm(dKeyOf(new Date()));
 };
 
-/* ---- food: entry choices ---- */
-function sheetFoodEntry() {
-  openSheet(`${shHead('加饮食')}
-    <button class="opt" id="eCam"><span class="g">📷</span>
-      <span><span class="t">拍照识别</span><span class="d">对着食物拍一张，AI 帮你估算</span></span></button>
-    <button class="opt" id="eLib"><span class="g">🖼️</span>
-      <span><span class="t">从相册选择</span><span class="d">选一张已有的食物照片</span></span></button>
-    <button class="opt" id="eMan"><span class="g">✎</span>
-      <span><span class="t">手动输入</span><span class="d">自己填写名称与营养信息</span></span></button>`);
-  $('#eCam').onclick = () => $('#fileCam').click();
-  $('#eLib').onclick = () => $('#fileLib').click();
-  $('#eMan').onclick = () => sheetFoodForm(null);
-}
-$('#fileCam').onchange = e => handlePhoto(e.target.files[0], e.target);
-$('#fileLib').onchange = e => handlePhoto(e.target.files[0], e.target);
+/* ============================================================
+   PHOTO TRAY — shared by the food and exercise composers.
+   Entries are { dataUrl } for a freshly picked photo, or { url } for one
+   already living in Storage (when editing a record). Uploads happen on save.
+   ============================================================ */
+let tray = [];            // current composer's photos
+let onTrayChange = null;  // re-render hook for the open sheet
 
-/* ---- image compression: longest edge 1024, jpeg q0.82 ---- */
+function trayHtml() {
+  const thumbs = tray.map((p, i) => `<div class="th">
+    <img src="${esc(p.dataUrl || p.url)}" alt="照片 ${i + 1}">
+    <button class="rm" data-rmph="${i}">✕</button>
+  </div>`).join('');
+  const add = tray.length >= MAX_PHOTOS ? '' :
+    `<button class="add" data-addph="cam"><span class="g">📷</span><span class="n">拍照</span></button>
+     <button class="add" data-addph="lib"><span class="g">🖼️</span><span class="n">相册</span></button>`;
+  return `<div class="tray" id="tray">${thumbs}${add}</div>`;
+}
+function bindTray() {
+  const el = $('#tray');
+  if (!el) return;
+  el.onclick = ev => {
+    const rm = ev.target.closest('[data-rmph]');
+    if (rm) { tray.splice(parseInt(rm.dataset.rmph, 10), 1); onTrayChange && onTrayChange(); return; }
+    const add = ev.target.closest('[data-addph]');
+    if (add) $(add.dataset.addph === 'cam' ? '#fileCam' : '#fileLib').click();
+  };
+}
+
+async function addFiles(files, input) {
+  if (input) input.value = '';   // allow re-picking the same file
+  const list = Array.from(files || []);
+  if (!list.length) return;
+  const room = MAX_PHOTOS - tray.length;
+  if (room <= 0) { toast(`最多 ${MAX_PHOTOS} 张照片`); return; }
+  if (list.length > room) toast(`最多 ${MAX_PHOTOS} 张，只加了前 ${room} 张`);
+  for (const f of list.slice(0, room)) {
+    try { tray.push({ dataUrl: await compressImage(f) }); }
+    catch (e) { console.error(e); toast('有张照片读取失败，已跳过'); }
+  }
+  onTrayChange && onTrayChange();
+}
+$('#fileCam').onchange = e => addFiles(e.target.files, e.target);
+$('#fileLib').onchange = e => addFiles(e.target.files, e.target);
+
+/* ---- Storage upload: calorie_ledger/{uid}/{timestamp}_{index}.jpg ---- */
+function dataUrlToBlob(dataUrl) {
+  const [head, b64] = String(dataUrl).split(',');
+  const mime = (/data:([^;]+)/.exec(head) || [])[1] || 'image/jpeg';
+  const bin = atob(b64);
+  const buf = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) buf[i] = bin.charCodeAt(i);
+  return new Blob([buf], { type: mime });
+}
+// Only the Storage downloadURL strings go into the Realtime Database — never base64.
+async function uploadTray(list) {
+  const ts = Date.now();
+  const urls = [];
+  for (let i = 0; i < list.length; i++) {
+    const p = list[i];
+    if (p.url) { urls.push(p.url); continue; }          // already uploaded (editing)
+    const ref = storage.ref(`${ROOT}/${UID}/${ts}_${i}.jpg`);
+    await ref.put(dataUrlToBlob(p.dataUrl), { contentType: 'image/jpeg' });
+    urls.push(await ref.getDownloadURL());
+  }
+  return urls;
+}
+
+/* ---- share toggle ---- */
+const swHtml = (on, desc) => `<button class="sw ${on ? 'on' : ''}" id="swShare">
+  <span class="mid"><span class="t">分享到朋友圈</span><span class="d">${esc(desc)}</span></span>
+  <span class="kn"></span></button>`;
+function bindShare(init) {
+  let on = !!init;
+  const el = $('#swShare');
+  if (el) el.onclick = () => { on = !on; el.classList.toggle('on', on); };
+  return () => on;
+}
+
+/* ---- food: entry composer ---- */
+function sheetFoodEntry() {
+  tray = [];
+  const draw = () => {
+    openSheet(`${shHead('加饮食')}
+      <div class="note" style="text-align:left;margin:0 2px 10px">
+        可以拍多张（最多 ${MAX_PHOTOS} 张）——同一餐的不同角度或不同菜色，AI 会合起来算这一餐的总卡路里。</div>
+      ${trayHtml()}
+      <button class="btn" id="eGo"${tray.length ? '' : ' disabled'}>
+        ${tray.length ? `AI 识别这 ${tray.length} 张照片` : '先加一张照片'}</button>
+      <button class="btn ghost" id="eMan">手动输入（不拍照）</button>`);
+    bindTray();
+    $('#eGo').onclick = () => { if (tray.length) analyzeTray(); };
+    $('#eMan').onclick = () => sheetFoodForm(null);
+  };
+  onTrayChange = draw;
+  draw();
+}
+
+/* ---- image compression: longest edge 1280, jpeg q0.82 ---- */
 function compressImage(file) {
   return new Promise((resolve, reject) => {
     const url = URL.createObjectURL(file);
     const img = new Image();
     img.onload = () => {
-      const MAX = 1024;
+      const MAX = 1280;
       let { width: w, height: h } = img;
       const scale = Math.min(1, MAX / Math.max(w, h));
       w = Math.max(1, Math.round(w * scale));
@@ -1238,14 +1687,17 @@ function compressImage(file) {
   });
 }
 
-/* ---- AI recognition via Netlify Function proxy ---- */
-async function analyzeFood(dataUrl) {
-  const m = /^data:(image\/[a-zA-Z+]+);base64,(.+)$/.exec(dataUrl);
-  if (!m) throw new Error('图片格式错误');
+/* ---- AI recognition via Netlify Function proxy (all photos = one meal) ---- */
+async function analyzeFood(dataUrls) {
+  const images = dataUrls.map(u => {
+    const m = /^data:(image\/[a-zA-Z+]+);base64,(.+)$/.exec(u);
+    if (!m) throw new Error('图片格式错误');
+    return { mediaType: m[1], base64: m[2] };
+  });
   const res = await fetch('/.netlify/functions/analyze-food', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ mediaType: m[1], imageBase64: m[2] })
+    body: JSON.stringify({ images })
   });
   let data = null;
   try { data = await res.json(); } catch (e) {}
@@ -1255,56 +1707,53 @@ async function analyzeFood(dataUrl) {
   return data;
 }
 
-async function handlePhoto(file, input) {
-  if (input) input.value = '';   // allow re-picking the same file
-  if (!file) return;
-
+async function analyzeTray() {
+  const shots = tray.slice();
+  const n = shots.length;
   openSheet(`${shHead('识别中')}
     <div class="load"><div class="spin"></div>
-      <div style="font-weight:600">AI 正在识别食物…</div>
-      <div class="note">正在分析照片中的食物与营养信息</div></div>`);
-
-  let dataUrl;
+      <div style="font-weight:600">AI 正在识别这一餐…</div>
+      <div class="note">正在综合 ${n} 张照片估算整餐的总营养${n > 3 ? '<br>照片较多，可能要多等几秒' : ''}</div></div>`);
   try {
-    dataUrl = await compressImage(file);
-  } catch (e) { sheetError('图片处理失败，请换一张试试'); return; }
-
-  try {
-    const r = await analyzeFood(dataUrl);
+    const r = await analyzeFood(shots.map(p => p.dataUrl));
     if (r.summary === '未识别到食物' || !num(r.totalCalories)) {
-      sheetError('未识别到食物，请换一张更清晰的照片');
+      sheetError('未识别到食物，请换几张更清晰的照片', shots);
       return;
     }
-    sheetFoodConfirm(r, dataUrl);
+    sheetFoodConfirm(r, shots);
   } catch (e) {
     console.error(e);
-    sheetError(e.message || '识别失败，请稍后再试');
+    sheetError(e.message || '识别失败，请稍后再试', shots);
   }
 }
 
-function sheetError(msg) {
+// `shots` carries the already-picked photos through, so a failed recognition
+// doesn't make the user shoot the meal again.
+function sheetError(msg, shots) {
   openSheet(`${shHead('识别失败')}
     <div class="card" style="text-align:center;padding:26px 16px">
       <div style="font-size:34px;margin-bottom:8px">😵</div>
       <div style="font-weight:600;margin-bottom:4px">${esc(msg)}</div>
-      <div class="note">你可以改为手动输入，或重新拍一张</div>
+      <div class="note">你可以改为手动输入（照片会留着），或重新拍一张</div>
     </div>
     <button class="btn" id="errMan">改为手动输入</button>
     <button class="btn ghost" id="errRetry">重新选择照片</button>`);
-  $('#errMan').onclick = () => sheetFoodForm(null);
+  $('#errMan').onclick = () => sheetFoodForm(null, shots);
   $('#errRetry').onclick = sheetFoodEntry;
 }
 
 /* ---- food: AI confirm screen ---- */
-function sheetFoodConfirm(r, dataUrl) {
+function sheetFoodConfirm(r, shots) {
   const conf = { high:['hi','高'], medium:['md','中'], low:['lo','低'] }[r.confidence] || ['md','中'];
   const items = Array.isArray(r.items) ? r.items : [];
   openSheet(`${shHead('确认结果')}
-    <img class="prev" src="${dataUrl}" alt="食物照片">
+    <div class="tray" style="grid-template-columns:repeat(${Math.min(4, shots.length)},1fr)">
+      ${shots.map((p, i) => `<div class="th"><img src="${esc(p.dataUrl)}" alt="照片 ${i + 1}"></div>`).join('')}
+    </div>
     <div class="card" style="display:flex;align-items:center;justify-content:space-between;gap:10px">
       <div style="min-width:0">
         <div style="font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(r.summary || '识别结果')}</div>
-        <div class="note" style="text-align:left;margin-top:2px">识别到 ${items.length} 项食物</div>
+        <div class="note" style="text-align:left;margin-top:2px">综合 ${shots.length} 张照片 · 识别到 ${items.length} 项食物</div>
       </div>
       <span class="tag ${conf[0]}" style="flex:none">置信度 ${conf[1]}</span>
     </div>
@@ -1323,53 +1772,94 @@ function sheetFoodConfirm(r, dataUrl) {
         <label class="f"><span class="lb">脂肪 g</span>
           <input class="in mono" id="fF" type="number" inputmode="numeric" value="${Math.round(num(r.fat))}"></label>
       </div>
-      <button class="btn" id="fSave">确认并保存</button>
     </div>
+    ${swHtml(false, '开启后这一餐会出现在小组的朋友圈')}
+    <button class="btn" id="fSave">确认并保存</button>
     <div class="note">⚠️ AI 估算仅供参考，可自行修改后再保存</div>`);
 
+  const isShared = bindShare(false);
   $('#fSave').onclick = async () => {
     const rec = readFoodForm(null, items);
     if (!rec) return;
-    await upsertFood(dKeyOf(new Date()), rec);
-    closeSheet(); toast('已记录 ' + Math.round(rec.calories) + ' kcal');
+    await saveFoodWith(rec, shots, isShared(), $('#fSave'));
   };
 }
 
-/* ---- food: manual / edit form ---- */
-function sheetFoodForm(existing) {
-  const e = existing || {};
-  openSheet(`${shHead(existing ? '编辑饮食' : '手动输入')}
-    <div class="card">
-      <label class="f"><span class="lb">名称</span>
-        <input class="in" id="fName" placeholder="例如：鸡胸肉沙拉" value="${esc(e.name || '')}"></label>
-      <label class="f"><span class="lb">总卡路里 kcal</span>
-        <input class="in mono" id="fCal" type="number" inputmode="numeric" placeholder="0"
-          value="${existing ? Math.round(num(e.calories)) : ''}"></label>
-      <div class="g3">
-        <label class="f"><span class="lb">蛋白 g</span>
-          <input class="in mono" id="fP" type="number" inputmode="numeric" placeholder="0"
-            value="${existing ? Math.round(num(e.protein)) : ''}"></label>
-        <label class="f"><span class="lb">碳水 g</span>
-          <input class="in mono" id="fC" type="number" inputmode="numeric" placeholder="0"
-            value="${existing ? Math.round(num(e.carbs)) : ''}"></label>
-        <label class="f"><span class="lb">脂肪 g</span>
-          <input class="in mono" id="fF" type="number" inputmode="numeric" placeholder="0"
-            value="${existing ? Math.round(num(e.fat)) : ''}"></label>
-      </div>
-      <button class="btn" id="fSave">${existing ? '保存修改' : '保存'}</button>
-      ${existing ? `<button class="btn danger" id="fDel">删除这条记录</button>` : ''}
-    </div>`);
-
-  $('#fSave').onclick = async () => {
-    const rec = readFoodForm(existing, existing ? existing.items : null);
-    if (!rec) return;
+// Uploads photos first, then writes the record with the resulting URLs.
+async function saveFoodWith(rec, shots, shared, btn) {
+  if (btn) { btn.disabled = true; btn.textContent = shots.length ? '上传照片中…' : '保存中…'; }
+  try {
+    rec.photos = await uploadTray(shots);
+    rec.shared = !!shared;
     await upsertFood(dKeyOf(new Date()), rec);
-    closeSheet(); toast(existing ? '已更新' : '已记录');
+  } catch (e) {
+    console.error('[save food]', e);
+    toast(e && e.code === 'storage/unauthorized' ? '照片上传被拒绝，请检查 Storage 规则' : '保存失败，请检查网路');
+    if (btn) { btn.disabled = false; btn.textContent = '重试保存'; }
+    return;
+  }
+  closeSheet();
+  toast('已记录 ' + Math.round(rec.calories) + ' kcal' + (shared ? ' · 已分享' : ''));
+}
+
+/* ---- food: manual / edit form ---- */
+function sheetFoodForm(existing, seedTray) {
+  const e = existing || {};
+  // Editing: seed the tray from the record's already-uploaded URLs.
+  // seedTray: photos carried over from a failed AI recognition.
+  tray = seedTray ? seedTray.slice() : (Array.isArray(e.photos) ? e.photos : []).map(u => ({ url: u }));
+
+  // Adding/removing a photo re-renders the sheet, so typed values live here, not in the DOM.
+  const v = {
+    name: e.name || '',
+    cal: existing ? String(Math.round(num(e.calories))) : '',
+    p: existing ? String(Math.round(num(e.protein))) : '',
+    c: existing ? String(Math.round(num(e.carbs))) : '',
+    f: existing ? String(Math.round(num(e.fat))) : '',
+    shared: !!e.shared
   };
-  if (existing) $('#fDel').onclick = async () => {
-    await removeFood(dKeyOf(new Date()), existing.id);
-    closeSheet(); toast('已删除');
+  const sync = () => {
+    if (!$('#fName')) return;
+    v.name = $('#fName').value; v.cal = $('#fCal').value;
+    v.p = $('#fP').value; v.c = $('#fC').value; v.f = $('#fF').value;
   };
+
+  const draw = () => {
+    openSheet(`${shHead(existing ? '编辑饮食' : '手动输入')}
+      ${trayHtml()}
+      <div class="card">
+        <label class="f"><span class="lb">名称</span>
+          <input class="in" id="fName" placeholder="例如：鸡胸肉沙拉" value="${esc(v.name)}"></label>
+        <label class="f"><span class="lb">总卡路里 kcal</span>
+          <input class="in mono" id="fCal" type="number" inputmode="numeric" placeholder="0" value="${esc(v.cal)}"></label>
+        <div class="g3">
+          <label class="f"><span class="lb">蛋白 g</span>
+            <input class="in mono" id="fP" type="number" inputmode="numeric" placeholder="0" value="${esc(v.p)}"></label>
+          <label class="f"><span class="lb">碳水 g</span>
+            <input class="in mono" id="fC" type="number" inputmode="numeric" placeholder="0" value="${esc(v.c)}"></label>
+          <label class="f"><span class="lb">脂肪 g</span>
+            <input class="in mono" id="fF" type="number" inputmode="numeric" placeholder="0" value="${esc(v.f)}"></label>
+        </div>
+      </div>
+      ${swHtml(v.shared, '开启后这一餐会出现在小组的朋友圈')}
+      <button class="btn" id="fSave">${existing ? '保存修改' : '保存'}</button>
+      ${existing ? `<button class="btn danger" id="fDel">删除这条记录</button>` : ''}`);
+
+    bindTray();
+    const sw = $('#swShare');
+    sw.onclick = () => { v.shared = !v.shared; sw.classList.toggle('on', v.shared); };
+    $('#fSave').onclick = async () => {
+      const rec = readFoodForm(existing, existing ? existing.items : null);
+      if (!rec) return;
+      await saveFoodWith(rec, tray.slice(), v.shared, $('#fSave'));
+    };
+    if (existing) $('#fDel').onclick = async () => {
+      await removeFood(dKeyOf(new Date()), existing.id);
+      closeSheet(); toast('已删除');
+    };
+  };
+  onTrayChange = () => { sync(); draw(); };
+  draw();
 }
 
 function readFoodForm(existing, items) {
@@ -1394,76 +1884,111 @@ function readFoodForm(existing, items) {
 /* ---- exercise form ---- */
 function sheetExForm(existing) {
   const e = existing || {};
-  const selId = e.activity || 'walk';
-  openSheet(`${shHead(existing ? '编辑运动' : '加运动')}
-    <div class="acts" id="acts">
-      ${ACTIVITIES.map(a => `<button class="act ${a.id === selId ? 'on' : ''}" data-act="${a.id}">
-        <span class="g">${a.icon}</span><span class="n">${a.name}</span></button>`).join('')}
-    </div>
-    <div class="card">
-      <label class="f" id="wrapCustom" style="display:${selId === 'custom' ? 'block' : 'none'}">
-        <span class="lb">活动名称</span>
-        <input class="in" id="xName" placeholder="例如：爬山" value="${esc(e.activityName && selId === 'custom' ? e.activityName : '')}">
-      </label>
-      <div class="g2">
-        <label class="f"><span class="lb">时长（分钟）</span>
-          <input class="in mono" id="xMin" type="number" inputmode="numeric" placeholder="30"
-            value="${existing ? Math.round(num(e.duration)) : ''}"></label>
-        <label class="f"><span class="lb">消耗 kcal</span>
-          <input class="in mono" id="xCal" type="number" inputmode="numeric" placeholder="0"
-            value="${existing ? Math.round(num(e.calories)) : ''}"></label>
+  tray = (Array.isArray(e.photos) ? e.photos : []).map(u => ({ url: u }));
+
+  // Same reason as the food form: the tray re-renders the sheet, so state lives here.
+  const v = {
+    act: e.activity || 'walk',
+    name: e.activityName && e.activity === 'custom' ? e.activityName : '',
+    min: existing ? String(Math.round(num(e.duration))) : '',
+    cal: existing ? String(Math.round(num(e.calories))) : '',
+    shared: !!e.shared,
+    calTouched: !!existing   // don't overwrite a value the user typed / an existing record
+  };
+  const sync = () => {
+    if (!$('#xMin')) return;
+    v.min = $('#xMin').value; v.cal = $('#xCal').value;
+    if ($('#xName')) v.name = $('#xName').value;
+  };
+  const hintFor = a => a.met
+    ? `消耗 = MET ${a.met} × 3.5 × 体重(${num(state.profile.weightKg, 65)}kg) ÷ 200 × 分钟，可手动覆盖`
+    : '自定义活动没有 MET 值，请手动填写消耗卡路里';
+
+  const draw = () => {
+    openSheet(`${shHead(existing ? '编辑运动' : '加运动')}
+      <div class="acts" id="acts">
+        ${ACTIVITIES.map(a => `<button class="act ${a.id === v.act ? 'on' : ''}" data-act="${a.id}">
+          <span class="g">${a.icon}</span><span class="n">${a.name}</span></button>`).join('')}
       </div>
+      <div class="card">
+        <label class="f" id="wrapCustom" style="display:${v.act === 'custom' ? 'block' : 'none'}">
+          <span class="lb">活动名称</span>
+          <input class="in" id="xName" placeholder="例如：爬山" value="${esc(v.name)}">
+        </label>
+        <div class="g2">
+          <label class="f"><span class="lb">时长（分钟）</span>
+            <input class="in mono" id="xMin" type="number" inputmode="numeric" placeholder="30" value="${esc(v.min)}"></label>
+          <label class="f"><span class="lb">消耗 kcal</span>
+            <input class="in mono" id="xCal" type="number" inputmode="numeric" placeholder="0" value="${esc(v.cal)}"></label>
+        </div>
+      </div>
+      <div class="sect-t" style="margin-top:6px"><span>照片（选填）</span><span class="mono">${tray.length}/${MAX_PHOTOS}</span></div>
+      ${trayHtml()}
+      ${swHtml(v.shared, '开启后这次运动会出现在小组的朋友圈')}
       <button class="btn" id="xSave">${existing ? '保存修改' : '保存'}</button>
       ${existing ? `<button class="btn danger" id="xDel">删除这条记录</button>` : ''}
-    </div>
-    <div class="note" id="xHint">消耗 = MET × 3.5 × 体重(${num(state.profile.weightKg, 65)}kg) ÷ 200 × 分钟，可手动覆盖</div>`);
+      <div class="note" id="xHint">${esc(hintFor(actById(v.act)))}</div>`);
 
-  let cur = selId;
-  let calTouched = !!existing;   // don't overwrite a value the user typed / an existing record
+    bindTray();
+    const sw = $('#swShare');
+    sw.onclick = () => { v.shared = !v.shared; sw.classList.toggle('on', v.shared); };
 
-  const recalc = () => {
-    const a = actById(cur);
-    if (!a.met || calTouched) return;
-    const mins = num($('#xMin').value);
-    if (mins > 0) {
-      $('#xCal').value = Math.round((a.met * 3.5 * num(state.profile.weightKg, 65) / 200) * mins);
-    }
+    const recalc = () => {
+      const a = actById(v.act);
+      if (!a.met || v.calTouched) return;
+      const mins = num($('#xMin').value);
+      if (mins > 0) $('#xCal').value = Math.round((a.met * 3.5 * num(state.profile.weightKg, 65) / 200) * mins);
+    };
+
+    $('#acts').onclick = ev => {
+      const b = ev.target.closest('[data-act]'); if (!b) return;
+      v.act = b.dataset.act;
+      $$('#acts .act').forEach(x => x.classList.toggle('on', x === b));
+      $('#wrapCustom').style.display = v.act === 'custom' ? 'block' : 'none';
+      $('#xHint').textContent = hintFor(actById(v.act));
+      v.calTouched = false; recalc();
+    };
+    $('#xMin').addEventListener('input', recalc);
+    $('#xCal').addEventListener('input', () => { v.calTouched = true; });
+
+    $('#xSave').onclick = async () => {
+      const a = actById(v.act);
+      const mins = num($('#xMin').value, NaN);
+      const cal = num($('#xCal').value, NaN);
+      const nm = v.act === 'custom' ? $('#xName').value.trim() : a.name;
+      if (v.act === 'custom' && !nm) { toast('请输入活动名称'); $('#xName').focus(); return; }
+      if (!Number.isFinite(mins) || mins <= 0) { toast('请输入时长'); $('#xMin').focus(); return; }
+      if (!Number.isFinite(cal) || cal < 0) { toast('请输入消耗卡路里'); $('#xCal').focus(); return; }
+
+      const shots = tray.slice();
+      const btn = $('#xSave');
+      btn.disabled = true; btn.textContent = shots.length ? '上传照片中…' : '保存中…';
+      try {
+        await upsertEx(dKeyOf(new Date()), {
+          id: existing ? existing.id : uid(),
+          time: existing ? existing.time : hhmm(new Date()),
+          activity: v.act, activityName: nm,
+          duration: Math.round(mins), calories: Math.round(cal),
+          photos: await uploadTray(shots),
+          shared: v.shared
+        });
+      } catch (err) {
+        console.error('[save exercise]', err);
+        toast(err && err.code === 'storage/unauthorized' ? '照片上传被拒绝，请检查 Storage 规则' : '保存失败，请检查网路');
+        btn.disabled = false; btn.textContent = '重试保存';
+        return;
+      }
+      closeSheet();
+      toast(existing ? '已更新' : '已记录 -' + Math.round(cal) + ' kcal' + (v.shared ? ' · 已分享' : ''));
+    };
+    if (existing) $('#xDel').onclick = async () => {
+      await removeEx(dKeyOf(new Date()), existing.id);
+      closeSheet(); toast('已删除');
+    };
+    recalc();
   };
-
-  $('#acts').addEventListener('click', ev => {
-    const b = ev.target.closest('[data-act]'); if (!b) return;
-    cur = b.dataset.act;
-    $$('#acts .act').forEach(x => x.classList.toggle('on', x === b));
-    $('#wrapCustom').style.display = cur === 'custom' ? 'block' : 'none';
-    $('#xHint').textContent = actById(cur).met
-      ? `消耗 = MET ${actById(cur).met} × 3.5 × 体重(${num(state.profile.weightKg, 65)}kg) ÷ 200 × 分钟，可手动覆盖`
-      : '自定义活动没有 MET 值，请手动填写消耗卡路里';
-    calTouched = false; recalc();
-  });
-  $('#xMin').addEventListener('input', recalc);
-  $('#xCal').addEventListener('input', () => { calTouched = true; });
-
-  $('#xSave').onclick = async () => {
-    const a = actById(cur);
-    const mins = num($('#xMin').value, NaN);
-    const cal = num($('#xCal').value, NaN);
-    const nm = cur === 'custom' ? $('#xName').value.trim() : a.name;
-    if (cur === 'custom' && !nm) { toast('请输入活动名称'); $('#xName').focus(); return; }
-    if (!Number.isFinite(mins) || mins <= 0) { toast('请输入时长'); $('#xMin').focus(); return; }
-    if (!Number.isFinite(cal) || cal < 0) { toast('请输入消耗卡路里'); $('#xCal').focus(); return; }
-    await upsertEx(dKeyOf(new Date()), {
-      id: existing ? existing.id : uid(),
-      time: existing ? existing.time : hhmm(new Date()),
-      activity: cur, activityName: nm,
-      duration: Math.round(mins), calories: Math.round(cal)
-    });
-    closeSheet(); toast(existing ? '已更新' : '已记录 -' + Math.round(cal) + ' kcal');
-  };
-  if (existing) $('#xDel').onclick = async () => {
-    await removeEx(dKeyOf(new Date()), existing.id);
-    closeSheet(); toast('已删除');
-  };
-  recalc();
+  onTrayChange = () => { sync(); draw(); };
+  draw();
 }
 
 /* ---- body form ---- */
@@ -1515,6 +2040,7 @@ function resetState() {
   detachAll();
   state.profile = null; state.roster = {};
   state.food = {}; state.exercise = {}; state.body = {};
+  state.social = {}; state.openComments = {}; state.cmDraft = {}; state.feedPhotos = {};
   obName = ''; obNewCode = '';
 }
 

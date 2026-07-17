@@ -4,9 +4,19 @@
 // install step, so there is no node_modules for @anthropic-ai/sdk to live in.
 // Node 18+ provides global fetch.
 
-const PROMPT = '你是一位专业的营养估算助手。请仔细分析这张食物照片，识别其中的所有食物项目，并估算营养信息。只返回严格的 JSON，不要任何其他文字、解释、前后缀或 markdown 代码块标记。JSON 结构：{"items":[{"name":"食物名称","calories":数字}],"totalCalories":数字,"protein":数字,"carbs":数字,"fat":数字,"confidence":"low|medium|high","summary":"简短中文描述"}。calories 单位大卡，protein/carbs/fat 单位克，均为整数。若无可辨认食物，summary 填"未识别到食物"，items 为空数组，其余为 0。';
+const SHAPE = '只返回严格的 JSON，不要任何其他文字、解释、前后缀或 markdown 代码块标记。JSON 结构：{"items":[{"name":"食物名称","calories":数字}],"totalCalories":数字,"protein":数字,"carbs":数字,"fat":数字,"confidence":"low|medium|high","summary":"简短中文描述"}。calories 单位大卡，protein/carbs/fat 单位克，均为整数。若无可辨认食物，summary 填"未识别到食物"，items 为空数组，其余为 0。';
+
+const promptFor = (n) => n <= 1
+  ? '你是一位专业的营养估算助手。请仔细分析这张食物照片，识别其中的所有食物项目，并估算营养信息。' + SHAPE
+  : '你是一位专业的营养估算助手。以下 ' + n + ' 张照片拍的是「同一餐」——可能是同一桌菜的不同角度，也可能是这一餐里的不同菜色。'
+    + '请综合所有照片，估算这一餐的总营养。重要：同一道菜若在多张照片中重复出现，只能计算一次，不要重复累加；'
+    + 'items 列出这一餐里所有不重复的食物项目，totalCalories 与 protein/carbs/fat 是整餐的合计值。' + SHAPE;
 
 const ALLOWED_MEDIA = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+const MAX_IMAGES = 6;
+// ~5MB of base64 per image — the frontend compresses to 1280px/q0.82, so anything larger is bogus.
+const MAX_ONE = 7_000_000;
+const MAX_TOTAL = 24_000_000;
 
 const HEADERS = {
   'Content-Type': 'application/json; charset=utf-8',
@@ -35,15 +45,28 @@ exports.handler = async (event) => {
     return fail(400, '请求格式错误');
   }
 
-  const imageBase64 = body.imageBase64;
-  const mediaType = ALLOWED_MEDIA.includes(body.mediaType) ? body.mediaType : 'image/jpeg';
+  const dfltMedia = ALLOWED_MEDIA.includes(body.mediaType) ? body.mediaType : 'image/jpeg';
 
-  if (typeof imageBase64 !== 'string' || imageBase64.length < 100) {
-    return fail(400, '缺少图片数据');
-  }
-  // ~5MB of base64 — the frontend compresses to 1024px/q0.82, so anything larger is bogus.
-  if (imageBase64.length > 7_000_000) {
-    return fail(413, '图片过大，请重新拍摄');
+  // Accepted shapes, newest first:
+  //   { images: ["<base64>", ...], mediaType }        — multi-photo, one meal
+  //   { images: [{ base64, mediaType }, ...] }
+  //   { imageBase64, mediaType }                      — legacy single photo
+  const rawList = Array.isArray(body.images) && body.images.length
+    ? body.images
+    : [{ base64: body.imageBase64, mediaType: dfltMedia }];
+
+  if (rawList.length > MAX_IMAGES) return fail(400, '最多只能一次识别 ' + MAX_IMAGES + ' 张照片');
+
+  const images = [];
+  let total = 0;
+  for (const item of rawList) {
+    const b64 = typeof item === 'string' ? item : (item && item.base64);
+    const mt = (item && ALLOWED_MEDIA.includes(item.mediaType)) ? item.mediaType : dfltMedia;
+    if (typeof b64 !== 'string' || b64.length < 100) return fail(400, '缺少图片数据');
+    if (b64.length > MAX_ONE) return fail(413, '图片过大，请重新拍摄');
+    total += b64.length;
+    if (total > MAX_TOTAL) return fail(413, '照片总量过大，请减少张数');
+    images.push({ type: 'image', source: { type: 'base64', media_type: mt, data: b64 } });
   }
 
   let res, raw;
@@ -60,10 +83,7 @@ exports.handler = async (event) => {
         max_tokens: 1000,
         messages: [{
           role: 'user',
-          content: [
-            { type: 'image', source: { type: 'base64', media_type: mediaType, data: imageBase64 } },
-            { type: 'text', text: PROMPT }
-          ]
+          content: images.concat([{ type: 'text', text: promptFor(images.length) }])
         }]
       })
     });

@@ -7,9 +7,11 @@
 [functions]
   node_bundler = "esbuild"
 
-# The default function timeout is 10s. Image recognition usually lands well inside
-# that, but if you see intermittent 502s, request a higher timeout from Netlify
-# support (background functions are not usable here — the client waits on the reply).
+# The default function timeout is 10s (26s max, on request to Netlify support).
+# A 6-photo meal sends ~6x the image tokens, so recognition can take 15-25s and may
+# hit the 10s ceiling. Background functions are not usable here — the client waits on
+# the reply. If 502s show up on multi-photo meals, either raise the timeout or tell
+# users to shoot fewer angles.
 
 [[headers]]
   for = "/*"
