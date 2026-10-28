@@ -3,13 +3,18 @@
 朋友小组一起打卡「吃饭 / 运动 / 卡路里记账」的手机网页 App。
 
 - `index.html` — 全部前端（HTML + CSS + JS 单档，无框架、无打包、无 npm build）
-- `netlify/functions/analyze-food.js` — 呼叫 Anthropic API 的 server-side proxy（藏 API key）
+- `netlify/functions/analyze-food.mjs` — 「加饮食」拍照识别
+- `netlify/functions/chat-log.mjs` — 「记录」聊天：一句话 / 照片 → 饮食、运动、身体数据
+- `netlify/functions/daily-report.mjs` — AI 日报
+- `netlify/lib/guard.mjs` — 三个 function 共用：验证 Firebase 登入、每人每日 AI 次数、呼叫 Anthropic
 - `netlify.toml` — Netlify 设定（functions 目录、publish 根目录、无 build command）
 
-技术栈：vanilla HTML + Firebase Auth + Firebase Realtime Database + Firebase Storage（皆 v8 compat CDN）+ Netlify Function。
-身份是 **Email + 密码登入**，所有资料以 `auth.uid` 为 key，换设备登入同一个 Email 就能看到自己的记录。
+技术栈：vanilla HTML + Firebase Auth + Firebase Realtime Database + Firebase Storage（皆 v8 compat CDN）+ Netlify Functions。
+身份是 **Google 登入或 Email + 密码登入**，所有资料以 `auth.uid` 为 key，换设备登入同一个帐号就能看到自己的记录。
 
-功能：今日记账、AI 拍照识别（一餐可多张照片）、运动、月度、身材（私密）、好友、**朋友圈**（FB 风格动态墙 + 赞 + 评论）。
+功能：今日记账、**今日概览**（热量 / 蛋白质 / 运动三个环 + 0–100 得分）、**AI 日报**（每天第一次打开自动写前一天的）、
+**记录**（用聊天的方式记饮食、运动、体重、体态，也能读华为运动健康 / Strava 截图）、AI 拍照识别（一餐可多张照片）、
+运动、月度（点日期看那天的得分和日报）、身材（私密）、好友、**朋友圈**（FB 风格动态墙 + 赞 + 评论）。
 
 ---
 
@@ -21,6 +26,9 @@
    **Authentication** → **Sign-in method** → **Email/Password** → 启用第一个开关（Email/Password）→ 储存。
    第二个开关（Email link / 免密码登入）**不用开**。
    （如果 Authentication 还没初始化过，先点 **Get started**。）
+
+   **启用 Google 登入**：同一页 → **Google** → 启用 → 「专案支援电子邮件」选你的 Gmail → 储存。
+   同一个 Gmail 先前用 Email + 密码注册过的话，改用 Google 登入会进同一个帐号（uid 不变，记录都在）。
 
 2. **加入授权网域**
    **Authentication** → **Settings** → **Authorized domains** →
@@ -185,11 +193,23 @@ ANTHROPIC_API_KEY=sk-ant-xxxxxxxx
           ".read": "auth != null && auth.uid === $uid",
           ".write": "auth != null && auth.uid === $uid"
         }
+      },
+
+      "usage": {
+        "$uid": {
+          ".read": "auth != null && auth.uid === $uid",
+          "$day": {
+            ".write": "auth != null && auth.uid === $uid && newData.isNumber() && newData.val() === (data.exists() ? data.val() : 0) + 1"
+          }
+        }
       }
     }
   }
 }
 ```
+
+> **已经有规则在跑的话**：不要整份覆盖（同一个 Firebase 专案里可能还有别的系统的节点）。
+> 只要在 `calorie_ledger` 里面、`members` 旁边加上 `usage` 这一段就好。
 
 ### 每段在做什么
 
@@ -201,7 +221,8 @@ ANTHROPIC_API_KEY=sk-ant-xxxxxxxx
 | `roster/$uid` → `".write": auth.uid === $uid` | 只能写自己那一格 —— 不能改别人的暱称，也不能把别人踢出小组。 |
 | `roster/$uid` 的 `.validate` | 必须有 `name`+`joinedAt`；`name` 限 1–12 字串、`joinedAt` 必须是数字；`$other: false` 挡掉塞额外栏位。 |
 | `food/$ym/$dKey/$uid`、`exercise/...` | 同理：读得到全组（继承自 group 的 `.read`），但**只能写 `auth.uid` 等于自己的那一格**。别人的记录改不了。 |
-| `members/$uid` | `.read` 和 `.write` 都要求 `auth.uid === $uid` —— `profile` 和 `body`（身材数据）**真正私密**，别人连读都读不到，不只是前端不显示。 |
+| `members/$uid` | `.read` 和 `.write` 都要求 `auth.uid === $uid` —— `profile`、`body`（身材数据）、`chat`（聊天记录）、`reports`（AI 日报）**真正私密**，别人连读都读不到，不只是前端不显示。 |
+| `usage/$uid/$day` | 每人每天用了几次 AI。只能读自己的；写入**只接受「原本的数字 + 1」**，所以没办法从浏览器把计数归零、删掉或改小。Netlify function 用使用者自己的登入凭证去 +1，超过上限就拒绝。没贴这段的话 AI 照样能用，只是不会限次数（function log 会提醒）。 |
 | `social` → `".read": "auth != null"` | 朋友圈的赞和评论，**登入用户都读得到**（要看得到别人的贴文底下有谁按赞、留了什么）。 |
 | `social/$postId/likes/$uid` → `".write": auth.uid === $uid` | **关键**：你只能写「自己那一格赞」。别人不能替你按赞，也不能帮你取消赞 —— 因为 key 就是按赞者的 uid，规则要求它等于 `auth.uid`。`.validate: newData.isBoolean()` 挡掉在这格塞奇怪资料。 |
 | `social/$postId/comments/$commentId` 的 `.write` | `!data.exists()` = 这个 commentId 还没东西 → 任何登入用户都可以**新增**评论（这就是「别人能留言到你贴文底下」）。`data.child('uid').val() === auth.uid` = 已经存在的评论，只有**原作者**能改或删。 |
@@ -311,11 +332,28 @@ calorie_ledger/
             {commentId}: { uid, name, text, time }   # uid 必须等于 auth.uid
   members/
     {uid}/
-      profile: { displayName, groupCode, dailyGoal, weightKg }   # 私密
+      profile: { displayName, groupCode, dailyGoal, weightKg,     # 私密
+                 heightCm?, age?, sex?, goal?, proteinTarget?, exerciseGoal? }
       body/                                                      # 私密，不进 group、不进朋友圈
         {ym}/
-          {dKey}: { weight, bodyFat, waist, note, time }
+          {dKey}: { weight, bodyFat, waist, note, time,
+                    chest?, hip?, arm?, thigh?, steps?, sleepH?, restingHr?, posture?, photos? }
+      chat/                                                      # 私密：「记录」页的对话
+        {ym}/
+          {dKey}: [ { id, role:'user'|'ai', text, photos:[url], ts,
+                      refs:[{ t:'food'|'exercise'|'body', id, dk }], err?, retryOf?, reportDKey?,
+                      pending:[{ pid, status:'pending'|'confirmed'|'rejected'|'replaced',
+                                 e:{ AI 识别的饮食 }, photos:[url], replacesRec?, recId?, recDk? }] }, ... ]
+      reports/                                                   # 私密：AI 日报
+        {dKey}: { date, ts, partial, score, sig, headline, summary, good:[], improve:[], tomorrow }
+  usage/
+    {uid}/
+      {YYYY-MM-DD}: 次数                                          # 马来西亚时间换日
 ```
+
+**聊天建立的记录**跟手动输入的存在**同一个地方**（`food` / `exercise` / `body`），所以今日、月度、好友战况都直接算得到。
+额外带 `source:'chat'`，饮食多了 `meal`（早午晚餐）、`portion`、`confidence`；运动可能多了 `distanceKm`、`sets`、`reps`、`weightKg`、`avgHr`、`intensity`。
+聊天记的饮食和运动 **`shared` 一律是 `false`**，不会自己跑进朋友圈；要分享就到今日页点那一条打开开关。
 
 **照片**：只有 Storage 的 `downloadURL` 字串进 Database，**base64 绝不进 DB**。
 档案本体在 Storage 的 `calorie_ledger/{uid}/{timestamp}_{index}.jpg`。
@@ -341,8 +379,9 @@ profile 存在 `members/{uid}/profile`，所以换设备、换浏览器登入同
 |---|---|
 | 登入 | Email + 密码，可切换「登入 / 注册」，常见错误都有中文提示 |
 | 引导 | 设暱称 → 创建小组（产生 6 位代码）或加入小组（检查 roster 是否存在） |
-| 今日 | 目标 / 已摄入 / 已消耗 / 净值 / 剩余；饮食与运动清单（点击编辑、✕ 删除）；有照片显示 `📷 N`、已公开显示 `🌏 已分享`；右下角 + |
-| 月度 | 月历上色（ratio<0.85 绿、0.85–1.05 金、>1.05 锈红、无资料灰）＋ 手写 inline SVG 折线图 |
+| 今日 | **今日概览**（三个环 + 得分 + 步数 / 睡眠 / 静息心率）、**AI 日报**（昨日 / 今日切换）；目标 / 已摄入 / 已消耗 / 净值 / 剩余；饮食与运动清单（点击编辑、✕ 删除）；有照片显示 `📷 N`、已公开显示 `🌏 已分享`；右下角 + |
+| 记录 | 聊天：打字或发照片（最多 4 张）→ AI 拆成饮食 / 运动 / 身体记录。**识别出的饮食先显示成「请确认」卡片**：点「对，记下」（或在聊天里回「对」）才写进资料库；「修改」可以改名称、份量、热量、营养、餐别、日期再记下；「不是」会取消这一项，并在输入框带出「不是…，是」让你直接说正确的食物。运动和身体数据直接记下。说「刚才那碗面只吃了一半」会产生一张修正卡，确认后才替换原本那条。会读华为运动健康 / Strava 截图的锻炼、步数、睡眠。底下显示今天还能用几次 AI |
+| 月度 | 月历上色（ratio<0.85 绿、0.85–1.05 金、>1.05 锈红、无资料灰）＋ 手写 inline SVG 折线图；**点任何一天**看那天的得分、三个环和日报 |
 | 朋友圈 | FB 风格动态墙：小组所有 `shared:true` 的饮食/运动，时间倒序；暱称首字母圆头像 + 相对时间；照片 FB 排版；赞（自己按过会高亮）+ 评论（可展开留言）；全程 `.on('value')` 实时更新 |
 | 身材 | 体重 / 体脂 / 腰围 / 备注，存 `members/{uid}/body`，私密，**永不进朋友圈** |
 | 好友 | roster 名单 + 每人今日摄入/消耗，group 节点是 `.on('value')` 监听，组员更新自动刷新 |
@@ -354,6 +393,19 @@ profile 存在 `members/{uid}/profile`，所以换设备、换浏览器登入同
 **运动消耗公式**：`round((MET × 3.5 × weightKg ÷ 200) × 分钟)`，`weightKg` 取 profile（预设 65），
 消耗值也可手动覆盖。10 个活动：走路 4.3、跑步 9.8、骑行 7.5、游泳 8.0、力量训练 6.0、
 瑜伽 3.0、跳绳 11.0、爬楼梯 8.8、球类运动 7.0、自定义（无 MET）。
+
+**每日得分（0–100，规则固定，同样的资料永远同样的分数）**：
+记录 20（记了几个餐别，有身体数据 +2）· 热量 30（净摄入 ÷ 每日目标，0.8–1.05 满分；三餐都记了但总摄入低于 1200 不给高分）·
+蛋白质 25（÷ 蛋白质目标，没设就用体重 × 1.6g）· 运动 25（÷ 每日运动目标，没设就 30 分钟）。
+
+**AI 日报**：每天第一次打开 App 时，自动写前一天的日报（标题、点评、做得好、可改进、明天做一件事），并在「记录」里推一则通知。
+多台设备同时打开时，用 RTDB transaction 在 `reports/{dKey}` 先抢一个 `pending` 标记，只有一台会真的去生成。
+今天的「今日点评」要自己按；前一天的完整版第二天会自动覆盖掉当天的点评。
+
+**AI 次数上限**：每人每天预设 **30 次**（拍照识别、聊天、日报都算一次）。要改的话在 Netlify 环境变数加 `AI_DAILY_LIMIT`。
+所有 AI function 都要求 `Authorization: Bearer <Firebase ID token>`，用 Google 的公开金钥验证（不需要 npm 套件），
+没登入的人打不到你的 Anthropic key。可选的环境变数：`ANTHROPIC_VISION_MODEL`（有照片时，预设 `claude-sonnet-4-6`）、
+`ANTHROPIC_FAST_MODEL`（纯文字聊天，预设 `claude-haiku-4-5`）、`ANTHROPIC_REPORT_MODEL`（日报，预设 `claude-sonnet-4-6`）。
 
 **AI 识别流程（一餐可多张照片）**：前端最多选 6 张 → 各自压缩（最长边 **1280px**、jpeg quality 0.82）→
 把整批 base64 放进 `images` 阵列，**一次** POST 到 `/.netlify/functions/analyze-food` →
@@ -394,22 +446,18 @@ Request 格式（三种都收，向下相容）：
 | 朋友圈按赞/留言 `PERMISSION_DENIED` | Database 规则里的 `social` 区段没贴到（第 3 节），或贴的是旧版规则 |
 | **多张照片识别 504 / 502 超时** | Netlify function 预设 10s 上限，6 张图可能要 15–25s。见下面「Netlify timeout」 |
 | 记录存了但朋友圈看不到 | 「分享到朋友圈」开关预设是**关**的，要自己打开；也确认贴文日期落在朋友圈已载入的月份内 |
+| AI 显示「请先登录」/「登录已过期」 | function 收不到或验证不了 Firebase ID token。重新整理页面或重新登入 |
+| AI 显示「今天的 AI 次数已用完」 | 到了 `AI_DAILY_LIMIT`（预设 30），马来西亚时间半夜 12 点归零 |
+| Google 登入跳「这个网址还没加入 Firebase 的授权网域」 | Authentication → Settings → Authorized domains 加上目前的网域 |
+| Google 登入说「这个 Email 已经用密码注册过了」 | 非 Gmail 的信箱先用密码注册过，请继续用 Email + 密码登入 |
+| AI 日报没自动出现 | 前一天要有饮食或运动记录才会生成；也可以在「今日 → AI 日报 → 昨日」手动按「生成日报」 |
 
-### ⚠️ Netlify timeout（多张照片要注意）
+### Netlify timeout（已处理）
 
-Netlify 同步 function 的**预设上限是 10 秒**（最高可向 Netlify support 申请调到 26 秒）。
-
-- 1–2 张照片：通常 3–8 秒，安全。
-- 5–6 张照片：图片 token 变 5–6 倍，**可能 15–25 秒，会撞到 10 秒上限**，前端会收到 502/504。
-
-三个可行做法（择一）：
-
-1. **申请调高 timeout** 到 26s（Netlify support / Pro 方案），最省事。
-2. **叫用户少拍几张**（2–3 张其实就够 AI 判断一餐了）。
-3. 真的要撑 6 张又不能调 timeout 的话，得改成非同步架构
-   （background function + 前端 polling），改动比较大，目前**没有**做。
-
-`max_tokens` 已经压在 1000，回覆很短，主要时间花在图片处理而不是输出，所以调 `max_tokens` 帮助不大。
+Netlify 一般 function 回应的上限是 10 秒，多张照片或聊天常常超过。
+现在三个 AI function 都改成**串流回应**：等 Claude 的时候每 2.5 秒先送一个空白，最后才送 JSON。
+串流回应适用 Netlify 比较长的执行上限，所以 6 张照片也不会再 502 / 504。前端读完整段文字、trim 之后再 `JSON.parse`。
+因为串流一开始 HTTP 状态就已经是 200，后面才发生的错误会放在 JSON 的 `error` 栏位里。
 
 **另外**：图片 token 会算钱。1280px 的图约 1600 tokens，6 张 ≈ 10k input tokens/次识别，
 比单张贵约 6 倍，量大的话留意 Anthropic 的帐单。

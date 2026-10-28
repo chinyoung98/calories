@@ -96,8 +96,8 @@ input,textarea{-webkit-appearance:none;appearance:none}
 .row .ic{width:38px;height:38px;flex:none;border-radius:10px;display:grid;place-items:center;font-size:19px;background:var(--forest-soft)}
 .row .ic.ex{background:var(--gold-soft)}
 .row .mid{flex:1;min-width:0}
-.row .nm{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.row .mt{font-size:12px;color:var(--ink-3);margin-top:2px}
+.row .nm{display:block;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row .mt{display:block;font-size:12px;color:var(--ink-3);margin-top:2px}
 .row .val{font-weight:700;font-size:16px;white-space:nowrap}
 /* the user's 备注 under a today-page row (.note is the centered hint class — different thing) */
 .r-note{display:block;font-size:12.5px;color:var(--ink-3);margin-top:4px;line-height:1.45;
@@ -321,6 +321,105 @@ textarea.in{min-height:74px;resize:vertical;line-height:1.45;display:block}
 .lb-ft{display:flex;justify-content:center;gap:8px;padding:14px;flex:none}
 .lb-ft button{width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,.14);color:#fff;font-size:19px}
 .lb-ft button[disabled]{opacity:.3}
+
+/* ---------- Google sign-in ---------- */
+.gbtn{display:flex;align-items:center;justify-content:center;gap:10px;background:var(--card);color:var(--ink);
+  border:1px solid var(--line);margin:0 0 14px}
+.gbtn svg{width:18px;height:18px;flex:none}
+.or{display:flex;align-items:center;gap:10px;color:var(--ink-3);font-size:12px;margin:0 0 14px}
+.or::before,.or::after{content:'';flex:1;height:1px;background:var(--line)}
+
+/* ---------- daily rings + score (今日 / day sheet) ---------- */
+.day-top{display:grid;grid-template-columns:128px minmax(0,1fr);gap:16px;align-items:center}
+.rings{position:relative;width:128px;height:128px}
+.rings svg{width:128px;height:128px;display:block}
+.ring-t{fill:none;stroke:var(--line-soft)}
+.ring-b{fill:none;stroke-linecap:round}
+.rings .sc{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1}
+.rings .sc b{font-size:30px;font-weight:700;letter-spacing:-1px}
+.rings .sc span{font-size:10px;color:var(--ink-3);margin-top:4px;letter-spacing:1px}
+.rl{display:grid;grid-template-columns:9px minmax(0,1fr);column-gap:8px;align-items:center;margin-bottom:8px}
+.rl:last-child{margin-bottom:0}
+.rl i{width:9px;height:9px;border-radius:50%;grid-row:span 2}
+.rl span{font-size:11.5px;color:var(--ink-3);line-height:1.2}
+.rl b{font-size:16px;font-weight:700;line-height:1.25;overflow-wrap:anywhere}
+.rl b small{font-size:11.5px;font-weight:500;color:var(--ink-3)}
+.dx{display:flex;flex-wrap:wrap;gap:4px 14px;margin-top:12px;padding-top:10px;border-top:1px dashed var(--line);font-size:12.5px;color:var(--ink-3)}
+.dx b{color:var(--ink);font-size:14px;margin-right:2px}
+.parts{display:flex;flex-wrap:wrap;gap:5px;margin-top:10px}
+.parts span{font-size:11px;padding:2px 8px;border-radius:99px;background:var(--paper);border:1px solid var(--line);color:var(--ink-2)}
+
+/* ---------- AI 日报 ---------- */
+.rp-hd{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}
+.rp-hd .seg{margin:0;flex:none}
+.rp-hd .seg button{padding:6px 12px;font-size:13px}
+.rp-meta{font-size:11.5px;color:var(--ink-3)}
+.rp-h{font-size:17px;font-weight:700;margin:0 0 6px;line-height:1.35;text-wrap:balance}
+.rp-s{font-size:14.5px;color:var(--ink-2);margin:0 0 10px;line-height:1.6}
+.rp-l{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.rp-l li{display:grid;grid-template-columns:auto minmax(0,1fr);gap:8px;align-items:baseline;font-size:14px;line-height:1.5}
+.rp-l li b{font-size:11px;padding:2px 7px;border-radius:6px;white-space:nowrap}
+.k-good b{background:var(--forest-soft);color:var(--forest)}
+.k-imp b{background:var(--gold-soft);color:var(--gold)}
+.k-next b{background:var(--rust-soft);color:var(--rust)}
+.rp-empty{font-size:13.5px;color:var(--ink-3);line-height:1.6}
+.btn.sm{width:auto;padding:9px 16px;font-size:14px;margin-top:12px}
+.dots{display:inline-flex;gap:4px;margin-right:6px;vertical-align:middle}
+.dots i{width:6px;height:6px;border-radius:50%;background:var(--ink-3);animation:blink 1.2s infinite both}
+.dots i:nth-child(2){animation-delay:.2s}.dots i:nth-child(3){animation-delay:.4s}
+@keyframes blink{0%,80%,100%{opacity:.25}40%{opacity:1}}
+.cell[data-day]{cursor:pointer}
+
+/* ---------- 记录 chat ---------- */
+#pg-chat{padding-bottom:calc(var(--tabh) + var(--safe-b) + 150px)}
+.chat{display:flex;flex-direction:column;gap:12px}
+.msg{display:flex;flex-direction:column;gap:5px;min-width:0}
+.msg.me{align-items:flex-end}
+.msg.ai{align-items:flex-start}
+.bub{max-width:min(86%,520px);padding:9px 13px;border-radius:16px;white-space:pre-wrap;overflow-wrap:anywhere;font-size:15px;line-height:1.5}
+.msg.me .bub{background:var(--forest);color:#fff;border-bottom-right-radius:5px}
+.msg.ai .bub{background:var(--card);border:1px solid var(--line);border-bottom-left-radius:5px}
+.msg.ai .bub.err{border-style:dashed;color:var(--ink-2)}
+.msg .tm{font-size:11px;color:var(--ink-3)}
+.msg .pics{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;max-width:86%}
+.msg .pics img{width:110px;height:110px;object-fit:cover;border-radius:12px;display:block;background:var(--line-soft)}
+.msg .rec{width:min(100%,520px);margin:0}
+.msg .rec .row{padding:10px 12px}
+.msg .rec .row .ic{width:32px;height:32px;font-size:16px}
+.ic.bd{background:var(--rust-soft)}
+.day-sep{align-self:center;font-size:11.5px;color:var(--ink-3);background:var(--line-soft);padding:2px 10px;border-radius:99px;font-weight:600}
+.lnk{color:var(--forest);font-weight:700;text-decoration:underline;text-underline-offset:3px;padding:0;font-size:inherit}
+.ex-chips{display:flex;flex-wrap:wrap;gap:7px;margin-top:4px}
+.ex-chips .lb{width:100%;font-size:12px;color:var(--ink-3)}
+.ex-chip{font-size:13px;padding:6px 11px;border-radius:99px;border:1px solid var(--line);background:var(--card);color:var(--ink-2);text-align:left}
+.ex-chip:active{background:var(--forest-soft)}
+.composer{position:fixed;left:0;right:0;bottom:calc(var(--tabh) + var(--safe-b));z-index:39;
+  background:rgba(247,245,239,.97);backdrop-filter:blur(12px);border-top:1px solid var(--line);padding:8px 12px}
+.cp-row{display:flex;align-items:flex-end;gap:8px;max-width:720px;margin:0 auto}
+.cp-row textarea{flex:1;min-width:0;resize:none;height:44px;max-height:132px;padding:10px 13px;border:1px solid var(--line);
+  border-radius:14px;background:var(--card);outline:none;line-height:1.4;font-size:16px}
+.cp-row textarea:focus{border-color:var(--forest)}
+.cp-cam{flex:none;width:44px;height:44px;border-radius:14px;border:1px solid var(--line);background:var(--card);font-size:20px;display:grid;place-items:center}
+.cp-send{flex:none;height:44px;padding:0 16px;border-radius:14px;background:var(--forest);color:#fff;font-weight:700}
+.cp-send[disabled]{opacity:.4}
+.cp-pend{display:flex;gap:8px;max-width:720px;margin:0 auto 8px;overflow-x:auto;padding-top:6px}
+.cp-pend .th{position:relative;flex:none}
+.cp-pend img{width:58px;height:58px;object-fit:cover;border-radius:10px;display:block}
+.cp-pend button{position:absolute;top:-6px;right:-6px;width:22px;height:22px;border-radius:50%;background:var(--ink);color:var(--paper);font-size:12px;line-height:1;display:grid;place-items:center}
+.cp-hint{max-width:720px;margin:6px auto 0;font-size:11px;color:var(--ink-3);text-align:center}
+/* pending food waiting for confirmation */
+.pf-hd{padding:9px 12px;font-size:12px;font-weight:600;color:var(--gold);background:var(--gold-soft);border-bottom:1px solid var(--line-soft)}
+.pf{border-bottom:1px solid var(--line-soft)}
+.pf:last-child{border-bottom:none}
+.pf .row{border-bottom:none;padding-bottom:6px}
+.pf .chips{margin-top:5px}
+.pf-acts{display:flex;flex-wrap:wrap;gap:6px;padding:0 12px 12px 56px}
+.pf-acts button{padding:7px 13px;border-radius:99px;border:1px solid var(--line);background:var(--card);font-size:13.5px;font-weight:600;color:var(--ink-2)}
+.pf-acts button:active{background:var(--paper)}
+.pf-acts .pf-ok{background:var(--forest);border-color:var(--forest);color:#fff}
+.pf-acts button[disabled]{opacity:.5}
+.pf-done .nm s{color:var(--ink-3)}
+.pf-all{display:block;width:100%;padding:11px;border-top:1px solid var(--line-soft);color:var(--forest);font-weight:700;font-size:14px;background:var(--forest-soft)}
 </style>
 </head>
 <body>
@@ -335,6 +434,11 @@ textarea.in{min-height:74px;resize:vertical;line-height:1.45;display:block}
       <div class="tl">和朋友一起打卡吃饭 · 运动 · 记账</div>
 
       <div class="ob-step on" id="obA">
+        <button class="btn gbtn" id="auGoogle" type="button">
+          <svg viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.2-.1-2.3-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.2-.1-2.3-.4-3.5z"/></svg>
+          使用 Google 登录
+        </button>
+        <div class="or">或用 Email</div>
         <div class="seg">
           <button class="on" id="segIn" data-mode="in">登入</button>
           <button id="segUp" data-mode="up">注册</button>
@@ -419,6 +523,9 @@ textarea.in{min-height:74px;resize:vertical;line-height:1.45;display:block}
         <div class="barcode" id="bc1"></div>
       </div>
 
+      <div class="card" id="dayCard"></div>
+      <div class="card" id="reportCard"></div>
+
       <div class="card receipt">
         <div class="rc-top">
           <span class="rc-title">今日结算</span>
@@ -440,6 +547,24 @@ textarea.in{min-height:74px;resize:vertical;line-height:1.45;display:block}
 
       <div class="sect-t"><span>运动记录</span><span class="mono" id="cntEx">0</span></div>
       <div class="card flat" id="listEx"></div>
+    </div>
+
+    <!-- ---- 记录 (chat) ---- -->
+    <div class="page" id="pg-chat">
+      <div class="hd">
+        <div><h1>记录</h1><div class="sub">说一句或拍张照，AI 帮你分类记账</div></div>
+        <div class="barcode" id="bc6"></div>
+      </div>
+      <div class="chat" id="chatList"></div>
+      <div class="composer">
+        <div class="cp-pend" id="cpPend" style="display:none"></div>
+        <div class="cp-row">
+          <button class="cp-cam" id="cpCam" type="button" aria-label="添加照片">📷</button>
+          <textarea id="cpText" rows="1" placeholder="吃了什么、练了什么、体重…" aria-label="输入记录"></textarea>
+          <button class="cp-send" id="cpSend" type="button" disabled>发送</button>
+        </div>
+        <div class="cp-hint" id="cpHint"></div>
+      </div>
     </div>
 
     <!-- ---- 月度 ---- -->
@@ -543,8 +668,38 @@ textarea.in{min-height:74px;resize:vertical;line-height:1.45;display:block}
             <input class="in mono" id="stW" type="number" inputmode="decimal">
           </label>
         </div>
+        <div class="g2">
+          <label class="f">
+            <span class="lb">身高 cm</span>
+            <input class="in mono" id="stH" type="number" inputmode="numeric" placeholder="选填">
+          </label>
+          <label class="f">
+            <span class="lb">年龄</span>
+            <input class="in mono" id="stAge" type="number" inputmode="numeric" placeholder="选填">
+          </label>
+        </div>
+        <div class="g2">
+          <label class="f">
+            <span class="lb">性别</span>
+            <select class="in" id="stSex"><option value="">不填</option><option value="male">男</option><option value="female">女</option></select>
+          </label>
+          <label class="f">
+            <span class="lb">目标</span>
+            <select class="in" id="stGoalType"><option value="">不填</option><option value="lose">减脂</option><option value="gain">增肌</option><option value="maintain">维持体重</option><option value="fitness">提升体能</option></select>
+          </label>
+        </div>
+        <div class="g2">
+          <label class="f">
+            <span class="lb">蛋白质目标 g</span>
+            <input class="in mono" id="stProt" type="number" inputmode="numeric" placeholder="自动">
+          </label>
+          <label class="f">
+            <span class="lb">运动目标 分钟</span>
+            <input class="in mono" id="stExGoal" type="number" inputmode="numeric" placeholder="30">
+          </label>
+        </div>
         <button class="btn" id="stSave">保存设定</button>
-        <div class="note">体重用于估算运动消耗卡路里</div>
+        <div class="note">体重用于估算运动消耗；蛋白质目标留空时按体重 × 1.6g 计算。这些也可以直接在「记录」里跟 AI 说。</div>
       </div>
 
       <div class="sect-t"><span>帐号</span></div>
@@ -561,6 +716,7 @@ textarea.in{min-height:74px;resize:vertical;line-height:1.45;display:block}
     <!-- tab bar -->
     <nav class="tabs">
       <button class="on" data-tab="today"><span class="g">🧾</span>今日</button>
+      <button data-tab="chat"><span class="g">💬</span>记录</button>
       <button data-tab="month"><span class="g">📅</span>月度</button>
       <button data-tab="feed"><span class="g">🌏</span>朋友圈</button>
       <button data-tab="body"><span class="g">⚖️</span>身材</button>
@@ -588,6 +744,7 @@ textarea.in{min-height:74px;resize:vertical;line-height:1.45;display:block}
 
 <input type="file" accept="image/*" capture="environment" id="fileCam" hidden>
 <input type="file" accept="image/*" id="fileLib" multiple hidden>
+<input type="file" accept="image/*" id="chatFile" multiple hidden>
 
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
@@ -708,10 +865,14 @@ function genCode() {
 let UID = null;
 
 /* ---------- profile (Firebase: members/{uid}/profile) ---------- */
+// Optional fields added with the 记录 chat / AI 日报. Old profiles simply lack them.
+const PROFILE_OPT = ['heightCm', 'age', 'sex', 'goal', 'activity', 'proteinTarget', 'exerciseGoal'];
 function normProfile(p) {
   if (p && p.displayName && p.groupCode) {
-    return { displayName: p.displayName, groupCode: p.groupCode,
-             dailyGoal: num(p.dailyGoal, 2000), weightKg: num(p.weightKg, 65) };
+    const out = { displayName: p.displayName, groupCode: p.groupCode,
+                  dailyGoal: num(p.dailyGoal, 2000), weightKg: num(p.weightKg, 65) };
+    PROFILE_OPT.forEach(k => { if (p[k] !== undefined && p[k] !== null && p[k] !== '') out[k] = p[k]; });
+    return out;
   }
   return null;
 }
@@ -737,7 +898,18 @@ const state = {
   feedPhotos: {},             // postId -> [url] (backs the lightbox)
   listeners: {},              // path -> ref (for detach)
   monthCursor: new Date(),    // month page cursor
-  tab: 'today'
+  tab: 'today',
+  chat: {},                   // ym -> { dKey -> [msg] }   (members/{uid}/chat, private)
+  reports: {},                // dKey -> AI 日报            (members/{uid}/reports, private)
+  quota: null,                // { used, limit } from the last AI call
+  chatBusy: false,
+  chatPend: [],               // photos picked for the next chat message: { id, dataUrl }
+  chatLimit: 40,
+  chatForceBottom: true,
+  reportView: 'yesterday',    // 今日 page report card: 'yesterday' | 'today'
+  reportBusy: null,           // dKey being generated
+  reportErr: null,            // { dKey, text }
+  autoReportTried: false
 };
 
 /* ---------- firebase paths ---------- */
@@ -751,7 +923,12 @@ const P = {
   exDay:    (c, ym, dk, m) => `${ROOT}/groups/${c}/exercise/${ym}/${dk}/${m}`,
   bodyYm:   (m, ym) => `${ROOT}/members/${m}/body/${ym}`,
   bodyDay:  (m, ym, dk) => `${ROOT}/members/${m}/body/${ym}/${dk}`,
-  profile:  m => `${ROOT}/members/${m}/profile`
+  profile:  m => `${ROOT}/members/${m}/profile`,
+  chatYm:   (m, ym) => `${ROOT}/members/${m}/chat/${ym}`,
+  chatDay:  (m, ym, dk) => `${ROOT}/members/${m}/chat/${ym}/${dk}`,
+  reports:  m => `${ROOT}/members/${m}/reports`,
+  report:   (m, dk) => `${ROOT}/members/${m}/reports/${dk}`,
+  usage:    (m, day) => `${ROOT}/usage/${m}/${day}`
 };
 
 /* ---------- realtime listeners (.on('value')) ---------- */
@@ -779,10 +956,42 @@ function attachMonth(ym) {
   const c = state.profile.groupCode;
   listen(P.foodYm(c, ym), val => { state.food[ym] = val || {}; renderAll(); });
   listen(P.exYm(c, ym),   val => { state.exercise[ym] = val || {}; renderAll(); });
-  listen(P.bodyYm(UID, ym), val => { state.body[ym] = val || {}; renderBody(); });
+  listen(P.bodyYm(UID, ym), val => { state.body[ym] = val || {}; renderBody(); renderDayCard(); renderChat(); });
 }
 function attachSocial() {
   listen(P.social(state.profile.groupCode), val => { state.social = val || {}; renderFeed(); });
+}
+function attachChat(ym) {
+  listen(P.chatYm(UID, ym), val => { state.chat[ym] = val || {}; renderChat(); });
+}
+function attachReports() {
+  const path = P.reports(UID);
+  if (state.listeners[path]) return;
+  const ref = db.ref(path).orderByKey().limitToLast(70);
+  ref.on('value', snap => {
+    // keep a report this device just wrote if the listener hasn't caught up yet
+    const fresh = snap.val() || {};
+    Object.keys(state.reports).forEach(k => { const a = state.reports[k], b = fresh[k]; if (a && a.headline && (!b || num(b.ts) < num(a.ts))) fresh[k] = a; });
+    state.reports = fresh;
+    state.reportsLoaded = true;
+    renderReportCard(); renderChat();
+    if (state.daySheet) renderDaySheet();
+    maybeAutoReport();
+  }, err => console.error('[rtdb] reports', err));
+  state.listeners[path] = ref;
+}
+// Fetch a month once (so code that needs the numbers right now can await them),
+// then keep it live with the normal listeners.
+async function loadMonth(ym) {
+  const c = state.profile.groupCode;
+  if (state.food[ym] && state.exercise[ym] && state.body[ym]) return;
+  const [f, x, b] = await Promise.all([
+    db.ref(P.foodYm(c, ym)).once('value'), db.ref(P.exYm(c, ym)).once('value'), db.ref(P.bodyYm(UID, ym)).once('value')
+  ]);
+  if (!state.food[ym]) state.food[ym] = f.val() || {};
+  if (!state.exercise[ym]) state.exercise[ym] = x.val() || {};
+  if (!state.body[ym]) state.body[ym] = b.val() || {};
+  attachMonth(ym);
 }
 
 /* ---------- data accessors ---------- */
@@ -843,6 +1052,35 @@ async function removeEx(dKey, id) {
   await writeEx(dKey, exOf(dKey, UID).filter(r => r.id !== id));
 }
 
+// Read-modify-write on a day's list against the server's current value, so the chat
+// can write to any date (even a month not loaded yet) without clobbering records.
+const asList = v => Array.isArray(v) ? v.filter(Boolean) : (v && typeof v === 'object' ? Object.values(v).filter(Boolean) : []);
+async function txList(path, fn) {
+  await db.ref(path).transaction(cur => {
+    const next = fn(asList(cur));
+    next.sort((a, b) => String(a.time).localeCompare(String(b.time)));
+    return next.length ? next : null;
+  });
+}
+const foodPath = dKey => P.foodDay(state.profile.groupCode, ymOfKey(dKey), dKey, UID);
+const exPath   = dKey => P.exDay(state.profile.groupCode, ymOfKey(dKey), dKey, UID);
+
+// Find one of my own food/exercise records by id in whatever months are loaded.
+function findOwn(id) {
+  for (const [kind, bucket] of [['food', state.food], ['exercise', state.exercise]]) {
+    for (const ym of Object.keys(bucket)) {
+      const days = bucket[ym] || {};
+      for (const dKey of Object.keys(days)) {
+        const list = days[dKey] && days[dKey][UID];
+        if (!Array.isArray(list)) continue;
+        const r = list.find(x => x && x.id === id);
+        if (r) return { kind, dKey, r };
+      }
+    }
+  }
+  return null;
+}
+
 /* ============================================================
    AUTH (email + password)
    ============================================================ */
@@ -859,7 +1097,10 @@ const AUTH_ERR = {
   'auth/user-disabled': '这个帐号已被停用',
   'auth/too-many-requests': '尝试次数太多，请稍后再试',
   'auth/network-request-failed': '网路连线失败，请检查网路',
-  'auth/operation-not-allowed': '尚未在 Firebase 启用 Email/密码登入'
+  'auth/operation-not-allowed': '尚未在 Firebase 启用这种登入方式',
+  'auth/account-exists-with-different-credential': '这个 Email 已经用密码注册过了，请用下面的 Email + 密码登入',
+  'auth/unauthorized-domain': '这个网址还没加入 Firebase 的授权网域',
+  'auth/popup-blocked': '浏览器挡住了登入视窗，请允许弹出视窗后再试'
 };
 const authErrMsg = e => AUTH_ERR[e && e.code] || ((e && e.message) ? e.message : '发生未知错误，请再试一次');
 
@@ -904,6 +1145,35 @@ $('#auGo').onclick = async () => {
   }
 };
 $('#auPass').addEventListener('keydown', e => { if (e.key === 'Enter') $('#auGo').click(); });
+
+/* ---- Google sign-in ----
+   Popup first (works in normal mobile/desktop browsers); falls back to a full-page
+   redirect where popups can't open (some in-app browsers). Same uid either way, so
+   routing still happens in onAuthStateChanged. */
+const googleProvider = () => {
+  const p = new firebase.auth.GoogleAuthProvider();
+  p.setCustomParameters({ prompt: 'select_account' });
+  return p;
+};
+$('#auGoogle').onclick = async () => {
+  const btn = $('#auGoogle'), err = $('#auErr');
+  err.textContent = '';
+  btn.disabled = true;
+  try {
+    await firebase.auth().signInWithPopup(googleProvider());
+  } catch (e) {
+    if (e && (e.code === 'auth/popup-blocked' || e.code === 'auth/operation-not-supported-in-this-environment')) {
+      try { await firebase.auth().signInWithRedirect(googleProvider()); return; } catch (e2) { e = e2; }
+    }
+    if (e && (e.code === 'auth/popup-closed-by-user' || e.code === 'auth/cancelled-popup-request')) return;
+    console.error('[auth google]', e && e.code, e && e.message);
+    err.textContent = e && e.code === 'auth/operation-not-allowed' ? 'Google 登入还没在 Firebase 启用' : authErrMsg(e);
+  } finally { btn.disabled = false; }
+};
+firebase.auth().getRedirectResult().catch(e => {
+  console.error('[auth redirect]', e && e.code);
+  $('#auErr').textContent = authErrMsg(e);
+});
 
 /* ============================================================
    ONBOARDING (nickname → create / join group)
@@ -977,24 +1247,40 @@ async function finishOnboarding(name, code) {
 function boot() {
   $('#scr-ob').classList.remove('on');
   $('#scr-main').classList.add('on');
-  ['#bc1','#bc2','#bc3','#bc4','#bc5'].forEach(s => makeBarcode($(s)));
+  ['#bc1','#bc2','#bc3','#bc4','#bc5','#bc6'].forEach(s => makeBarcode($(s)));
 
   detachAll();
   state.monthCursor = new Date();
+  state.autoReportTried = false;
   attachRoster();
   attachSocial();
   attachMonth(ymOf(new Date()));
   attachMonth(ymOf(state.monthCursor));
+  attachChat(ymOf(new Date()));
+  attachReports();
+  loadQuota();
 
-  $('#stName').value = state.profile.displayName;
-  $('#stGoal').value = state.profile.dailyGoal;
-  $('#stW').value    = state.profile.weightKg;
+  fillSettings();
   $('#fCode').textContent = state.profile.groupCode;
   $('#rcNo').textContent = '#' + state.profile.groupCode;
   const u = firebase.auth().currentUser;
-  $('#stEmail').textContent = (u && u.email) || '—';
+  const viaGoogle = u && (u.providerData || []).some(p => p && p.providerId === 'google.com');
+  $('#stEmail').textContent = ((u && u.email) || '—') + (viaGoogle ? '（Google）' : '');
 
   renderAll();
+}
+
+function fillSettings() {
+  const p = state.profile;
+  $('#stName').value = p.displayName;
+  $('#stGoal').value = p.dailyGoal;
+  $('#stW').value    = p.weightKg;
+  $('#stH').value    = p.heightCm || '';
+  $('#stAge').value  = p.age || '';
+  $('#stSex').value  = p.sex || '';
+  $('#stGoalType').value = p.goal || '';
+  $('#stProt').value = p.proteinTarget || '';
+  $('#stExGoal').value = p.exerciseGoal || '';
 }
 
 /* show the onboarding screen at a given step, main screen hidden */
@@ -1018,15 +1304,22 @@ $$('.tabs button').forEach(b => {
     state.tab = b.dataset.tab;
     $$('.tabs button').forEach(x => x.classList.toggle('on', x === b));
     $$('.page').forEach(p => p.classList.toggle('on', p.id === 'pg-' + state.tab));
+    $('#fab').style.display = state.tab === 'chat' ? 'none' : '';
     window.scrollTo(0, 0);
+    if (state.tab === 'chat') state.chatForceBottom = true;
     renderAll();
   };
 });
+function goTab(t) { const b = $(`.tabs button[data-tab="${t}"]`); if (b) b.click(); }
 
 /* ============================================================
    RENDER — TODAY
    ============================================================ */
-function renderAll() { renderToday(); renderMonth(); renderBody(); renderFriends(); renderFeed(); }
+function renderAll() {
+  renderToday(); renderDayCard(); renderReportCard(); renderChat();
+  renderMonth(); renderBody(); renderFriends(); renderFeed();
+  if (state.daySheet) renderDaySheet();
+}
 
 // Your own 备注, shown on the today page whether or not the record is public.
 // Renders nothing at all when empty — no stray blank line.
@@ -1092,7 +1385,7 @@ function renderToday() {
       <span class="ic ex">${a.icon}</span>
       <span class="mid">
         <span class="nm">${esc(r.activityName || a.name)}</span>
-        <span class="mt">${esc(r.time)} · ${Math.round(num(r.duration))} 分钟${sharedMark(r)}</span>
+        <span class="mt">${esc(r.time)} · ${Math.round(num(r.duration))} 分钟${r.distanceKm ? ' · ' + num(r.distanceKm) + ' km' : ''}${sharedMark(r)}</span>
         ${noteRow(r)}
       </span>
       <span class="val neg">-${Math.round(num(r.calories))}</span>
@@ -1117,6 +1410,14 @@ $('#pg-today').addEventListener('click', async e => {
 /* ============================================================
    RENDER — MONTH
    ============================================================ */
+$('#cal').addEventListener('click', e => {
+  const c = e.target.closest('[data-day]');
+  if (c) openDaySheet(c.dataset.day);
+});
+$('#cal').addEventListener('keydown', e => {
+  const c = e.target.closest('[data-day]');
+  if (c && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); openDaySheet(c.dataset.day); }
+});
 $('#mPrev').onclick = () => shiftMonth(-1);
 $('#mNext').onclick = () => shiftMonth(1);
 function shiftMonth(d) {
@@ -1160,7 +1461,7 @@ function renderMonth() {
       else if (ratio <= 1.05) { cls = 'd-y'; okDays++; }
       else cls = 'd-r';
     }
-    html += `<div class="cell ${cls} ${dk === todayKey ? 'today' : ''}">
+    html += `<div class="cell ${cls} ${dk === todayKey ? 'today' : ''}"${dk <= todayKey ? ` data-day="${dk}" role="button" tabindex="0" aria-label="${dk} 的日报"` : ''}>
       <b>${d}</b>${has ? `<i>${Math.round(net)}</i>` : ''}</div>`;
   }
   $('#cal').innerHTML = html;
@@ -1231,12 +1532,13 @@ function renderBody() {
   const map = state.body[ym] || {};
   const keys = Object.keys(map).sort();
 
-  const lastKey = keys[keys.length - 1];
-  const last = lastKey ? map[lastKey] : null;
-  $('#bLast').textContent = lastKey || '—';
-  $('#bW').textContent  = last && last.weight  ? num(last.weight).toFixed(1) + ' kg' : '—';
-  $('#bF').textContent  = last && last.bodyFat ? num(last.bodyFat).toFixed(1) + ' %' : '—';
-  $('#bWa').textContent = last && last.waist   ? num(last.waist).toFixed(1) + ' cm' : '—';
+  // Days logged through the chat may hold only steps or sleep — take each figure from the latest day that has it.
+  const latest = f => { for (let i = keys.length - 1; i >= 0; i--) if (map[keys[i]] && map[keys[i]][f]) return map[keys[i]][f]; return null; };
+  const wKeys = keys.filter(k => map[k] && map[k].weight);
+  $('#bLast').textContent = wKeys[wKeys.length - 1] || keys[keys.length - 1] || '—';
+  $('#bW').textContent  = latest('weight')  ? num(latest('weight')).toFixed(1) + ' kg' : '—';
+  $('#bF').textContent  = latest('bodyFat') ? num(latest('bodyFat')).toFixed(1) + ' %' : '—';
+  $('#bWa').textContent = latest('waist')   ? num(latest('waist')).toFixed(1) + ' cm' : '—';
 
   const series = keys.map(k => ({ d: parseInt(k.slice(8), 10), net: num(map[k].weight) }))
                      .filter(p => p.net > 0);
@@ -1246,18 +1548,14 @@ function renderBody() {
 
   $('#listBody').innerHTML = keys.length ? keys.slice().reverse().map(k => {
     const r = map[k];
-    const meta = [
-      r.bodyFat ? '体脂 ' + num(r.bodyFat).toFixed(1) + '%' : null,
-      r.waist ? '腰围 ' + num(r.waist).toFixed(1) + 'cm' : null,
-      r.note ? esc(r.note) : null
-    ].filter(Boolean).join(' · ');
+    const meta = bodyMeta(r).map(esc).join(' · ');
     return `<div class="row" data-body="${esc(k)}">
       <span class="ic">⚖️</span>
       <span class="mid">
         <span class="nm">${esc(k)}</span>
         <span class="mt">${meta || '仅体重'}</span>
       </span>
-      <span class="val">${num(r.weight).toFixed(1)}<span style="font-size:11px;color:var(--ink-3)"> kg</span></span>
+      <span class="val">${r.weight ? `${num(r.weight).toFixed(1)}<span style="font-size:11px;color:var(--ink-3)"> kg</span>` : '—'}</span>
     </div>`;
   }).join('') : `<div class="empty">还没有身材记录</div>`;
 }
@@ -1544,11 +1842,21 @@ $('#stSave').onclick = async () => {
   const name = $('#stName').value.trim();
   if (!name) { toast('名字不能为空'); return; }
   const p = {
+    ...state.profile,
     displayName: name,
     groupCode: state.profile.groupCode,
     dailyGoal: Math.max(1, num($('#stGoal').value, 2000)),
     weightKg: Math.max(1, num($('#stW').value, 65))
   };
+  // Optional fields: an empty box clears the value (RTDB drops undefined keys on set).
+  const optNum = (sel, lo, hi) => { const n = num($(sel).value, NaN); return Number.isFinite(n) && n >= lo && n <= hi ? Math.round(n) : undefined; };
+  p.heightCm = optNum('#stH', 100, 250);
+  p.age = optNum('#stAge', 10, 100);
+  p.proteinTarget = optNum('#stProt', 20, 400);
+  p.exerciseGoal = optNum('#stExGoal', 5, 300);
+  p.sex = $('#stSex').value || undefined;
+  p.goal = $('#stGoalType').value || undefined;
+  Object.keys(p).forEach(k => { if (p[k] === undefined) delete p[k]; });
   try {
     await saveProfile(p);
     await db.ref(`${P.roster(p.groupCode)}/${UID}/name`).set(name);
@@ -1563,6 +1871,7 @@ $('#stSave').onclick = async () => {
    SHEETS
    ============================================================ */
 function openSheet(html) {
+  state.daySheet = null;   // any other sheet replaces the day-report sheet
   $('#sheetBody').innerHTML = html;
   $('#mask').classList.add('on'); $('#sheet').classList.add('on');
 }
@@ -1570,6 +1879,7 @@ function closeSheet() {
   $('#mask').classList.remove('on'); $('#sheet').classList.remove('on');
   $('#sheetBody').innerHTML = '';
   tray = []; onTrayChange = null;   // drop any composer draft
+  state.daySheet = null;
 }
 $('#mask').onclick = closeSheet;
 document.addEventListener('click', e => { if (e.target.closest('[data-close]')) closeSheet(); });
@@ -1719,16 +2029,40 @@ async function analyzeFood(dataUrls) {
     if (!m) throw new Error('图片格式错误');
     return { mediaType: m[1], base64: m[2] };
   });
-  const res = await fetch('/.netlify/functions/analyze-food', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ images })
-  });
-  let data = null;
-  try { data = await res.json(); } catch (e) {}
-  if (!res.ok || !data || data.error) {
-    throw new Error((data && data.error) || `识别服务错误 (${res.status})`);
+  return aiCall('analyze-food', { images });
+}
+
+/* ---- every AI function goes through here: signed-in token + daily budget ----
+   The functions stream spaces while Claude works (keeps them under Netlify's longer
+   streaming limit), then one JSON object — so read text and parse after trimming. */
+async function aiCall(fn, payload, opts = {}) {
+  const u = firebase.auth().currentUser;
+  if (!u) throw new Error('请先登录');
+  const token = await u.getIdToken();
+  let res, txt;
+  try {
+    res = await fetch('/.netlify/functions/' + fn, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+      body: JSON.stringify(payload),
+      signal: opts.signal
+    });
+    txt = await res.text();
+  } catch (e) {
+    if (e && e.name === 'AbortError') { const a = new Error('已停止'); a.aborted = true; throw a; }
+    throw new Error('网络连线失败，请检查网路');
   }
+  let data = null;
+  try { data = JSON.parse(String(txt).trim()); } catch (e) {}
+  if (!data) throw new Error(res.ok ? 'AI 回复中断了，请再试一次' : `服务错误 (${res.status})`);
+  if (data.quota && data.quota.used != null) state.quota = data.quota;
+  if (!res.ok || data.error) {
+    const err = new Error(data.error || `服务错误 (${res.status})`);
+    err.status = data.status || res.status;
+    if (err.status === 429 && /用完/.test(err.message)) state.quota = { used: (state.quota && state.quota.limit) || 30, limit: (state.quota && state.quota.limit) || 30 };
+    throw err;
+  }
+  renderQuota();
   return data;
 }
 
@@ -1898,7 +2232,11 @@ function readFoodForm(existing, items) {
   const cal = num($('#fCal').value, NaN);
   if (!name) { toast('请输入名称'); $('#fName').focus(); return null; }
   if (!Number.isFinite(cal) || cal < 0) { toast('请输入有效的卡路里'); $('#fCal').focus(); return null; }
+  // keep the fields only the chat sets (meal, portion…) when a chat record is edited by hand
+  const kept = {};
+  if (existing) ['meal', 'portion', 'source'].forEach(k => { if (existing[k] != null) kept[k] = existing[k]; });
   return {
+    ...kept,
     id: existing ? existing.id : uid(),
     time: existing ? existing.time : hhmm(new Date()),
     name,
@@ -2000,7 +2338,10 @@ function sheetExForm(existing) {
       const btn = $('#xSave');
       btn.disabled = true; btn.textContent = shots.length ? '上传照片中…' : '保存中…';
       try {
+        const kept = {};
+        if (existing) ['distanceKm', 'sets', 'reps', 'weightKg', 'avgHr', 'intensity', 'source'].forEach(k => { if (existing[k] != null) kept[k] = existing[k]; });
         await upsertEx(dKeyOf(new Date()), {
+          ...kept,
           id: existing ? existing.id : uid(),
           time: existing ? existing.time : hhmm(new Date()),
           activity: v.act, activityName: nm,
@@ -2055,13 +2396,15 @@ function sheetBodyForm(dKey) {
   $('#ySave').onclick = async () => {
     const w = num($('#yW').value, NaN);
     if (!Number.isFinite(w) || w <= 0) { toast('请输入体重'); $('#yW').focus(); return; }
-    const rec = { weight: Math.round(w * 10) / 10, time: hhmm(new Date()) };
+    // update(), not set(): the chat may have stored steps / sleep / posture on this day too.
+    const rec = { weight: Math.round(w * 10) / 10, time: hhmm(new Date()), bodyFat: null, waist: null, note: null };
     const f = num($('#yF').value, NaN), wa = num($('#yWa').value, NaN);
     const n = $('#yN').value.trim();
     if (Number.isFinite(f) && f > 0) rec.bodyFat = Math.round(f * 10) / 10;
     if (Number.isFinite(wa) && wa > 0) rec.waist = Math.round(wa * 10) / 10;
     if (n) rec.note = n;
-    await writeBody(dKey, rec);
+    try { await db.ref(P.bodyDay(UID, ymOfKey(dKey), dKey)).update(rec); }
+    catch (err) { console.error('[body]', err); toast('保存失败，请检查网路'); return; }
     closeSheet(); toast('已记录');
   };
   if (e.weight) $('#yDel').onclick = async () => {
@@ -2071,6 +2414,835 @@ function sheetBodyForm(dKey) {
 }
 
 /* ============================================================
+   DAILY SCORE · RINGS · AI 日报
+
+   Score (0–100) uses fixed rules so the same day always scores the same:
+   记录 20 (meals logged, body data) · 热量 30 (net intake vs dailyGoal) ·
+   蛋白质 25 (vs proteinTarget, default weight × 1.6 g) · 运动 25 (vs exerciseGoal, default 30 min).
+   Reports live in members/{uid}/reports/{dKey} — private like body data.
+   ============================================================ */
+const WD = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
+const keyToDate = k => new Date(k + 'T12:00:00');
+const addDaysKey = (k, n) => { const d = keyToDate(k); d.setDate(d.getDate() + n); return dKeyOf(d); };
+const fmtDay = k => { const d = keyToDate(k); return `${d.getMonth() + 1}月${d.getDate()}日 ${WD[d.getDay()]}`; };
+const todayKey = () => dKeyOf(new Date());
+const MEAL_N = { breakfast: '早餐', lunch: '午餐', dinner: '晚餐', snack: '加餐' };
+const GOAL_N = { lose: '减脂', gain: '增肌', maintain: '维持体重', fitness: '提升体能' };
+function mealOf(r) {
+  if (MEAL_N[r.meal]) return r.meal;
+  const t = /^\d{2}:\d{2}$/.test(r.time || '') ? r.time : '12:00';
+  const h = +t.slice(0, 2) + (+t.slice(3)) / 60;
+  return h < 10.5 ? 'breakfast' : h < 15 ? 'lunch' : h < 17.5 ? 'snack' : h < 21.5 ? 'dinner' : 'snack';
+}
+const BODY_F = [
+  ['bodyFat', '体脂', '%'], ['waist', '腰围', 'cm'], ['chest', '胸围', 'cm'], ['hip', '臀围', 'cm'],
+  ['arm', '臂围', 'cm'], ['thigh', '大腿围', 'cm'], ['steps', '步数', ' 步'], ['sleepH', '睡眠', ' 小时'], ['restingHr', '静息心率', ' bpm']
+];
+function bodyMeta(r) {
+  if (!r) return [];
+  const out = BODY_F.filter(([k]) => r[k] != null && r[k] !== '').map(([k, n, u]) =>
+    `${n} ${k === 'steps' ? Math.round(num(r[k])).toLocaleString('en-US') : num(r[k])}${u}`);
+  if (r.posture) out.push('体态：' + r.posture);
+  if (r.note) out.push(r.note);
+  return out;
+}
+
+function dayTotals(dk) {
+  const f = foodOf(dk, UID), x = exOf(dk, UID);
+  return {
+    kcal: sumCal(f),
+    p: f.reduce((s, r) => s + num(r.protein), 0),
+    c: f.reduce((s, r) => s + num(r.carbs), 0),
+    fat: f.reduce((s, r) => s + num(r.fat), 0),
+    burn: sumCal(x),
+    min: x.reduce((s, r) => s + num(r.duration), 0),
+    foods: f.length, ex: x.length,
+    meals: new Set(f.map(mealOf)).size,
+    body: bodyOf(dk)
+  };
+}
+function latestWeight(upTo) {
+  const ks = [];
+  Object.keys(state.body).forEach(ym => Object.keys(state.body[ym] || {}).forEach(k => {
+    const b = state.body[ym][k];
+    if (k <= upTo && b && b.weight) ks.push(k);
+  }));
+  ks.sort();
+  const k = ks[ks.length - 1];
+  return k ? { w: num(bodyOf(k).weight), dk: k } : null;
+}
+function proteinTarget() {
+  const p = state.profile;
+  if (p.proteinTarget) return { v: num(p.proteinTarget), auto: false };
+  return { v: Math.round(num(p.weightKg, 65) * 1.6 / 5) * 5, auto: true };
+}
+const exGoal = () => num(state.profile.exerciseGoal, 30) || 30;
+
+function dayScore(dk) {
+  const t = dayTotals(dk);
+  if (!t.foods && !t.ex) return null;
+  const goal = num(state.profile.dailyGoal, 2000);
+  const net = t.kcal - t.burn;
+  const rec = Math.min(20, [0, 8, 14, 18, 20][Math.min(4, t.meals)] + (t.body ? 2 : 0));
+  let cal = 0;
+  if (t.foods) {
+    const r = goal > 0 ? net / goal : 0;
+    cal = r >= 0.8 && r <= 1.05 ? 30 : r >= 0.65 && r < 0.8 ? 24 : r > 1.05 && r <= 1.15 ? 20
+        : r >= 0.5 && r < 0.65 ? 16 : r > 1.15 && r <= 1.3 ? 12 : 6;
+    if (t.meals >= 3 && t.kcal < 1200) cal = Math.min(cal, 12);   // three meals under 1200 is not a win
+  }
+  let pro = 0;
+  if (t.foods) { const r = t.p / proteinTarget().v; pro = r >= 0.9 ? 25 : r >= 0.75 ? 19 : r >= 0.55 ? 12 : 5; }
+  const er = t.min / exGoal();
+  const ex = er >= 1 ? 25 : er >= 0.66 ? 19 : er >= 0.33 ? 12 : t.min > 0 ? 6 : 0;
+  return { score: rec + cal + pro + ex, parts: [['记录', rec, 20], ['热量', cal, 30], ['蛋白质', pro, 25], ['运动', ex, 25]], t, net, goal };
+}
+const daySig = dk => { const t = dayTotals(dk); return `${Math.round(t.kcal)}|${Math.round(t.p)}|${Math.round(t.min)}|${t.foods + t.ex}`; };
+
+function ringsSvg(rings) {
+  const size = 128, c = size / 2, sw = 10, gap = 4;
+  let s = `<svg viewBox="0 0 ${size} ${size}" aria-hidden="true">`;
+  rings.forEach((r, i) => {
+    const rad = c - sw / 2 - 1 - i * (sw + gap), circ = 2 * Math.PI * rad;
+    const p = Math.max(0, Math.min(1, r.p || 0));
+    s += `<circle class="ring-t" cx="${c}" cy="${c}" r="${rad}" stroke-width="${sw}"/>`;
+    if (p > 0) s += `<circle class="ring-b" cx="${c}" cy="${c}" r="${rad}" stroke-width="${sw}" stroke="${r.c}"
+      stroke-dasharray="${(p * circ).toFixed(1)} ${circ.toFixed(1)}" transform="rotate(-90 ${c} ${c})"/>`;
+  });
+  return s + '</svg>';
+}
+
+function dayCardHtml(dk, title) {
+  const sc = dayScore(dk);
+  const t = sc ? sc.t : dayTotals(dk);
+  const goal = num(state.profile.dailyGoal, 2000), net = t.kcal - t.burn;
+  const pt = proteinTarget(), eg = exGoal();
+  const rings = ringsSvg([
+    { p: t.foods && goal > 0 ? net / goal : 0, c: 'var(--gold)' },
+    { p: t.foods ? t.p / pt.v : 0, c: 'var(--forest)' },
+    { p: t.min / eg, c: 'var(--rust)' }
+  ]);
+  const b = t.body || {};
+  const extras = [
+    b.steps != null ? `<span><b>${Math.round(num(b.steps)).toLocaleString('en-US')}</b>步</span>` : '',
+    b.sleepH != null ? `<span>睡眠 <b>${num(b.sleepH)}</b>小时</span>` : '',
+    b.restingHr != null ? `<span>静息心率 <b>${Math.round(num(b.restingHr))}</b>bpm</span>` : '',
+    b.weight ? `<span>体重 <b>${num(b.weight).toFixed(1)}</b>kg</span>` : ''
+  ].join('');
+  return `${title ? `<div class="rc-top" style="border:none;padding:0 0 12px"><span class="rc-title">${title}</span>
+      <span class="rp-meta">得分越高越接近目标</span></div>` : ''}
+    <div class="day-top">
+      <div class="rings">${rings}<div class="sc">${sc ? `<b class="mono${sc.score >= 80 ? ' pos' : ''}">${sc.score}</b><span>得分</span>` : `<b class="mono" style="color:var(--ink-3)">–</b><span>未记录</span>`}</div></div>
+      <div>
+        <div class="rl"><i style="background:var(--gold)"></i><span>净摄入</span><b class="mono">${t.foods ? Math.round(net).toLocaleString('en-US') : '–'} <small>/ ${Math.round(goal).toLocaleString('en-US')} kcal</small></b></div>
+        <div class="rl"><i style="background:var(--forest)"></i><span>蛋白质</span><b class="mono">${t.foods ? Math.round(t.p) : '–'} <small>/ ${pt.v} g</small></b></div>
+        <div class="rl"><i style="background:var(--rust)"></i><span>运动</span><b class="mono">${Math.round(t.min)} <small>/ ${eg} 分钟</small></b></div>
+      </div>
+    </div>
+    ${extras ? `<div class="dx">${extras}</div>` : ''}
+    ${sc ? `<div class="parts">${sc.parts.map(([k, v, m]) => `<span>${k} ${v}/${m}</span>`).join('')}</div>` : ''}`;
+}
+function renderDayCard() {
+  if (!state.profile) return;
+  $('#dayCard').innerHTML = dayCardHtml(todayKey(), '今日概览');
+}
+
+function reportBodyHtml(dk) {
+  const isToday = dk === todayKey();
+  const rep = state.reports[dk];
+  const sc = dayScore(dk);
+  const err = state.reportErr && state.reportErr.dKey === dk && state.reportBusy !== dk
+    ? `<div class="err" style="text-align:left;margin:0 0 8px">${esc(state.reportErr.text)}</div>` : '';
+  if (state.reportBusy === dk) {
+    return `<div class="rp-empty"><span class="dots"><i></i><i></i><i></i></span>正在写${isToday ? '今天的点评' : '日报'}…
+      <button class="lnk" data-stoprep>停止</button></div>`;
+  }
+  const fresh = rep && rep.pending && !rep.headline && Date.now() - num(rep.pending) < 5 * 60000;
+  if (fresh) return `<div class="rp-empty"><span class="dots"><i></i><i></i><i></i></span>另一台设备正在生成这份日报…</div>`;
+  if (rep && rep.headline) {
+    const li = (cls, label, txt) => `<li class="${cls}"><b>${label}</b><span>${esc(txt)}</span></li>`;
+    const items = (rep.good || []).map(x => li('k-good', '做得好', x)).join('')
+      + (rep.improve || []).map(x => li('k-imp', '可改进', x)).join('')
+      + (rep.tomorrow ? li('k-next', rep.partial && rep.date === todayKey() ? '接下来' : '明天', rep.tomorrow) : '');
+    const stale = rep.sig && rep.sig !== daySig(dk) ? `<div class="note" style="text-align:left">生成之后这天的记录有改动，可以重新生成。</div>` : '';
+    const when = new Date(num(rep.ts));
+    const partialNote = rep.partial && !isToday ? `<div class="note" style="text-align:left">这份是当天 ${hhmm(when)} 为止的点评。</div>` : '';
+    return `${err}<p class="rp-h">${esc(rep.headline)}</p>
+      ${rep.summary ? `<p class="rp-s">${esc(rep.summary)}</p>` : ''}
+      ${items ? `<ul class="rp-l">${items}</ul>` : ''}${stale}${partialNote}
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
+        <span class="rp-meta">${when.getMonth() + 1}月${when.getDate()}日 ${hhmm(when)} 生成</span>
+        ${sc ? `<button class="btn ghost sm" data-genrep="${dk}">重新生成</button>` : ''}
+      </div>`;
+  }
+  if (!sc) {
+    return `${err}<div class="rp-empty">${isToday ? '今天还没有饮食或运动记录。去「记录」说一句，或点右下角 + 添加。' : '这天没有饮食或运动记录，所以没有日报。'}</div>`;
+  }
+  return `${err}<div class="rp-empty">${isToday
+      ? '一天还没结束，可以先看看到目前为止的点评。完整日报会在明天第一次打开 App 时自动生成。'
+      : '这天还没有日报。'}</div>
+    <button class="btn sm" data-genrep="${dk}">${isToday ? '生成今日点评' : '生成日报'}</button>`;
+}
+function renderReportCard() {
+  if (!state.profile) return;
+  const y = addDaysKey(todayKey(), -1);
+  const dk = state.reportView === 'today' ? todayKey() : y;
+  $('#reportCard').innerHTML = `<div class="rp-hd">
+      <span class="rc-title">AI 日报</span>
+      <div class="seg" role="group" aria-label="日报日期">
+        <button class="${state.reportView !== 'today' ? 'on' : ''}" data-repview="yesterday">昨日</button>
+        <button class="${state.reportView === 'today' ? 'on' : ''}" data-repview="today">今日</button>
+      </div>
+    </div>
+    <div class="rp-meta" style="margin:-4px 0 10px">${fmtDay(dk)}</div>
+    ${reportBodyHtml(dk)}`;
+}
+
+/* ---- day sheet: tap a day on the 月度 calendar ---- */
+async function openDaySheet(dk) {
+  openSheet(`${shHead(fmtDay(dk))}<div class="load"><div class="spin"></div></div>`);
+  state.daySheet = dk;
+  try { await loadMonth(ymOfKey(dk)); await loadMonth(ymOfKey(addDaysKey(dk, -6))); } catch (e) { console.error(e); }
+  if (state.daySheet === dk) renderDaySheet();
+}
+function renderDaySheet() {
+  const dk = state.daySheet;
+  if (!dk || !$('#sheet').classList.contains('on')) return;
+  $('#sheetBody').innerHTML = `${shHead(fmtDay(dk))}
+    <div class="card">${dayCardHtml(dk)}</div>
+    <div class="card"><div class="rc-title" style="margin-bottom:10px">AI 日报</div>${reportBodyHtml(dk)}</div>`;
+}
+
+/* ---- facts block sent to the report function ---- */
+function profileLine() {
+  const p = state.profile, out = [];
+  if (p.heightCm) out.push(`身高 ${p.heightCm}cm`);
+  if (p.age) out.push(`${p.age} 岁`);
+  if (p.sex) out.push(p.sex === 'male' ? '男' : '女');
+  out.push(`体重 ${num(p.weightKg, 65)}kg`);
+  if (GOAL_N[p.goal]) out.push(`目标：${GOAL_N[p.goal]}`);
+  out.push(`每日净摄入目标 ${num(p.dailyGoal, 2000)} kcal（摄入减运动消耗）`);
+  const pt = proteinTarget();
+  out.push(`蛋白质目标 ${pt.v}g${pt.auto ? '（按体重估算）' : ''}`);
+  out.push(`每日运动目标 ${exGoal()} 分钟`);
+  return out.join('，');
+}
+function entryLine(kind, r) {
+  if (kind === 'food') return `${MEAL_N[mealOf(r)]}：${r.name} ${Math.round(num(r.calories))}kcal，蛋白质 ${Math.round(num(r.protein))}g`;
+  return `运动：${r.activityName || actById(r.activity).name} ${Math.round(num(r.duration))}分钟 ${Math.round(num(r.calories))}kcal${r.distanceKm ? ' ' + num(r.distanceKm) + 'km' : ''}`;
+}
+function reportFacts(dk, sc) {
+  const t = sc.t;
+  const lines = [];
+  lines.push(`【日期】${dk} ${WD[keyToDate(dk).getDay()]}`);
+  lines.push(`【用户资料】${profileLine()}`);
+  const b = t.body || {};
+  lines.push(`【当天合计】摄入 ${Math.round(t.kcal)} kcal（蛋白质 ${Math.round(t.p)}g / 碳水 ${Math.round(t.c)}g / 脂肪 ${Math.round(t.fat)}g，记了 ${t.meals} 个餐别），运动 ${Math.round(t.min)} 分钟、消耗 ${Math.round(t.burn)} kcal，净摄入 ${Math.round(sc.net)} kcal`
+    + (b.steps != null ? `，步数 ${b.steps}` : '') + (b.sleepH != null ? `，睡眠 ${b.sleepH} 小时` : '') + (b.restingHr != null ? `，静息心率 ${b.restingHr}` : ''));
+  lines.push(`【评分】${sc.score}/100（${sc.parts.map(([k, v, m]) => `${k} ${v}/${m}`).join('，')}）`);
+  const ents = foodOf(dk, UID).map(r => ({ t: r.time, s: entryLine('food', r) }))
+    .concat(exOf(dk, UID).map(r => ({ t: r.time, s: entryLine('exercise', r) })))
+    .sort((a, c) => String(a.t).localeCompare(String(c.t)));
+  lines.push('【当天明细】\n' + (ents.length ? ents.map(e => `- ${e.t || ''} ${e.s}`).join('\n') : '无'));
+  if (t.body) { const m = bodyMeta(t.body); if (t.body.weight) m.unshift('体重 ' + t.body.weight + 'kg'); if (m.length) lines.push('【身体】' + m.join('；')); }
+  const prev = [];
+  for (let i = 6; i >= 1; i--) {
+    const d = addDaysKey(dk, -i), p = dayTotals(d), s = dayScore(d), bb = p.body || {};
+    prev.push(`${d} | ${p.foods ? Math.round(p.kcal) : '-'} | ${p.foods ? Math.round(p.p) : '-'} | ${Math.round(p.min)} | ${bb.steps ?? '-'} | ${bb.sleepH ?? '-'} | ${bb.weight ?? '-'} | ${s ? s.score : '-'}`);
+  }
+  lines.push('【前 6 天对比】日期 | 摄入kcal | 蛋白质g | 运动分钟 | 步数 | 睡眠h | 体重kg | 评分\n' + prev.join('\n'));
+  const lw = latestWeight(dk);
+  lines.push(`【最近体重】${lw ? `${lw.w} kg（${lw.dk}）` : '没有记录'}`);
+  return lines.join('\n');
+}
+
+async function generateReport(dk, opts = {}) {
+  if (state.reportBusy) return;
+  try { await loadMonth(ymOfKey(dk)); await loadMonth(ymOfKey(addDaysKey(dk, -6))); } catch (e) { console.error(e); }
+  const sc = dayScore(dk);
+  if (!sc) { if (opts.auto) db.ref(P.report(UID, dk) + '/pending').remove().catch(() => {}); return; }
+  state.reportBusy = dk; state.reportErr = null;
+  state.reportCtl = new AbortController();
+  renderReportCard(); renderDaySheet();
+  try {
+    const out = await aiCall('daily-report', { facts: reportFacts(dk, sc), partial: dk === todayKey(), now: hhmm(new Date()) },
+      { signal: state.reportCtl.signal });
+    const rep = {
+      date: dk, ts: Date.now(), partial: dk === todayKey(), score: sc.score, sig: daySig(dk),
+      headline: out.headline || `${sc.score} 分`, summary: out.summary || '',
+      good: out.good || [], improve: out.improve || [], tomorrow: out.tomorrow || ''
+    };
+    await db.ref(P.report(UID, dk)).set(rep);
+    state.reports[dk] = rep;
+    if (opts.auto) {
+      const td = todayKey();
+      await appendChat(td, { id: uid(), role: 'ai', ts: Date.now(), reportDKey: dk,
+        text: `${dk === addDaysKey(td, -1) ? '昨天' : fmtDay(dk)}的日报出来了：${sc.score} 分。${rep.headline}` });
+    }
+  } catch (e) {
+    if (opts.auto) db.ref(P.report(UID, dk) + '/pending').remove().catch(() => {});
+    if (!e.aborted) {
+      console.error('[report]', e);
+      state.reportErr = { dKey: dk, text: opts.auto ? '自动生成日报没成功：' + e.message + '。可以点下面的按钮再试。' : e.message };
+    }
+  } finally {
+    state.reportBusy = null; state.reportCtl = null;
+    renderReportCard(); renderDaySheet(); renderChat();
+  }
+}
+
+// Once per day per account: the first device to open the app after midnight writes
+// yesterday's report. A short "pending" lease in a transaction stops two devices
+// both spending budget on it.
+async function maybeAutoReport() {
+  if (state.autoReportTried || !state.profile || !UID || !state.reportsLoaded) return;
+  state.autoReportTried = true;
+  state.autoDay = todayKey();
+  const y = addDaysKey(todayKey(), -1);
+  const rep = state.reports[y];
+  if (rep && rep.headline && !rep.partial) return;
+  try { await loadMonth(ymOfKey(y)); await loadMonth(ymOfKey(addDaysKey(y, -6))); } catch (e) { return; }
+  if (!dayScore(y)) return;
+  let res;
+  try {
+    res = await db.ref(P.report(UID, y)).transaction(cur => {
+      if (cur && cur.headline && !cur.partial) return;                       // done elsewhere
+      if (cur && cur.pending && Date.now() - num(cur.pending) < 5 * 60000) return;  // someone is on it
+      return Object.assign({}, cur || {}, { pending: Date.now(), date: y });
+    });
+  } catch (e) { console.error('[auto report]', e); return; }
+  if (res && res.committed) generateReport(y, { auto: true });
+}
+
+document.addEventListener('click', e => {
+  const v = e.target.closest('[data-repview]');
+  if (v) { state.reportView = v.dataset.repview; renderReportCard(); return; }
+  const g = e.target.closest('[data-genrep]');
+  if (g) { generateReport(g.dataset.genrep); return; }
+  if (e.target.closest('[data-stoprep]')) { if (state.reportCtl) state.reportCtl.abort(); return; }
+  const o = e.target.closest('[data-openday]');
+  if (o) { openDaySheet(o.dataset.openday); return; }
+});
+
+/* ============================================================
+   记录 — chat logging
+
+   One message (text and/or photos) → chat-log function → entries written into the
+   SAME nodes the manual forms use: groups/{code}/food|exercise/... (shared:false by
+   default, so nothing reaches 朋友圈 unless the user turns it on later) and
+   members/{uid}/body/... (private). The conversation itself is private:
+   members/{uid}/chat/{ym}/{dKey}.
+   ============================================================ */
+const CHAT_EXAMPLES = [
+  '午餐一盘海南鸡饭，加一杯 kopi-o',
+  '跑步 5km，用了 32 分钟',
+  '今天早上体重 72.4kg，腰围 84cm',
+  '深蹲 80kg 4×6，卧推 60kg 4×8',
+  '我身高 170cm，目标是减脂'
+];
+const quotaDay = () => new Date(Date.now() + 8 * 3600e3).toISOString().slice(0, 10);   // same day boundary as the server (UTC+8)
+async function loadQuota() {
+  try {
+    const s = await db.ref(P.usage(UID, quotaDay())).once('value');
+    state.quota = { used: num(s.val(), 0), limit: (state.quota && state.quota.limit) || null };
+  } catch (e) { /* usage rule not readable yet — the next AI call reports it */ }
+  renderQuota();
+}
+function renderQuota() {
+  const el = $('#cpHint');
+  if (!el) return;
+  const q = state.quota;
+  el.textContent = q && q.used != null
+    ? (q.limit ? `今天还能用 AI ${Math.max(0, q.limit - q.used)} 次` : `今天已用 AI ${q.used} 次`)
+    : '照片会存进你的记录；饮食默认不分享到朋友圈';
+}
+
+function allChatMsgs() {
+  const out = [];
+  Object.keys(state.chat).forEach(ym => {
+    const days = state.chat[ym] || {};
+    Object.keys(days).forEach(dk => asList(days[dk]).forEach(m => { if (m && m.id) out.push(m); }));
+  });
+  return out.sort((a, b) => num(a.ts) - num(b.ts));
+}
+function refRowHtml(ref) {
+  const isToday = ref.dk === todayKey();
+  if (ref.t === 'body') {
+    const b = bodyOf(ref.dk);
+    if (!b) return `<div class="row"><span class="ic bd">⚖️</span><span class="mid"><span class="nm">身体数据</span><span class="mt">这条记录已修改或删除</span></span></div>`;
+    const meta = bodyMeta(b);
+    return `<button class="row" data-cref="body" data-dk="${esc(ref.dk)}"><span class="ic bd">⚖️</span>
+      <span class="mid"><span class="nm">${b.weight ? '体重' : b.posture ? '体态记录' : '身体数据'}${isToday ? '' : ' · ' + esc(ref.dk.slice(5))}</span>
+      <span class="mt">${esc(meta.join(' · ') || '—')}</span></span>
+      <span class="val">${b.weight ? num(b.weight).toFixed(1) + '<span style="font-size:11px;color:var(--ink-3)"> kg</span>' : ''}</span></button>`;
+  }
+  const hit = findOwn(ref.id);
+  if (!hit) return `<div class="row"><span class="ic">${ref.t === 'food' ? '🍽️' : '🏃'}</span><span class="mid"><span class="nm" style="color:var(--ink-3)">这条记录已修改或删除</span></span></div>`;
+  const r = hit.r, when = isToday ? esc(r.time) : esc(ref.dk.slice(5)) + ' ' + esc(r.time);
+  if (hit.kind === 'food') {
+    return `<button class="row" data-cref="food" data-id="${esc(r.id)}" data-dk="${esc(hit.dKey)}"><span class="ic">🍽️</span>
+      <span class="mid"><span class="nm">${esc(r.name)}</span>
+      <span class="mt">${when} · ${MEAL_N[mealOf(r)]} · P ${Math.round(num(r.protein))}g · C ${Math.round(num(r.carbs))}g · F ${Math.round(num(r.fat))}g${r.confidence === 'low' ? ' · 粗略估算' : ''}</span></span>
+      <span class="val">${Math.round(num(r.calories))}</span></button>`;
+  }
+  const a = actById(r.activity);
+  return `<button class="row" data-cref="exercise" data-id="${esc(r.id)}" data-dk="${esc(hit.dKey)}"><span class="ic ex">${a.icon}</span>
+    <span class="mid"><span class="nm">${esc(r.activityName || a.name)}</span>
+    <span class="mt">${when} · ${Math.round(num(r.duration))} 分钟${r.distanceKm ? ' · ' + num(r.distanceKm) + ' km' : ''}</span></span>
+    <span class="val neg">-${Math.round(num(r.calories))}</span></button>`;
+}
+function chatMsgHtml(m) {
+  const tm = `<span class="tm">${hhmm(new Date(num(m.ts)))}</span>`;
+  if (m.role === 'user') {
+    const pics = (m.localPics || m.photos || []).map((u, i) => `<img src="${esc(u)}" alt="照片 ${i + 1}" loading="lazy">`).join('');
+    return `<div class="msg me">${pics ? `<div class="pics">${pics}</div>` : ''}${m.text ? `<div class="bub">${esc(m.text)}</div>` : ''}${tm}</div>`;
+  }
+  const refs = Array.isArray(m.refs) ? m.refs : [];
+  const canRetry = m.err && m.retryOf && !state.chatBusy;
+  const link = canRetry ? ` <button class="lnk" data-cretry="${esc(m.retryOf)}" data-cerr="${esc(m.id)}">重试</button>`
+    : m.reportDKey ? ` <button class="lnk" data-openday="${esc(m.reportDKey)}">查看日报</button>` : '';
+  return `<div class="msg ai"><div class="bub${m.err ? ' err' : ''}">${esc(m.text)}${link}</div>
+    ${pendingHtml(m)}
+    ${refs.length ? `<div class="card flat rec">${refs.map(refRowHtml).join('')}</div>` : ''}${tm}</div>`;
+}
+function pendingHtml(m) {
+  const list = (Array.isArray(m.pending) ? m.pending : []).filter(p => p && p.pid && p.e);
+  if (!list.length) return '';
+  const open = list.filter(p => p.status === 'pending');
+  const rows = list.map(p => {
+    if (p.status === 'confirmed') return refRowHtml({ t: 'food', id: p.recId, dk: p.recDk });
+    const e = p.e;
+    if (p.status === 'rejected' || p.status === 'replaced') {
+      return `<div class="row pf-done"><span class="ic">🍽️</span><span class="mid"><span class="nm"><s>${esc(e.name)}</s></span>
+        <span class="mt">${p.status === 'rejected' ? '已取消，没有记录' : '已更正，看下面的新识别'}</span></span></div>`;
+    }
+    const when = e.date === todayKey() ? '' : esc(e.date.slice(5)) + ' · ';
+    const items = Array.isArray(e.items) && e.items.length > 1
+      ? `<span class="chips">${e.items.map(i => `<span class="chip">${esc(i.name)} · ${Math.round(num(i.kcal))}</span>`).join('')}</span>` : '';
+    const conf = e.confidence === 'low' ? ' · 粗略估算' : '';
+    return `<div class="pf">
+      <div class="row"><span class="ic">🍽️</span>
+        <span class="mid"><span class="nm">${esc(e.name)}</span>
+          <span class="mt">${when}${MEAL_N[e.meal] || ''}${e.portion ? ' · ' + esc(e.portion) : ''} · P ${Math.round(num(e.protein_g))}g · C ${Math.round(num(e.carbs_g))}g · F ${Math.round(num(e.fat_g))}g${conf}</span>
+          ${items}</span>
+        <span class="val">${Math.round(num(e.kcal))}</span></div>
+      <div class="pf-acts">
+        <button class="pf-ok" data-pok="${esc(p.pid)}">✓ 对，记下</button>
+        <button data-pedit="${esc(p.pid)}">修改</button>
+        <button data-pno="${esc(p.pid)}">不是</button>
+      </div>
+    </div>`;
+  }).join('');
+  return `<div class="card flat rec">
+    ${open.length ? `<div class="pf-hd">请确认识别结果 · 确认后才会记进饮食</div>` : ''}
+    ${rows}
+    ${open.length > 1 ? `<button class="pf-all" data-pall="${esc(m.id)}">全部确认（${open.length} 项）</button>` : ''}
+  </div>`;
+}
+
+/* ---- edit a pending food before confirming ---- */
+function sheetPendingFood(pid) {
+  const hit = findPending(pid);
+  if (!hit || hit.p.status !== 'pending') return;
+  const e = hit.p.e;
+  openSheet(`${shHead('修改再记下')}
+    ${(hit.p.photos || []).length ? `<div class="tray">${hit.p.photos.map((u, i) =>
+      `<div class="th"><img src="${esc(u)}" alt="照片 ${i + 1}"></div>`).join('')}</div>` : ''}
+    <div class="card">
+      <label class="f"><span class="lb">名称</span><input class="in" id="pfName" value="${esc(e.name)}"></label>
+      <label class="f"><span class="lb">份量</span><input class="in" id="pfPortion" value="${esc(e.portion || '')}" placeholder="例如：一盘、半碗"></label>
+      <div class="g2">
+        <label class="f"><span class="lb">热量 kcal</span><input class="in mono" id="pfCal" type="number" inputmode="numeric" value="${Math.round(num(e.kcal))}"></label>
+        <label class="f"><span class="lb">餐别</span><select class="in" id="pfMeal">${Object.keys(MEAL_N).map(k =>
+          `<option value="${k}"${k === e.meal ? ' selected' : ''}>${MEAL_N[k]}</option>`).join('')}</select></label>
+      </div>
+      <div class="g3">
+        <label class="f"><span class="lb">蛋白 g</span><input class="in mono" id="pfP" type="number" inputmode="numeric" value="${Math.round(num(e.protein_g))}"></label>
+        <label class="f"><span class="lb">碳水 g</span><input class="in mono" id="pfC" type="number" inputmode="numeric" value="${Math.round(num(e.carbs_g))}"></label>
+        <label class="f"><span class="lb">脂肪 g</span><input class="in mono" id="pfF" type="number" inputmode="numeric" value="${Math.round(num(e.fat_g))}"></label>
+      </div>
+      <label class="f" style="margin-bottom:0"><span class="lb">日期</span><input class="in mono" id="pfDate" type="date" max="${todayKey()}" value="${esc(e.date)}"></label>
+    </div>
+    <button class="btn" id="pfSave">确认并记下</button>
+    <div class="note">改完名称或份量，热量和营养也记得一起改；不确定的话可以关掉，直接在聊天里说「不是这个，是…」，AI 会重新估算。</div>`);
+  $('#pfSave').onclick = async () => {
+    const name = $('#pfName').value.trim();
+    const cal = num($('#pfCal').value, NaN);
+    if (!name) { toast('请输入名称'); $('#pfName').focus(); return; }
+    if (!Number.isFinite(cal) || cal < 0) { toast('请输入有效的卡路里'); $('#pfCal').focus(); return; }
+    let date = $('#pfDate').value || e.date;
+    if (date > todayKey()) date = todayKey();
+    const btn = $('#pfSave'); btn.disabled = true; btn.textContent = '保存中…';
+    try {
+      const changedName = name !== e.name;
+      const ok = await confirmPending(pid, {
+        name, portion: $('#pfPortion').value.trim(), kcal: Math.round(cal), meal: $('#pfMeal').value, date,
+        protein_g: Math.round(num($('#pfP').value)), carbs_g: Math.round(num($('#pfC').value)), fat_g: Math.round(num($('#pfF').value)),
+        ...(changedName ? { items: [] } : {}), confidence: 'high'
+      });
+      if (!ok) { toast('这一项已经处理过了'); closeSheet(); return; }
+    } catch (err) {
+      console.error('[pending edit]', err); toast('保存失败，请检查网路');
+      btn.disabled = false; btn.textContent = '重试'; return;
+    }
+    closeSheet(); toast('已记下 ' + Math.round(cal) + ' kcal');
+  };
+}
+function renderChat() {
+  if (!state.profile || state.tab !== 'chat') return;
+  const doc = document.scrollingElement || document.documentElement;
+  const atBottom = window.innerHeight + window.scrollY >= doc.scrollHeight - 160;
+  const msgs = allChatMsgs();
+  if (state.chatLocal && !msgs.some(m => m.id === state.chatLocal.id)) msgs.push(state.chatLocal);
+  let html = '';
+  // Until the person has sent anything, keep the intro + examples on top (an auto 日报 notice alone doesn't count).
+  if (!msgs.some(m => m.role === 'user')) {
+    html = `<div class="msg ai"><div class="bub">直接跟我说今天吃了什么、练了什么、身体有什么变化，也可以拍食物、体态照片，或者华为运动健康 / Strava 的截图发过来。
+
+我会自动分进「饮食 / 运动 / 身材」。识别出的食物会先请你确认，点「对，记下」或回一句「对」才会记进去；不对就点「修改」或「不是」。在「今日」看得分和 AI 日报，每天第一次打开 App 时会自动写好前一天的日报。</div></div>
+      <div class="ex-chips"><span class="lb">可以这样说（示例，点一下会填进输入框）</span>
+        ${CHAT_EXAMPLES.map(t => `<button class="ex-chip" data-cex="${esc(t)}">${esc(t)}</button>`).join('')}</div>`;
+  }
+  if (msgs.length) {
+    const start = Math.max(0, msgs.length - state.chatLimit);
+    if (start > 0) html += `<button class="ex-chip" style="align-self:center" data-cmore>显示更早的 ${start} 条</button>`;
+    let last = null;
+    msgs.slice(start).forEach(m => {
+      const d = dKeyOf(new Date(num(m.ts)));
+      if (d !== last) { html += `<div class="day-sep">${d === todayKey() ? '今天' : fmtDay(d)}</div>`; last = d; }
+      html += chatMsgHtml(m);
+    });
+  }
+  if (state.chatBusy) html += `<div class="msg ai"><div class="bub"><span class="dots"><i></i><i></i><i></i></span>正在${state.chatBusyPics ? '看照片、' : ''}整理记录…</div></div>`;
+  $('#chatList').innerHTML = html;
+  if (atBottom || state.chatForceBottom) {
+    state.chatForceBottom = false;
+    requestAnimationFrame(() => window.scrollTo(0, doc.scrollHeight));
+  }
+  $('#cpSend').disabled = state.chatBusy || !($('#cpText').value.trim() || state.chatPend.length);
+}
+
+async function appendChat(dk, m) {
+  const clean = JSON.parse(JSON.stringify(m));   // RTDB rejects undefined
+  await db.ref(P.chatDay(UID, ymOfKey(dk), dk)).transaction(cur => {
+    const l = asList(cur);
+    l.push(clean);
+    return l.slice(-200);
+  });
+}
+async function dropChat(dk, id) {
+  await db.ref(P.chatDay(UID, ymOfKey(dk), dk)).transaction(cur => {
+    const l = asList(cur).filter(x => x && x.id !== id);
+    return l.length ? l : null;
+  });
+}
+
+function chatContext(now) {
+  const dk = dKeyOf(now), y = addDaysKey(dk, -1);
+  const t = dayTotals(dk), goal = num(state.profile.dailyGoal, 2000), net = t.kcal - t.burn;
+  const lines = [];
+  lines.push(`【当前时间】${dk} ${WD[now.getDay()]} ${hhmm(now)}`);
+  lines.push(`【用户资料】${profileLine()}`);
+  lines.push(`【今天已记录】摄入 ${Math.round(t.kcal)} kcal（蛋白质 ${Math.round(t.p)}g / 碳水 ${Math.round(t.c)}g / 脂肪 ${Math.round(t.fat)}g），运动 ${Math.round(t.min)} 分钟、消耗 ${Math.round(t.burn)} kcal；净摄入 ${Math.round(net)} kcal，离目标还剩 ${Math.round(goal - net)} kcal`);
+  const rec = [];
+  [y, dk].forEach(d => {
+    foodOf(d, UID).forEach(r => rec.push({ k: d + (r.time || ''), s: `- [${r.id}] ${d} ${r.time || ''} 饮食：${r.name}${r.portion ? '（' + r.portion + '）' : ''} ${Math.round(num(r.calories))}kcal 蛋白质${Math.round(num(r.protein))}g` }));
+    exOf(d, UID).forEach(r => rec.push({ k: d + (r.time || ''), s: `- [${r.id}] ${d} ${r.time || ''} 运动：${r.activityName || actById(r.activity).name} ${Math.round(num(r.duration))}分钟 ${Math.round(num(r.calories))}kcal${r.distanceKm ? ' ' + num(r.distanceKm) + 'km' : ''}` }));
+    const b = bodyOf(d);
+    if (b) { const m = bodyMeta(b); if (b.weight) m.unshift('体重 ' + b.weight + 'kg'); if (m.length) rec.push({ k: d + (b.time || ''), s: `- ${d} 身体（新数据会自动合并，不需要 id）：${m.join('；')}` }); }
+  });
+  rec.sort((a, b) => a.k.localeCompare(b.k));
+  lines.push('【最近条目】' + (rec.length ? '\n' + rec.slice(-18).map(r => r.s).join('\n') : '无'));
+  const pend = pendingList().filter(x => x.p.status === 'pending' && x.p.e.date >= addDaysKey(dk, -2));
+  lines.push('【待确认饮食】' + (pend.length ? '\n' + pend.map(({ p }) =>
+    `- [${p.pid}] ${p.e.date} ${p.e.time || ''} ${p.e.name}${p.e.portion ? '（' + p.e.portion + '）' : ''} ${Math.round(num(p.e.kcal))}kcal`).join('\n') : '无'));
+  return lines.join('\n');
+}
+function chatHistory() {
+  return allChatMsgs().filter(m => !m.err && (m.text || (m.photos || []).length)).slice(-8).map(m => ({
+    role: m.role === 'user' ? 'user' : 'assistant',
+    content: ((m.text || '') + ((m.photos || []).length ? `（附 ${m.photos.length} 张照片）` : '')).trim()
+  }));
+}
+const dataUrlParts = u => { const m = /^data:(image\/[a-zA-Z+]+);base64,(.+)$/.exec(u); return m ? { mediaType: m[1], base64: m[2] } : null; };
+
+/* ---- food the AI recognised waits for the person to confirm it ----
+   Stored on the AI message as pending: [{ pid, status, e, photos, replacesRec? }]
+   status: 'pending' → 'confirmed' (recId/recDk point at the saved record) | 'rejected' | 'replaced'.
+   Nothing reaches the food list (or the score) until it is confirmed. */
+function pendingList() {
+  const out = [];
+  allChatMsgs().forEach(m => (Array.isArray(m.pending) ? m.pending : []).forEach(p => { if (p && p.pid) out.push({ m, p }); }));
+  return out;
+}
+const findPending = pid => pendingList().find(x => x.p.pid === pid);
+async function updateChatMsg(m, fn) {
+  const dk = dKeyOf(new Date(num(m.ts)));
+  await db.ref(P.chatDay(UID, ymOfKey(dk), dk)).transaction(cur => {
+    const l = asList(cur);
+    const i = l.findIndex(x => x && x.id === m.id);
+    if (i < 0) return;                                   // message gone — nothing to change
+    l[i] = fn(JSON.parse(JSON.stringify(l[i])));
+    return l;
+  });
+}
+function foodRecFrom(e, photos) {
+  return {
+    id: uid(), time: e.time, name: e.name, calories: Math.round(num(e.kcal)),
+    protein: Math.round(num(e.protein_g)), carbs: Math.round(num(e.carbs_g)), fat: Math.round(num(e.fat_g)),
+    items: (e.items || []).map(i => ({ name: String(i.name || ''), calories: Math.round(num(i.kcal)) })),
+    note: '', photos: Array.isArray(photos) ? photos : [], shared: false,
+    source: 'chat', meal: e.meal || mealOf(e), portion: e.portion || '', confidence: e.confidence || 'medium'
+  };
+}
+const pendingBusy = new Set();
+async function confirmPending(pid, edits) {
+  const hit = findPending(pid);
+  if (!hit || hit.p.status !== 'pending' || pendingBusy.has(pid)) return false;
+  pendingBusy.add(pid);
+  try {
+    const e = { ...hit.p.e, ...(edits || {}) };
+    let photos = hit.p.photos || [];
+    if (hit.p.replacesRec) {                             // a correction of something already recorded
+      const old = findOwn(hit.p.replacesRec);
+      if (old) {
+        if (!photos.length && Array.isArray(old.r.photos)) photos = old.r.photos;
+        await txList(foodPath(old.dKey), l => l.filter(r => r.id !== hit.p.replacesRec));
+      }
+    }
+    const rec = foodRecFrom(e, photos);
+    await txList(foodPath(e.date), l => l.concat([rec]));
+    await updateChatMsg(hit.m, mm => {
+      (mm.pending || []).forEach(p => { if (p && p.pid === pid) { p.status = 'confirmed'; p.recId = rec.id; p.recDk = e.date; p.e = e; } });
+      return mm;
+    });
+    return true;
+  } finally { pendingBusy.delete(pid); }
+}
+async function setPendingStatus(pid, status) {
+  const hit = findPending(pid);
+  if (!hit || hit.p.status !== 'pending') return;
+  await updateChatMsg(hit.m, mm => {
+    (mm.pending || []).forEach(p => { if (p && p.pid === pid) p.status = status; });
+    return mm;
+  });
+}
+
+async function applyChat(d, msg, dk, urls) {
+  const refs = [], pending = [];
+  const entries = Array.isArray(d.entries) ? d.entries : [];
+  const posturePhoto = entries.some(e => e.type === 'body' && e.posture);
+  let photoUsed = false;
+  const errs = [];
+  // "对 / 没错" in the chat confirms pending food the same way the button does
+  for (const pid of (Array.isArray(d.confirm) ? d.confirm : [])) {
+    try { await confirmPending(pid); } catch (err) { console.error('[chat confirm]', err); errs.push(err); }
+  }
+  for (const e of entries) {
+    try {
+      let carryPhotos = null, replacesRec = null;
+      if (e.replaces) {
+        const ph = findPending(e.replaces);
+        if (ph && ph.p.status === 'pending') {
+          carryPhotos = ph.p.photos || null;
+          await setPendingStatus(e.replaces, e.type === 'delete' ? 'rejected' : 'replaced');
+        } else if (e.type === 'food') {
+          replacesRec = e.replaces;                      // swap the recorded one only once the correction is confirmed
+        } else {
+          const hit = findOwn(e.replaces);
+          if (hit) await txList(hit.kind === 'food' ? foodPath(hit.dKey) : exPath(hit.dKey), l => l.filter(r => r.id !== e.replaces));
+        }
+      }
+      if (e.type === 'delete') continue;
+      if (e.type === 'food') {
+        let photos = [];
+        if (carryPhotos && carryPhotos.length) photos = carryPhotos;
+        else if (!photoUsed && !posturePhoto && urls.length) { photos = urls; photoUsed = true; }
+        const ent = { ...e }; delete ent.replaces;
+        const p = { pid: uid(), status: 'pending', e: ent, photos };
+        if (replacesRec) p.replacesRec = replacesRec;
+        pending.push(p);
+      } else if (e.type === 'exercise') {
+        const a = actById(e.activity);
+        const mins = num(e.duration_min);
+        const kcal = num(e.kcal_burned) || (a.met ? Math.round(a.met * 3.5 * num(state.profile.weightKg, 65) / 200 * mins) : 0);
+        const rec = {
+          id: uid(), time: e.time, activity: a.id, activityName: e.name || a.name, duration: mins, calories: kcal,
+          note: '', photos: [], shared: false, source: 'chat', intensity: e.intensity
+        };
+        if (e.distance_km != null) rec.distanceKm = e.distance_km;
+        if (e.sets != null) rec.sets = e.sets;
+        if (e.reps != null) rec.reps = e.reps;
+        if (e.weight_kg != null) rec.weightKg = e.weight_kg;
+        if (e.avg_hr != null) rec.avgHr = e.avg_hr;
+        await txList(exPath(e.date), l => l.concat([rec]));
+        refs.push({ t: 'exercise', id: rec.id, dk: e.date });
+      } else if (e.type === 'body') {
+        const map = { weight_kg: 'weight', body_fat_pct: 'bodyFat', waist_cm: 'waist', chest_cm: 'chest', hip_cm: 'hip',
+                      arm_cm: 'arm', thigh_cm: 'thigh', steps: 'steps', sleep_h: 'sleepH', resting_hr: 'restingHr' };
+        const upd = { time: e.time };
+        Object.keys(map).forEach(k => { if (e[k] != null) upd[map[k]] = e[k]; });
+        if (e.posture) upd.posture = e.posture;
+        if (e.note) upd.note = e.note;
+        if (e.posture && urls.length && !photoUsed) { upd.photos = urls; photoUsed = true; }
+        await db.ref(P.bodyDay(UID, ymOfKey(e.date), e.date)).update(upd);
+        refs.push({ t: 'body', dk: e.date });
+        // keep the MET weight current when today's weight is logged
+        if (upd.weight && e.date === todayKey() && Math.abs(upd.weight - num(state.profile.weightKg)) >= 0.1) {
+          await saveProfile({ ...state.profile, weightKg: upd.weight });
+        }
+      }
+    } catch (err) { console.error('[chat apply]', err); errs.push(err); }
+  }
+  if (d.profile) {
+    try { await saveProfile({ ...state.profile, ...d.profile }); fillSettings(); }
+    catch (err) { console.error('[chat profile]', err); errs.push(err); }
+  }
+  const tail = errs.length ? `\n（有 ${errs.length} 条没保存成功，请检查网路后再说一次）` : '';
+  await appendChat(dk, { id: uid(), role: 'ai', text: (d.reply || '好的。') + tail, refs, pending, ts: Date.now() });
+}
+
+async function chatSend(retry) {
+  if (state.chatBusy) return;
+  const ta = $('#cpText');
+  const text = retry ? retry.text : ta.value.trim().slice(0, 2000);
+  const pics = retry ? [] : state.chatPend.slice();
+  if (!text && !pics.length) return;
+  const now = new Date(), dk = dKeyOf(now);
+  const msg = retry ? retry.msg : { id: uid(), role: 'user', text, photos: [], ts: Date.now() };
+
+  // context is built before this message is saved, so it doesn't see itself
+  const payload = {
+    text, images: pics.map(p => dataUrlParts(p.dataUrl)).filter(Boolean),
+    today: dk, now: hhmm(now), context: chatContext(now), history: chatHistory()
+  };
+  state.chatBusy = true; state.chatBusyPics = pics.length > 0; state.chatForceBottom = true;
+  if (!retry) {
+    state.chatLocal = { ...msg, localPics: pics.map(p => p.dataUrl) };
+    ta.value = ''; autosizeCp(); state.chatPend = []; renderPend();
+    try { localStorage.removeItem('chatDraft'); } catch (e) {}
+  }
+  renderChat();
+
+  const aiP = aiCall('chat-log', payload).then(d => ({ ok: true, d }), e => ({ ok: false, e }));
+  let urls = [];
+  if (!retry) {
+    if (pics.length) {
+      try { urls = await uploadTray(pics.map(p => ({ dataUrl: p.dataUrl }))); }
+      catch (e) { console.error('[chat photos]', e); toast(e && e.code === 'storage/unauthorized' ? '照片上传被拒绝，请检查 Storage 规则' : '照片没上传成功，记录照常保存'); }
+    }
+    msg.photos = urls;
+    try { await appendChat(dk, msg); } catch (e) { console.error('[chat save]', e); toast('消息没保存成功，请检查网路'); }
+    state.chatLocal = null;
+  }
+  const res = await aiP;
+  try {
+    if (res.ok) await applyChat(res.d, msg, dk, urls);
+    else await appendChat(dk, { id: uid(), role: 'ai', ts: Date.now(), err: true,
+      retryOf: pics.length || (msg.photos || []).length ? null : msg.id,
+      text: (res.e.message || '这次没整理成功') + (pics.length ? '。照片已经保存，需要的话请重新发一次。' : '') });
+  } catch (e) { console.error('[chat]', e); toast('保存失败，请检查网路'); }
+  state.chatBusy = false; state.chatBusyPics = false; state.chatForceBottom = true;
+  renderAll();
+}
+async function chatRetry(userId, errId) {
+  const m = allChatMsgs().find(x => x.id === userId);
+  if (!m || state.chatBusy) return;
+  const dk = dKeyOf(new Date(num(m.ts)));
+  try { await dropChat(dk, errId); } catch (e) { console.error(e); }
+  chatSend({ text: m.text || '', msg: m });
+}
+
+/* ---- composer ---- */
+function autosizeCp() {
+  const ta = $('#cpText');
+  ta.style.height = '44px';
+  ta.style.height = Math.min(Math.max(44, ta.scrollHeight + 2), 132) + 'px';
+}
+function renderPend() {
+  const box = $('#cpPend');
+  box.style.display = state.chatPend.length ? 'flex' : 'none';
+  box.innerHTML = state.chatPend.map(p => `<div class="th"><img src="${esc(p.dataUrl)}" alt="待发送的照片">
+    <button data-cunpend="${esc(p.id)}" aria-label="移除这张照片">✕</button></div>`).join('');
+  $('#cpSend').disabled = state.chatBusy || !($('#cpText').value.trim() || state.chatPend.length);
+}
+const CHAT_MAX_PICS = 4;
+$('#cpCam').onclick = () => $('#chatFile').click();
+$('#chatFile').onchange = async e => {
+  const files = Array.from(e.target.files || []); e.target.value = '';
+  const room = CHAT_MAX_PICS - state.chatPend.length;
+  if (room <= 0) { toast(`一条消息最多 ${CHAT_MAX_PICS} 张照片`); return; }
+  if (files.length > room) toast(`一条消息最多 ${CHAT_MAX_PICS} 张，只加了前 ${room} 张`);
+  for (const f of files.slice(0, room)) {
+    try { state.chatPend.push({ id: uid(), dataUrl: await compressImage(f) }); }
+    catch (err) { console.error(err); toast('有张照片读取失败，已跳过'); }
+  }
+  renderPend();
+};
+(() => {
+  const ta = $('#cpText');
+  const coarse = window.matchMedia && matchMedia('(pointer: coarse)').matches;
+  try { const d = localStorage.getItem('chatDraft'); if (d) ta.value = d; } catch (e) {}
+  let t = null;
+  ta.addEventListener('input', () => {
+    autosizeCp(); renderPend();
+    clearTimeout(t); t = setTimeout(() => { try { ta.value ? localStorage.setItem('chatDraft', ta.value) : localStorage.removeItem('chatDraft'); } catch (e) {} }, 400);
+  });
+  ta.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !e.shiftKey && !coarse && !e.isComposing && e.keyCode !== 229) { e.preventDefault(); chatSend(); }
+  });
+})();
+$('#cpSend').onclick = () => chatSend();
+$('#chatList').addEventListener('click', e => {
+  const ex = e.target.closest('[data-cex]');
+  if (ex) { const ta = $('#cpText'); ta.value = ex.dataset.cex; autosizeCp(); renderPend(); ta.focus(); return; }
+  if (e.target.closest('[data-cmore]')) { state.chatLimit += 40; attachChat(ymOf(new Date(new Date().getFullYear(), new Date().getMonth() - 1, 1))); renderChat(); return; }
+  const rt = e.target.closest('[data-cretry]');
+  if (rt) { chatRetry(rt.dataset.cretry, rt.dataset.cerr); return; }
+  const ok = e.target.closest('[data-pok]');
+  if (ok) {
+    ok.disabled = true;
+    confirmPending(ok.dataset.pok).then(r => { if (r) toast('已记下'); })
+      .catch(err => { console.error('[confirm]', err); toast('保存失败，请检查网路'); ok.disabled = false; });
+    return;
+  }
+  const all = e.target.closest('[data-pall]');
+  if (all) {
+    all.disabled = true;
+    const ids = pendingList().filter(x => x.m.id === all.dataset.pall && x.p.status === 'pending').map(x => x.p.pid);
+    (async () => { let n = 0; for (const id of ids) { try { if (await confirmPending(id)) n++; } catch (err) { console.error(err); } } toast(`已记下 ${n} 项`); })();
+    return;
+  }
+  const ed = e.target.closest('[data-pedit]');
+  if (ed) { sheetPendingFood(ed.dataset.pedit); return; }
+  const no = e.target.closest('[data-pno]');
+  if (no) {
+    const hit = findPending(no.dataset.pno);
+    no.disabled = true;
+    setPendingStatus(no.dataset.pno, 'rejected').catch(err => { console.error(err); toast('操作失败，请检查网路'); });
+    if (hit) {
+      const ta = $('#cpText');
+      ta.value = `不是${hit.p.e.name}，是`;
+      autosizeCp(); renderPend(); ta.focus();
+      ta.setSelectionRange(ta.value.length, ta.value.length);
+    }
+    return;
+  }
+  const cr = e.target.closest('[data-cref]');
+  if (cr) {
+    const kind = cr.dataset.cref, dk = cr.dataset.dk;
+    if (kind === 'body') { sheetBodyForm(dk); return; }
+    if (dk !== todayKey()) { toast('只能直接修改今天的记录；其他日子可以在聊天里告诉我要改什么'); return; }
+    const hit = findOwn(cr.dataset.id);
+    if (hit) (kind === 'food' ? sheetFoodForm : sheetExForm)(hit.r);
+  }
+});
+$('#cpPend').addEventListener('click', e => {
+  const b = e.target.closest('[data-cunpend]');
+  if (b) { state.chatPend = state.chatPend.filter(p => p.id !== b.dataset.cunpend); renderPend(); }
+});
+
+/* ============================================================
    START — routing is driven entirely by auth state
    ============================================================ */
 function resetState() {
@@ -2078,6 +3250,9 @@ function resetState() {
   state.profile = null; state.roster = {};
   state.food = {}; state.exercise = {}; state.body = {};
   state.social = {}; state.openComments = {}; state.cmDraft = {}; state.feedPhotos = {};
+  state.chat = {}; state.reports = {}; state.reportsLoaded = false; state.quota = null;
+  state.chatPend = []; state.chatBusy = false; state.chatLocal = null;
+  state.reportBusy = null; state.reportErr = null; state.autoReportTried = false; state.daySheet = null;
   obName = ''; obNewCode = '';
 }
 
@@ -2109,6 +3284,7 @@ firebase.auth().onAuthStateChanged(async user => {
     boot();
   } else {
     // first time on this account → nickname, then create / join group
+    if (!$('#obName').value && user.displayName) $('#obName').value = user.displayName.trim().slice(0, 12);
     showOb(1);
     setTimeout(() => $('#obName').focus(), 200);
   }
@@ -2119,7 +3295,10 @@ setInterval(() => {
   if (!state.profile || !UID) return;
   const ym = ymOf(new Date());
   if (!state.listeners[P.foodYm(state.profile.groupCode, ym)]) attachMonth(ym);
-  renderToday();
+  attachChat(ym);
+  renderToday(); renderDayCard();
+  // crossed midnight with the app open → yesterday's report is now due
+  if (state.autoDay && state.autoDay !== dKeyOf(new Date())) { state.autoReportTried = false; maybeAutoReport(); }
 }, 60000);
 </script>
 </body>
