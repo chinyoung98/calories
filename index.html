@@ -3096,10 +3096,18 @@ async function applyChat(d, msg, dk, urls) {
         let photos = [];
         if (carryPhotos && carryPhotos.length) photos = carryPhotos;
         else if (!photoUsed && !posturePhoto && urls.length) { photos = urls; photoUsed = true; }
-        const ent = { ...e }; delete ent.replaces;
-        const p = { pid: uid(), status: 'pending', e: ent, photos, share: !!e.share };
-        if (replacesRec) p.replacesRec = replacesRec;
-        pending.push(p);
+        const ent = { ...e }; delete ent.replaces; delete ent.confirmed;
+        if (e.confirmed) {
+          // the person already said yes in the chat to food that never got a card — record it straight away
+          if (replacesRec) { const old = findOwn(replacesRec); if (old) await txList(foodPath(old.dKey), l => l.filter(r => r.id !== replacesRec)); }
+          const rec = foodRecFrom(ent, photos, !!e.share);
+          await txList(foodPath(ent.date), l => l.concat([rec]));
+          refs.push({ t: 'food', id: rec.id, dk: ent.date });
+        } else {
+          const p = { pid: uid(), status: 'pending', e: ent, photos, share: !!e.share };
+          if (replacesRec) p.replacesRec = replacesRec;
+          pending.push(p);
+        }
       } else if (e.type === 'exercise') {
         const a = actById(e.activity);
         const mins = num(e.duration_min);
