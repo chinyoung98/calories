@@ -10,13 +10,14 @@ const RULES = `你是「卡路里记账本」app 里的记录助手。用户用�
 1. 从【用户新消息】和附带的照片里提取所有能记录的条目，分三类：food（饮食）、exercise（运动）、body（身体数据与体态）。一句话里有多项就拆成多条；同一餐的几样食物可以合成一条 food，并把每样写进 items。
 2. 份量和热量按马来西亚常见份量估算（如一盘海南鸡饭、一碗板面、一份经济饭、一杯 teh tarik 或 kopi），数字取整。照片看不清份量就按常见份量估，confidence 填 low 或 medium。
 3. 运动消耗用 MET 估算：MET × 3.5 × 体重kg ÷ 200 × 分钟。体重用【用户资料】里的体重，没有就按 65kg。力量训练按实际训练时间估；用户没说时长就合理估计，并在 reply 里说一下是估的。activity 从这些里选最接近的：walk 走路、run 跑步、bike 骑行、swim 游泳、lift 力量训练、yoga 瑜伽、rope 跳绳、stairs 爬楼梯、ball 球类运动；都不像就用 custom，并把项目名写进 name。
+   力量训练要记细节：同一次训练的所有动作合成一条 exercise（activity 用 lift，name 写练的部位，如「胸 + 三头」「腿」），每个动作放进 lifts，每一组一条 {"reps":次数,"kg":重量}——「卧推 60kg 4×8」就是 4 条 {"reps":8,"kg":60}；徒手动作 kg 填 null；用户只说了组数没说每组次数时按 10 次估。muscle 从 chest 胸、back 背、legs 腿、shoulders 肩、arms 手臂、core 核心、full 全身 里选。没说训练时长就按每组约 2.5 分钟估。
 4. body：体重、体脂、围度直接记录。用户发体态照片（镜子自拍、正面或侧面照）时，在 posture 里客观描述能看到的体态特点（如头前伸、圆肩、骨盆前倾、高低肩、站姿重心），不评价长相，不做医疗诊断。能目测的体脂区间写进 note 并注明“目测”。
 5. 用户发运动健康 app 的截图（如华为运动健康 Huawei Health、Strava、Apple 健康）时：锻炼记录记成 exercise（用截图里的项目、时长、距离、平均心率和消耗热量，time 用锻炼开始时间）；步数、睡眠时长、静息心率记成一条 body（steps、sleep_h、resting_hr）。截图里的“活动热量 / 卡路里”总数不要另外记成运动，避免和锻炼重复。截图日期不是今天就按截图上的日期记。如果【最近条目】里已经有同一次锻炼，就用 replaces 替换，不要重复记。
 6. 用户纠正之前的记录（如“刚才那碗面其实只吃了一半”），输出修正后的完整新条目，并加 "replaces":"被替换条目的 id"（id 在【最近条目】的方括号里）。只删除不替换时输出 {"type":"delete","replaces":"id"}。
 7. 用户提到身高、年龄、性别、目标、每日热量目标、蛋白质目标、每日运动目标（分钟）、日常活动量时，填进 profile；没提到就 profile 为 null。
-8. 消息只是聊天或提问、没有可记录内容时，entries 为 []，在 reply 里正常回答。
+8. 消息只是聊天或提问、没有可记录内容时，entries 为 []，在 reply 里正常回答。用户问训练、饮食或恢复的建议（如“今天练什么”“卧推卡住了怎么办”“怎么增肌”“练完腿酸要不要休息”）时，像一位专业的私人教练回答：参考【训练概况】【AI 教练计划】和用户资料，给具体的动作、组数 × 次数、重量或 RPE、组间休息和 1 到 2 个动作要点，必要时说明为什么；这类回答可以写到 8 行左右，用换行分点。不要编造用户没做过的训练。用户提到疼痛、受伤、头晕胸闷时，先建议停下来并看医生或物理治疗师。
 9. date 默认【当前时间】的日期；用户说“昨天”“前天”“周一”等就换算成对应日期，不能晚于今天。time 用 24 小时 HH:MM，没说就用当前时间；饮食可以按餐别给一个合理时间。
-10. reply 用简体中文，1 到 3 句，语气像懂训练和营养的朋友，需要时再加一句有用的提醒，比如今天蛋白质偏低、离目标还剩多少。不说教，不用每次都提醒。饮食的确认由 app 负责：识别到饮食时，一定要在 entries 里输出 food 条目——app 会把它显示成「请确认」卡片，用户点确认后才记下。绝对不要因为“要等用户确认”就不输出 food。reply 里说出你识别到的食物和份量，请用户确认（例如“看起来是一盘海南鸡饭，约 650 kcal，对吗？”）；真的看不出是什么时，仍然按最可能的食物输出 food（confidence 填 low），并在 reply 里问。运动和身体数据会直接记下，reply 里说记了什么。
+10. reply 用简体中文；记录类的回复 1 到 3 句，语气像懂训练和营养的朋友，需要时再加一句有用的提醒，比如今天蛋白质偏低、离目标还剩多少。不说教，不用每次都提醒。饮食的确认由 app 负责：识别到饮食时，一定要在 entries 里输出 food 条目——app 会把它显示成「请确认」卡片，用户点确认后才记下。绝对不要因为“要等用户确认”就不输出 food。reply 里说出你识别到的食物和份量，请用户确认（例如“看起来是一盘海南鸡饭，约 650 kcal，对吗？”）；真的看不出是什么时，仍然按最可能的食物输出 food（confidence 填 low），并在 reply 里问。运动和身体数据会直接记下，reply 里说记了什么。
 11. 不鼓励极端做法：用户想长期每天吃低于 1200 kcal、长时间断食或短期大幅减重时，温和说明风险并给更稳妥的做法。提到疼痛、受伤或身体不适时，建议看医生或物理治疗师。
 12. 【待确认饮食】里是之前识别出、还在等用户确认的饮食（还没记下），方括号里是它的 id。
    - 用户表示没错（如“对”“是的”“没错”“确认”“记吧”）：把这些 id 放进 "confirm"，不要再重复输出这些 food。没说哪一项就确认全部待确认饮食。
@@ -35,9 +36,31 @@ const RULES = `你是「卡路里记账本」app 里的记录助手。用户用�
 
 条目格式（数值未知用 null）：
 food: {"type":"food","date":"YYYY-MM-DD","time":"HH:MM","meal":"breakfast|lunch|dinner|snack","name":"这一餐的名称","portion":"份量描述","kcal":0,"protein_g":0,"carbs_g":0,"fat_g":0,"confidence":"high|medium|low","items":[{"name":"食物","kcal":0}]}（要发朋友圈时再加 "share":true,"note":"配文"）
-exercise: {"type":"exercise","date":"YYYY-MM-DD","time":"HH:MM","activity":"walk|run|bike|swim|lift|yoga|rope|stairs|ball|custom","name":"项目名","duration_min":0,"distance_km":null,"sets":null,"reps":null,"weight_kg":null,"avg_hr":null,"intensity":"low|moderate|high","kcal_burned":0}（要发朋友圈时再加 "share":true,"note":"配文"）
+exercise: {"type":"exercise","date":"YYYY-MM-DD","time":"HH:MM","activity":"walk|run|bike|swim|lift|yoga|rope|stairs|ball|custom","name":"项目名","duration_min":0,"distance_km":null,"avg_hr":null,"intensity":"low|moderate|high","kcal_burned":0,"lifts":[{"name":"动作","muscle":"chest|back|legs|shoulders|arms|core|full","sets":[{"reps":8,"kg":60}]}]}（不是力量训练时 lifts 用 []）（要发朋友圈时再加 "share":true,"note":"配文"）
 body: {"type":"body","date":"YYYY-MM-DD","time":"HH:MM","weight_kg":null,"body_fat_pct":null,"waist_cm":null,"chest_cm":null,"hip_cm":null,"arm_cm":null,"thigh_cm":null,"steps":null,"sleep_h":null,"resting_hr":null,"posture":"","note":""}
-profile（只填用户提到的字段）: {"height_cm":null,"age":null,"sex":"male|female","goal":"lose|gain|maintain|fitness","kcal_target":null,"protein_target_g":null,"exercise_goal_min":null,"activity":"sedentary|moderate|physical"}`;
+profile（只填用户提到的字段）: {"height_cm":null,"age":null,"sex":"male|female","goal":"lose|gain|maintain|fitness","kcal_target":null,"protein_target_g":null,"exercise_goal_min":null,"activity":"sedentary|moderate|physical","experience":"beginner|intermediate|advanced","train_days":null,"equipment":"gym|dumbbell|bodyweight"}`;
+
+const MUSCLES = ['chest', 'back', 'legs', 'shoulders', 'arms', 'core', 'full'];
+// Lifts come back as one entry per set; tolerate the shorthand {sets:4, reps:8, kg:60} too.
+export function normLifts(list) {
+  if (!Array.isArray(list)) return [];
+  return list.slice(0, 15).map(l => {
+    if (!l || typeof l !== 'object') return null;
+    const name = str(l.name, 30);
+    if (!name) return null;
+    let sets = [];
+    if (Array.isArray(l.sets)) {
+      sets = l.sets.slice(0, 12).map(s => ({ reps: numIn(s && s.reps, 1, 100, 0), kg: numIn(s && s.kg, 0, 500, 1) }));
+    } else {
+      const n = Math.min(12, Math.round(numIn(l.sets, 1, 12, 0) || 0));
+      for (let i = 0; i < n; i++) sets.push({ reps: numIn(l.reps, 1, 100, 0), kg: numIn(l.kg ?? l.weight_kg, 0, 500, 1) });
+    }
+    // a set needs reps or a weight; bodyweight sets simply have no kg
+    sets = sets.filter(s => s.reps != null || s.kg != null).map(s => s.kg != null ? { reps: s.reps ?? 10, kg: s.kg } : { reps: s.reps ?? 10 });
+    if (!sets.length) return null;
+    return { name, muscle: MUSCLES.includes(l.muscle) ? l.muscle : 'full', sets };
+  }).filter(Boolean);
+}
 
 const ACTS = ['walk', 'run', 'bike', 'swim', 'lift', 'yoga', 'rope', 'stairs', 'ball', 'custom'];
 const MEALS = ['breakfast', 'lunch', 'dinner', 'snack'];
@@ -94,12 +117,14 @@ export function normEntry(r, today, nowHm) {
     e.name = str(r.name, 30);
     e.duration_min = Math.round(numIn(r.duration_min, 0, 900, 0) || 0);
     e.distance_km = numIn(r.distance_km, 0, 400, 2);
-    e.sets = numIn(r.sets, 0, 100, 0);
-    e.reps = numIn(r.reps, 0, 1000, 0);
-    e.weight_kg = numIn(r.weight_kg, 0, 600, 1);
     e.avg_hr = numIn(r.avg_hr, 30, 230, 0);
     e.intensity = ['low', 'moderate', 'high'].includes(r.intensity) ? r.intensity : 'moderate';
     e.kcal_burned = Math.round(numIn(r.kcal_burned, 0, 5000, 0) || 0);
+    e.lifts = normLifts(r.lifts);
+    if (e.lifts.length) {
+      e.activity = 'lift';
+      if (!e.duration_min) e.duration_min = Math.max(10, Math.round(e.lifts.reduce((n, l) => n + l.sets.length, 0) * 2.5));
+    }
     if (!e.duration_min && !e.kcal_burned) return null;
   } else {
     let any = false;
@@ -125,6 +150,9 @@ export function normProfile(p) {
   const pr = numIn(p.protein_target_g, 20, 400, 0); if (pr !== null) out.proteinTarget = pr;
   const ex = numIn(p.exercise_goal_min, 5, 300, 0); if (ex !== null) out.exerciseGoal = ex;
   if (['sedentary', 'moderate', 'physical'].includes(p.activity)) out.activity = p.activity;
+  if (['beginner', 'intermediate', 'advanced'].includes(p.experience)) out.experience = p.experience;
+  const td = numIn(p.train_days, 1, 7, 0); if (td !== null) out.trainDays = td;
+  if (['gym', 'dumbbell', 'bodyweight'].includes(p.equipment)) out.equipment = p.equipment;
   return Object.keys(out).length ? out : null;
 }
 
@@ -179,7 +207,7 @@ export default async (req) => {
     const unshare = Array.isArray(parsed.unshare)
       ? parsed.unshare.map(x => str(String(x || ''), 64)).filter(Boolean).slice(0, 12)
       : [];
-    const reply = str(parsed.reply, 1200) || (entries.length || confirm.length || share.length ? '好的。' : '收到。');
+    const reply = str(parsed.reply, 2000) || (entries.length || confirm.length || share.length ? '好的。' : '收到。');
     return { reply, entries, profile: normProfile(parsed.profile), confirm, share, unshare, quota };
   });
 };
