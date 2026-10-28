@@ -407,6 +407,19 @@ textarea.in{min-height:74px;resize:vertical;line-height:1.45;display:block}
 .cp-pend img{width:58px;height:58px;object-fit:cover;border-radius:10px;display:block}
 .cp-pend button{position:absolute;top:-6px;right:-6px;width:22px;height:22px;border-radius:50%;background:var(--ink);color:var(--paper);font-size:12px;line-height:1;display:grid;place-items:center}
 .cp-hint{max-width:720px;margin:6px auto 0;font-size:11px;color:var(--ink-3);text-align:center}
+/* pending food waiting for confirmation */
+.pf-hd{padding:9px 12px;font-size:12px;font-weight:600;color:var(--gold);background:var(--gold-soft);border-bottom:1px solid var(--line-soft)}
+.pf{border-bottom:1px solid var(--line-soft)}
+.pf:last-child{border-bottom:none}
+.pf .row{border-bottom:none;padding-bottom:6px}
+.pf .chips{margin-top:5px}
+.pf-acts{display:flex;flex-wrap:wrap;gap:6px;padding:0 12px 12px 56px}
+.pf-acts button{padding:7px 13px;border-radius:99px;border:1px solid var(--line);background:var(--card);font-size:13.5px;font-weight:600;color:var(--ink-2)}
+.pf-acts button:active{background:var(--paper)}
+.pf-acts .pf-ok{background:var(--forest);border-color:var(--forest);color:#fff}
+.pf-acts button[disabled]{opacity:.5}
+.pf-done .nm s{color:var(--ink-3)}
+.pf-all{display:block;width:100%;padding:11px;border-top:1px solid var(--line-soft);color:var(--forest);font-weight:700;font-size:14px;background:var(--forest-soft)}
 </style>
 </head>
 <body>
@@ -2789,7 +2802,91 @@ function chatMsgHtml(m) {
   const link = canRetry ? ` <button class="lnk" data-cretry="${esc(m.retryOf)}" data-cerr="${esc(m.id)}">重试</button>`
     : m.reportDKey ? ` <button class="lnk" data-openday="${esc(m.reportDKey)}">查看日报</button>` : '';
   return `<div class="msg ai"><div class="bub${m.err ? ' err' : ''}">${esc(m.text)}${link}</div>
+    ${pendingHtml(m)}
     ${refs.length ? `<div class="card flat rec">${refs.map(refRowHtml).join('')}</div>` : ''}${tm}</div>`;
+}
+function pendingHtml(m) {
+  const list = (Array.isArray(m.pending) ? m.pending : []).filter(p => p && p.pid && p.e);
+  if (!list.length) return '';
+  const open = list.filter(p => p.status === 'pending');
+  const rows = list.map(p => {
+    if (p.status === 'confirmed') return refRowHtml({ t: 'food', id: p.recId, dk: p.recDk });
+    const e = p.e;
+    if (p.status === 'rejected' || p.status === 'replaced') {
+      return `<div class="row pf-done"><span class="ic">🍽️</span><span class="mid"><span class="nm"><s>${esc(e.name)}</s></span>
+        <span class="mt">${p.status === 'rejected' ? '已取消，没有记录' : '已更正，看下面的新识别'}</span></span></div>`;
+    }
+    const when = e.date === todayKey() ? '' : esc(e.date.slice(5)) + ' · ';
+    const items = Array.isArray(e.items) && e.items.length > 1
+      ? `<span class="chips">${e.items.map(i => `<span class="chip">${esc(i.name)} · ${Math.round(num(i.kcal))}</span>`).join('')}</span>` : '';
+    const conf = e.confidence === 'low' ? ' · 粗略估算' : '';
+    return `<div class="pf">
+      <div class="row"><span class="ic">🍽️</span>
+        <span class="mid"><span class="nm">${esc(e.name)}</span>
+          <span class="mt">${when}${MEAL_N[e.meal] || ''}${e.portion ? ' · ' + esc(e.portion) : ''} · P ${Math.round(num(e.protein_g))}g · C ${Math.round(num(e.carbs_g))}g · F ${Math.round(num(e.fat_g))}g${conf}</span>
+          ${items}</span>
+        <span class="val">${Math.round(num(e.kcal))}</span></div>
+      <div class="pf-acts">
+        <button class="pf-ok" data-pok="${esc(p.pid)}">✓ 对，记下</button>
+        <button data-pedit="${esc(p.pid)}">修改</button>
+        <button data-pno="${esc(p.pid)}">不是</button>
+      </div>
+    </div>`;
+  }).join('');
+  return `<div class="card flat rec">
+    ${open.length ? `<div class="pf-hd">请确认识别结果 · 确认后才会记进饮食</div>` : ''}
+    ${rows}
+    ${open.length > 1 ? `<button class="pf-all" data-pall="${esc(m.id)}">全部确认（${open.length} 项）</button>` : ''}
+  </div>`;
+}
+
+/* ---- edit a pending food before confirming ---- */
+function sheetPendingFood(pid) {
+  const hit = findPending(pid);
+  if (!hit || hit.p.status !== 'pending') return;
+  const e = hit.p.e;
+  openSheet(`${shHead('修改再记下')}
+    ${(hit.p.photos || []).length ? `<div class="tray">${hit.p.photos.map((u, i) =>
+      `<div class="th"><img src="${esc(u)}" alt="照片 ${i + 1}"></div>`).join('')}</div>` : ''}
+    <div class="card">
+      <label class="f"><span class="lb">名称</span><input class="in" id="pfName" value="${esc(e.name)}"></label>
+      <label class="f"><span class="lb">份量</span><input class="in" id="pfPortion" value="${esc(e.portion || '')}" placeholder="例如：一盘、半碗"></label>
+      <div class="g2">
+        <label class="f"><span class="lb">热量 kcal</span><input class="in mono" id="pfCal" type="number" inputmode="numeric" value="${Math.round(num(e.kcal))}"></label>
+        <label class="f"><span class="lb">餐别</span><select class="in" id="pfMeal">${Object.keys(MEAL_N).map(k =>
+          `<option value="${k}"${k === e.meal ? ' selected' : ''}>${MEAL_N[k]}</option>`).join('')}</select></label>
+      </div>
+      <div class="g3">
+        <label class="f"><span class="lb">蛋白 g</span><input class="in mono" id="pfP" type="number" inputmode="numeric" value="${Math.round(num(e.protein_g))}"></label>
+        <label class="f"><span class="lb">碳水 g</span><input class="in mono" id="pfC" type="number" inputmode="numeric" value="${Math.round(num(e.carbs_g))}"></label>
+        <label class="f"><span class="lb">脂肪 g</span><input class="in mono" id="pfF" type="number" inputmode="numeric" value="${Math.round(num(e.fat_g))}"></label>
+      </div>
+      <label class="f" style="margin-bottom:0"><span class="lb">日期</span><input class="in mono" id="pfDate" type="date" max="${todayKey()}" value="${esc(e.date)}"></label>
+    </div>
+    <button class="btn" id="pfSave">确认并记下</button>
+    <div class="note">改完名称或份量，热量和营养也记得一起改；不确定的话可以关掉，直接在聊天里说「不是这个，是…」，AI 会重新估算。</div>`);
+  $('#pfSave').onclick = async () => {
+    const name = $('#pfName').value.trim();
+    const cal = num($('#pfCal').value, NaN);
+    if (!name) { toast('请输入名称'); $('#pfName').focus(); return; }
+    if (!Number.isFinite(cal) || cal < 0) { toast('请输入有效的卡路里'); $('#pfCal').focus(); return; }
+    let date = $('#pfDate').value || e.date;
+    if (date > todayKey()) date = todayKey();
+    const btn = $('#pfSave'); btn.disabled = true; btn.textContent = '保存中…';
+    try {
+      const changedName = name !== e.name;
+      const ok = await confirmPending(pid, {
+        name, portion: $('#pfPortion').value.trim(), kcal: Math.round(cal), meal: $('#pfMeal').value, date,
+        protein_g: Math.round(num($('#pfP').value)), carbs_g: Math.round(num($('#pfC').value)), fat_g: Math.round(num($('#pfF').value)),
+        ...(changedName ? { items: [] } : {}), confidence: 'high'
+      });
+      if (!ok) { toast('这一项已经处理过了'); closeSheet(); return; }
+    } catch (err) {
+      console.error('[pending edit]', err); toast('保存失败，请检查网路');
+      btn.disabled = false; btn.textContent = '重试'; return;
+    }
+    closeSheet(); toast('已记下 ' + Math.round(cal) + ' kcal');
+  };
 }
 function renderChat() {
   if (!state.profile || state.tab !== 'chat') return;
@@ -2802,7 +2899,7 @@ function renderChat() {
   if (!msgs.some(m => m.role === 'user')) {
     html = `<div class="msg ai"><div class="bub">直接跟我说今天吃了什么、练了什么、身体有什么变化，也可以拍食物、体态照片，或者华为运动健康 / Strava 的截图发过来。
 
-我会自动记进「饮食 / 运动 / 身材」，在「今日」看得分和 AI 日报。每天第一次打开 App 时，会自动写好前一天的日报。</div></div>
+我会自动分进「饮食 / 运动 / 身材」。识别出的食物会先请你确认，点「对，记下」或回一句「对」才会记进去；不对就点「修改」或「不是」。在「今日」看得分和 AI 日报，每天第一次打开 App 时会自动写好前一天的日报。</div></div>
       <div class="ex-chips"><span class="lb">可以这样说（示例，点一下会填进输入框）</span>
         ${CHAT_EXAMPLES.map(t => `<button class="ex-chip" data-cex="${esc(t)}">${esc(t)}</button>`).join('')}</div>`;
   }
@@ -2856,6 +2953,9 @@ function chatContext(now) {
   });
   rec.sort((a, b) => a.k.localeCompare(b.k));
   lines.push('【最近条目】' + (rec.length ? '\n' + rec.slice(-18).map(r => r.s).join('\n') : '无'));
+  const pend = pendingList().filter(x => x.p.status === 'pending' && x.p.e.date >= addDaysKey(dk, -2));
+  lines.push('【待确认饮食】' + (pend.length ? '\n' + pend.map(({ p }) =>
+    `- [${p.pid}] ${p.e.date} ${p.e.time || ''} ${p.e.name}${p.e.portion ? '（' + p.e.portion + '）' : ''} ${Math.round(num(p.e.kcal))}kcal`).join('\n') : '无'));
   return lines.join('\n');
 }
 function chatHistory() {
@@ -2866,29 +2966,102 @@ function chatHistory() {
 }
 const dataUrlParts = u => { const m = /^data:(image\/[a-zA-Z+]+);base64,(.+)$/.exec(u); return m ? { mediaType: m[1], base64: m[2] } : null; };
 
+/* ---- food the AI recognised waits for the person to confirm it ----
+   Stored on the AI message as pending: [{ pid, status, e, photos, replacesRec? }]
+   status: 'pending' → 'confirmed' (recId/recDk point at the saved record) | 'rejected' | 'replaced'.
+   Nothing reaches the food list (or the score) until it is confirmed. */
+function pendingList() {
+  const out = [];
+  allChatMsgs().forEach(m => (Array.isArray(m.pending) ? m.pending : []).forEach(p => { if (p && p.pid) out.push({ m, p }); }));
+  return out;
+}
+const findPending = pid => pendingList().find(x => x.p.pid === pid);
+async function updateChatMsg(m, fn) {
+  const dk = dKeyOf(new Date(num(m.ts)));
+  await db.ref(P.chatDay(UID, ymOfKey(dk), dk)).transaction(cur => {
+    const l = asList(cur);
+    const i = l.findIndex(x => x && x.id === m.id);
+    if (i < 0) return;                                   // message gone — nothing to change
+    l[i] = fn(JSON.parse(JSON.stringify(l[i])));
+    return l;
+  });
+}
+function foodRecFrom(e, photos) {
+  return {
+    id: uid(), time: e.time, name: e.name, calories: Math.round(num(e.kcal)),
+    protein: Math.round(num(e.protein_g)), carbs: Math.round(num(e.carbs_g)), fat: Math.round(num(e.fat_g)),
+    items: (e.items || []).map(i => ({ name: String(i.name || ''), calories: Math.round(num(i.kcal)) })),
+    note: '', photos: Array.isArray(photos) ? photos : [], shared: false,
+    source: 'chat', meal: e.meal || mealOf(e), portion: e.portion || '', confidence: e.confidence || 'medium'
+  };
+}
+const pendingBusy = new Set();
+async function confirmPending(pid, edits) {
+  const hit = findPending(pid);
+  if (!hit || hit.p.status !== 'pending' || pendingBusy.has(pid)) return false;
+  pendingBusy.add(pid);
+  try {
+    const e = { ...hit.p.e, ...(edits || {}) };
+    let photos = hit.p.photos || [];
+    if (hit.p.replacesRec) {                             // a correction of something already recorded
+      const old = findOwn(hit.p.replacesRec);
+      if (old) {
+        if (!photos.length && Array.isArray(old.r.photos)) photos = old.r.photos;
+        await txList(foodPath(old.dKey), l => l.filter(r => r.id !== hit.p.replacesRec));
+      }
+    }
+    const rec = foodRecFrom(e, photos);
+    await txList(foodPath(e.date), l => l.concat([rec]));
+    await updateChatMsg(hit.m, mm => {
+      (mm.pending || []).forEach(p => { if (p && p.pid === pid) { p.status = 'confirmed'; p.recId = rec.id; p.recDk = e.date; p.e = e; } });
+      return mm;
+    });
+    return true;
+  } finally { pendingBusy.delete(pid); }
+}
+async function setPendingStatus(pid, status) {
+  const hit = findPending(pid);
+  if (!hit || hit.p.status !== 'pending') return;
+  await updateChatMsg(hit.m, mm => {
+    (mm.pending || []).forEach(p => { if (p && p.pid === pid) p.status = status; });
+    return mm;
+  });
+}
+
 async function applyChat(d, msg, dk, urls) {
-  const refs = [];
+  const refs = [], pending = [];
   const entries = Array.isArray(d.entries) ? d.entries : [];
   const posturePhoto = entries.some(e => e.type === 'body' && e.posture);
   let photoUsed = false;
   const errs = [];
+  // "对 / 没错" in the chat confirms pending food the same way the button does
+  for (const pid of (Array.isArray(d.confirm) ? d.confirm : [])) {
+    try { await confirmPending(pid); } catch (err) { console.error('[chat confirm]', err); errs.push(err); }
+  }
   for (const e of entries) {
     try {
+      let carryPhotos = null, replacesRec = null;
       if (e.replaces) {
-        const hit = findOwn(e.replaces);
-        if (hit) await txList(hit.kind === 'food' ? foodPath(hit.dKey) : exPath(hit.dKey), l => l.filter(r => r.id !== e.replaces));
+        const ph = findPending(e.replaces);
+        if (ph && ph.p.status === 'pending') {
+          carryPhotos = ph.p.photos || null;
+          await setPendingStatus(e.replaces, e.type === 'delete' ? 'rejected' : 'replaced');
+        } else if (e.type === 'food') {
+          replacesRec = e.replaces;                      // swap the recorded one only once the correction is confirmed
+        } else {
+          const hit = findOwn(e.replaces);
+          if (hit) await txList(hit.kind === 'food' ? foodPath(hit.dKey) : exPath(hit.dKey), l => l.filter(r => r.id !== e.replaces));
+        }
       }
       if (e.type === 'delete') continue;
       if (e.type === 'food') {
-        const rec = {
-          id: uid(), time: e.time, name: e.name, calories: num(e.kcal), protein: num(e.protein_g), carbs: num(e.carbs_g), fat: num(e.fat_g),
-          items: (e.items || []).map(i => ({ name: String(i.name || ''), calories: Math.round(num(i.kcal)) })),
-          note: '', photos: !photoUsed && !posturePhoto && urls.length ? urls : [], shared: false,
-          source: 'chat', meal: e.meal, portion: e.portion || '', confidence: e.confidence || 'medium'
-        };
-        if (rec.photos.length) photoUsed = true;
-        await txList(foodPath(e.date), l => l.concat([rec]));
-        refs.push({ t: 'food', id: rec.id, dk: e.date });
+        let photos = [];
+        if (carryPhotos && carryPhotos.length) photos = carryPhotos;
+        else if (!photoUsed && !posturePhoto && urls.length) { photos = urls; photoUsed = true; }
+        const ent = { ...e }; delete ent.replaces;
+        const p = { pid: uid(), status: 'pending', e: ent, photos };
+        if (replacesRec) p.replacesRec = replacesRec;
+        pending.push(p);
       } else if (e.type === 'exercise') {
         const a = actById(e.activity);
         const mins = num(e.duration_min);
@@ -2926,7 +3099,7 @@ async function applyChat(d, msg, dk, urls) {
     catch (err) { console.error('[chat profile]', err); errs.push(err); }
   }
   const tail = errs.length ? `\n（有 ${errs.length} 条没保存成功，请检查网路后再说一次）` : '';
-  await appendChat(dk, { id: uid(), role: 'ai', text: (d.reply || '记下了。') + tail, refs, ts: Date.now() });
+  await appendChat(dk, { id: uid(), role: 'ai', text: (d.reply || '好的。') + tail, refs, pending, ts: Date.now() });
 }
 
 async function chatSend(retry) {
@@ -3026,6 +3199,35 @@ $('#chatList').addEventListener('click', e => {
   if (e.target.closest('[data-cmore]')) { state.chatLimit += 40; attachChat(ymOf(new Date(new Date().getFullYear(), new Date().getMonth() - 1, 1))); renderChat(); return; }
   const rt = e.target.closest('[data-cretry]');
   if (rt) { chatRetry(rt.dataset.cretry, rt.dataset.cerr); return; }
+  const ok = e.target.closest('[data-pok]');
+  if (ok) {
+    ok.disabled = true;
+    confirmPending(ok.dataset.pok).then(r => { if (r) toast('已记下'); })
+      .catch(err => { console.error('[confirm]', err); toast('保存失败，请检查网路'); ok.disabled = false; });
+    return;
+  }
+  const all = e.target.closest('[data-pall]');
+  if (all) {
+    all.disabled = true;
+    const ids = pendingList().filter(x => x.m.id === all.dataset.pall && x.p.status === 'pending').map(x => x.p.pid);
+    (async () => { let n = 0; for (const id of ids) { try { if (await confirmPending(id)) n++; } catch (err) { console.error(err); } } toast(`已记下 ${n} 项`); })();
+    return;
+  }
+  const ed = e.target.closest('[data-pedit]');
+  if (ed) { sheetPendingFood(ed.dataset.pedit); return; }
+  const no = e.target.closest('[data-pno]');
+  if (no) {
+    const hit = findPending(no.dataset.pno);
+    no.disabled = true;
+    setPendingStatus(no.dataset.pno, 'rejected').catch(err => { console.error(err); toast('操作失败，请检查网路'); });
+    if (hit) {
+      const ta = $('#cpText');
+      ta.value = `不是${hit.p.e.name}，是`;
+      autosizeCp(); renderPend(); ta.focus();
+      ta.setSelectionRange(ta.value.length, ta.value.length);
+    }
+    return;
+  }
   const cr = e.target.closest('[data-cref]');
   if (cr) {
     const kind = cr.dataset.cref, dk = cr.dataset.dk;
