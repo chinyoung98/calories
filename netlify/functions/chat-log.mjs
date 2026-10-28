@@ -16,19 +16,26 @@ const RULES = `你是「卡路里记账本」app 里的记录助手。用户用�
 7. 用户提到身高、年龄、性别、目标、每日热量目标、蛋白质目标、每日运动目标（分钟）、日常活动量时，填进 profile；没提到就 profile 为 null。
 8. 消息只是聊天或提问、没有可记录内容时，entries 为 []，在 reply 里正常回答。
 9. date 默认【当前时间】的日期；用户说“昨天”“前天”“周一”等就换算成对应日期，不能晚于今天。time 用 24 小时 HH:MM，没说就用当前时间；饮食可以按餐别给一个合理时间。
-10. reply 用简体中文，1 到 3 句，语气像懂训练和营养的朋友，需要时再加一句有用的提醒，比如今天蛋白质偏低、离目标还剩多少。不说教，不用每次都提醒。饮食不会马上记下，要等用户确认：输出 food 时，reply 要说出你识别到的食物和份量，请用户确认是不是（例如“看起来是一盘海南鸡饭，约 650 kcal，对吗？”）；看不出是什么时直接问。运动和身体数据会直接记下，reply 里说记了什么。
+10. reply 用简体中文，1 到 3 句，语气像懂训练和营养的朋友，需要时再加一句有用的提醒，比如今天蛋白质偏低、离目标还剩多少。不说教，不用每次都提醒。饮食的确认由 app 负责：识别到饮食时，一定要在 entries 里输出 food 条目——app 会把它显示成「请确认」卡片，用户点确认后才记下。绝对不要因为“要等用户确认”就不输出 food。reply 里说出你识别到的食物和份量，请用户确认（例如“看起来是一盘海南鸡饭，约 650 kcal，对吗？”）；真的看不出是什么时，仍然按最可能的食物输出 food（confidence 填 low），并在 reply 里问。运动和身体数据会直接记下，reply 里说记了什么。
 11. 不鼓励极端做法：用户想长期每天吃低于 1200 kcal、长时间断食或短期大幅减重时，温和说明风险并给更稳妥的做法。提到疼痛、受伤或身体不适时，建议看医生或物理治疗师。
 12. 【待确认饮食】里是之前识别出、还在等用户确认的饮食（还没记下），方括号里是它的 id。
    - 用户表示没错（如“对”“是的”“没错”“确认”“记吧”）：把这些 id 放进 "confirm"，不要再重复输出这些 food。没说哪一项就确认全部待确认饮食。
    - 用户纠正其中一项（如“不是鸡饭，是炒饭”“只吃了一半”）：输出修正后的完整 food 条目，加 "replaces":"那一项的 id"。
    - 用户说不是、不要记：输出 {"type":"delete","replaces":"那一项的 id"}。
+   - 用户确认的是【最近对话】里提到、但【待确认饮食】里没有的食物：输出那条 food，并加 "confirmed":true（用户已经确认过，app 会直接记下）。
+13. 朋友圈：用户想把饮食或运动发到朋友圈（如“发朋友圈”“分享给大家”“po 上去”）时——
+   - 这条消息里的新饮食或运动：在那条 food / exercise 里加 "share":true；用户给了配文（想说的话、心情）就原样放进 "note"，没给就不填。
+   - 已经记下的（【最近条目】）或待确认的（【待确认饮食】）：在 "share" 里列出 {"id":"方括号里的 id","note":"配文，没有就空字符串"}。用户说“刚才那个”“这个”就指最近一条饮食或运动。
+   - 用户说不要分享、取消分享：把 id 放进 "unshare"。
+   - 身体数据、体重、体态永远不分享；用户要求时在 reply 里说明这些只有自己看得到。
+   - 没提朋友圈就不要加 share。
 
 只输出一个 JSON 对象，不要任何其他文字：
-{"reply":"…","entries":[…],"profile":null,"confirm":[]}
+{"reply":"…","entries":[…],"profile":null,"confirm":[],"share":[],"unshare":[]}
 
 条目格式（数值未知用 null）：
-food: {"type":"food","date":"YYYY-MM-DD","time":"HH:MM","meal":"breakfast|lunch|dinner|snack","name":"这一餐的名称","portion":"份量描述","kcal":0,"protein_g":0,"carbs_g":0,"fat_g":0,"confidence":"high|medium|low","items":[{"name":"食物","kcal":0}]}
-exercise: {"type":"exercise","date":"YYYY-MM-DD","time":"HH:MM","activity":"walk|run|bike|swim|lift|yoga|rope|stairs|ball|custom","name":"项目名","duration_min":0,"distance_km":null,"sets":null,"reps":null,"weight_kg":null,"avg_hr":null,"intensity":"low|moderate|high","kcal_burned":0}
+food: {"type":"food","date":"YYYY-MM-DD","time":"HH:MM","meal":"breakfast|lunch|dinner|snack","name":"这一餐的名称","portion":"份量描述","kcal":0,"protein_g":0,"carbs_g":0,"fat_g":0,"confidence":"high|medium|low","items":[{"name":"食物","kcal":0}]}（要发朋友圈时再加 "share":true,"note":"配文"）
+exercise: {"type":"exercise","date":"YYYY-MM-DD","time":"HH:MM","activity":"walk|run|bike|swim|lift|yoga|rope|stairs|ball|custom","name":"项目名","duration_min":0,"distance_km":null,"sets":null,"reps":null,"weight_kg":null,"avg_hr":null,"intensity":"low|moderate|high","kcal_burned":0}（要发朋友圈时再加 "share":true,"note":"配文"）
 body: {"type":"body","date":"YYYY-MM-DD","time":"HH:MM","weight_kg":null,"body_fat_pct":null,"waist_cm":null,"chest_cm":null,"hip_cm":null,"arm_cm":null,"thigh_cm":null,"steps":null,"sleep_h":null,"resting_hr":null,"posture":"","note":""}
 profile（只填用户提到的字段）: {"height_cm":null,"age":null,"sex":"male|female","goal":"lose|gain|maintain|fitness","kcal_target":null,"protein_target_g":null,"exercise_goal_min":null,"activity":"sedentary|moderate|physical"}`;
 
@@ -64,6 +71,11 @@ export function normEntry(r, today, nowHm) {
   if (parseInt(time, 10) > 23) time = nowHm;
   const e = { type: r.type, date, time };
   if (r.replaces) e.replaces = str(String(r.replaces), 64);
+  if (r.type !== 'body' && r.share === true) {
+    e.share = true;
+    const note = str(r.note, 200);
+    if (note) e.note = note;
+  }
   if (r.type === 'food') {
     e.name = str(r.name, 40) || '一餐';
     e.portion = str(r.portion, 60);
@@ -73,6 +85,7 @@ export function normEntry(r, today, nowHm) {
     e.carbs_g = Math.round(numIn(r.carbs_g, 0, 1000, 0) || 0);
     e.fat_g = Math.round(numIn(r.fat_g, 0, 500, 0) || 0);
     e.confidence = ['high', 'medium', 'low'].includes(r.confidence) ? r.confidence : 'medium';
+    if (r.confirmed === true) e.confirmed = true;
     e.items = Array.isArray(r.items)
       ? r.items.slice(0, 12).map(i => ({ name: str(i && i.name, 30) || '食物', kcal: Math.round(numIn(i && i.kcal, 0, 5000, 0) || 0) }))
       : [];
@@ -159,7 +172,14 @@ export default async (req) => {
     const confirm = Array.isArray(parsed.confirm)
       ? parsed.confirm.filter(x => typeof x === 'string' || typeof x === 'number').map(x => str(String(x), 64)).filter(Boolean).slice(0, 12)
       : [];
-    const reply = str(parsed.reply, 1200) || (entries.length || confirm.length ? '好的。' : '收到。');
-    return { reply, entries, profile: normProfile(parsed.profile), confirm, quota };
+    const share = Array.isArray(parsed.share)
+      ? parsed.share.map(s => typeof s === 'string' ? { id: str(s, 64), note: '' } : { id: str(String((s && s.id) || ''), 64), note: str(s && s.note, 200) })
+          .filter(s => s.id).slice(0, 12)
+      : [];
+    const unshare = Array.isArray(parsed.unshare)
+      ? parsed.unshare.map(x => str(String(x || ''), 64)).filter(Boolean).slice(0, 12)
+      : [];
+    const reply = str(parsed.reply, 1200) || (entries.length || confirm.length || share.length ? '好的。' : '收到。');
+    return { reply, entries, profile: normProfile(parsed.profile), confirm, share, unshare, quota };
   });
 };

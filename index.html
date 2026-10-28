@@ -420,6 +420,17 @@ textarea.in{min-height:74px;resize:vertical;line-height:1.45;display:block}
 .pf-acts button[disabled]{opacity:.5}
 .pf-done .nm s{color:var(--ink-3)}
 .pf-all{display:block;width:100%;padding:11px;border-top:1px solid var(--line-soft);color:var(--forest);font-weight:700;font-size:14px;background:var(--forest-soft)}
+/* 朋友圈 share toggle under chat records */
+.rr{border-bottom:1px solid var(--line-soft)}
+.rr:last-child{border-bottom:none}
+.rr .row{border-bottom:none;padding-bottom:4px}
+.rr-acts{display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding:0 12px 10px 56px}
+.shr{padding:5px 11px;border-radius:99px;border:1px solid var(--line);background:var(--card);font-size:12.5px;font-weight:600;color:var(--ink-2)}
+.shr.on{border-color:var(--forest);background:var(--forest-soft);color:var(--forest)}
+.shr[disabled]{opacity:.5}
+.pf-acts .shr{padding:5px 11px;font-size:12.5px}
+.pf-acts .shr.on{border-color:var(--forest);background:var(--forest-soft);color:var(--forest)}
+.rr-note{font-size:12.5px;color:var(--ink-2);overflow-wrap:anywhere}
 </style>
 </head>
 <body>
@@ -2737,6 +2748,7 @@ const CHAT_EXAMPLES = [
   '午餐一盘海南鸡饭，加一杯 kopi-o',
   '跑步 5km，用了 32 分钟',
   '今天早上体重 72.4kg，腰围 84cm',
+  '晚餐炒粿条，发朋友圈：今天吃得好满足',
   '深蹲 80kg 4×6，卧推 60kg 4×8',
   '我身高 170cm，目标是减脂'
 ];
@@ -2779,17 +2791,22 @@ function refRowHtml(ref) {
   const hit = findOwn(ref.id);
   if (!hit) return `<div class="row"><span class="ic">${ref.t === 'food' ? '🍽️' : '🏃'}</span><span class="mid"><span class="nm" style="color:var(--ink-3)">这条记录已修改或删除</span></span></div>`;
   const r = hit.r, when = isToday ? esc(r.time) : esc(ref.dk.slice(5)) + ' ' + esc(r.time);
+  const on = r.shared === true;
+  const shareBar = `<div class="rr-acts">
+      <button class="shr${on ? ' on' : ''}" data-shr="${esc(r.id)}" aria-pressed="${on}">${on ? '🌏 已分享到朋友圈 · 取消' : '🌏 分享到朋友圈'}</button>
+      ${on && r.note ? `<span class="rr-note">“${esc(r.note)}”</span>` : ''}
+    </div>`;
   if (hit.kind === 'food') {
-    return `<button class="row" data-cref="food" data-id="${esc(r.id)}" data-dk="${esc(hit.dKey)}"><span class="ic">🍽️</span>
+    return `<div class="rr"><button class="row" data-cref="food" data-id="${esc(r.id)}" data-dk="${esc(hit.dKey)}"><span class="ic">🍽️</span>
       <span class="mid"><span class="nm">${esc(r.name)}</span>
-      <span class="mt">${when} · ${MEAL_N[mealOf(r)]} · P ${Math.round(num(r.protein))}g · C ${Math.round(num(r.carbs))}g · F ${Math.round(num(r.fat))}g${r.confidence === 'low' ? ' · 粗略估算' : ''}</span></span>
-      <span class="val">${Math.round(num(r.calories))}</span></button>`;
+      <span class="mt">${when} · ${MEAL_N[mealOf(r)]} · P ${Math.round(num(r.protein))}g · C ${Math.round(num(r.carbs))}g · F ${Math.round(num(r.fat))}g${r.confidence === 'low' ? ' · 粗略估算' : ''}${(r.photos || []).length ? ' · 📷 ' + r.photos.length : ''}</span></span>
+      <span class="val">${Math.round(num(r.calories))}</span></button>${shareBar}</div>`;
   }
   const a = actById(r.activity);
-  return `<button class="row" data-cref="exercise" data-id="${esc(r.id)}" data-dk="${esc(hit.dKey)}"><span class="ic ex">${a.icon}</span>
+  return `<div class="rr"><button class="row" data-cref="exercise" data-id="${esc(r.id)}" data-dk="${esc(hit.dKey)}"><span class="ic ex">${a.icon}</span>
     <span class="mid"><span class="nm">${esc(r.activityName || a.name)}</span>
     <span class="mt">${when} · ${Math.round(num(r.duration))} 分钟${r.distanceKm ? ' · ' + num(r.distanceKm) + ' km' : ''}</span></span>
-    <span class="val neg">-${Math.round(num(r.calories))}</span></button>`;
+    <span class="val neg">-${Math.round(num(r.calories))}</span></button>${shareBar}</div>`;
 }
 function chatMsgHtml(m) {
   const tm = `<span class="tm">${hhmm(new Date(num(m.ts)))}</span>`;
@@ -2827,9 +2844,11 @@ function pendingHtml(m) {
           ${items}</span>
         <span class="val">${Math.round(num(e.kcal))}</span></div>
       <div class="pf-acts">
-        <button class="pf-ok" data-pok="${esc(p.pid)}">✓ 对，记下</button>
+        <button class="pf-ok" data-pok="${esc(p.pid)}">✓ 对，${p.share ? '记下并分享' : '记下'}</button>
         <button data-pedit="${esc(p.pid)}">修改</button>
         <button data-pno="${esc(p.pid)}">不是</button>
+        <button class="shr${p.share ? ' on' : ''}" data-pshare="${esc(p.pid)}" aria-pressed="${!!p.share}">🌏 ${p.share ? '会分享到朋友圈' : '也分享到朋友圈'}</button>
+        ${p.share && e.note ? `<span class="rr-note">“${esc(e.note)}”</span>` : ''}
       </div>
     </div>`;
   }).join('');
@@ -2946,8 +2965,9 @@ function chatContext(now) {
   lines.push(`【今天已记录】摄入 ${Math.round(t.kcal)} kcal（蛋白质 ${Math.round(t.p)}g / 碳水 ${Math.round(t.c)}g / 脂肪 ${Math.round(t.fat)}g），运动 ${Math.round(t.min)} 分钟、消耗 ${Math.round(t.burn)} kcal；净摄入 ${Math.round(net)} kcal，离目标还剩 ${Math.round(goal - net)} kcal`);
   const rec = [];
   [y, dk].forEach(d => {
-    foodOf(d, UID).forEach(r => rec.push({ k: d + (r.time || ''), s: `- [${r.id}] ${d} ${r.time || ''} 饮食：${r.name}${r.portion ? '（' + r.portion + '）' : ''} ${Math.round(num(r.calories))}kcal 蛋白质${Math.round(num(r.protein))}g` }));
-    exOf(d, UID).forEach(r => rec.push({ k: d + (r.time || ''), s: `- [${r.id}] ${d} ${r.time || ''} 运动：${r.activityName || actById(r.activity).name} ${Math.round(num(r.duration))}分钟 ${Math.round(num(r.calories))}kcal${r.distanceKm ? ' ' + num(r.distanceKm) + 'km' : ''}` }));
+    const sh = r => r.shared === true ? '（已分享到朋友圈）' : '';
+    foodOf(d, UID).forEach(r => rec.push({ k: d + (r.time || ''), s: `- [${r.id}] ${d} ${r.time || ''} 饮食：${r.name}${r.portion ? '（' + r.portion + '）' : ''} ${Math.round(num(r.calories))}kcal 蛋白质${Math.round(num(r.protein))}g${sh(r)}` }));
+    exOf(d, UID).forEach(r => rec.push({ k: d + (r.time || ''), s: `- [${r.id}] ${d} ${r.time || ''} 运动：${r.activityName || actById(r.activity).name} ${Math.round(num(r.duration))}分钟 ${Math.round(num(r.calories))}kcal${r.distanceKm ? ' ' + num(r.distanceKm) + 'km' : ''}${sh(r)}` }));
     const b = bodyOf(d);
     if (b) { const m = bodyMeta(b); if (b.weight) m.unshift('体重 ' + b.weight + 'kg'); if (m.length) rec.push({ k: d + (b.time || ''), s: `- ${d} 身体（新数据会自动合并，不需要 id）：${m.join('；')}` }); }
   });
@@ -2986,14 +3006,32 @@ async function updateChatMsg(m, fn) {
     return l;
   });
 }
-function foodRecFrom(e, photos) {
+function foodRecFrom(e, photos, share) {
   return {
     id: uid(), time: e.time, name: e.name, calories: Math.round(num(e.kcal)),
     protein: Math.round(num(e.protein_g)), carbs: Math.round(num(e.carbs_g)), fat: Math.round(num(e.fat_g)),
     items: (e.items || []).map(i => ({ name: String(i.name || ''), calories: Math.round(num(i.kcal)) })),
-    note: '', photos: Array.isArray(photos) ? photos : [], shared: false,
+    note: String(e.note || '').slice(0, NOTE_MAX), photos: Array.isArray(photos) ? photos : [], shared: !!share,
     source: 'chat', meal: e.meal || mealOf(e), portion: e.portion || '', confidence: e.confidence || 'medium'
   };
+}
+
+/* ---- 朋友圈 from the chat: flip `shared` on a record I own (caption goes in its 备注) ---- */
+async function setShared(id, on, note) {
+  const hit = findOwn(id);
+  if (!hit) return false;
+  const path = hit.kind === 'food' ? foodPath(hit.dKey) : exPath(hit.dKey);
+  await txList(path, l => l.map(r => r && r.id === id
+    ? { ...r, shared: !!on, ...(on && note ? { note: String(note).slice(0, NOTE_MAX) } : {}) } : r));
+  return { t: hit.kind, id, dk: hit.dKey };
+}
+async function setPendingShare(pid, on, note) {
+  const hit = findPending(pid);
+  if (!hit || hit.p.status !== 'pending') return;
+  await updateChatMsg(hit.m, mm => {
+    (mm.pending || []).forEach(p => { if (p && p.pid === pid) { p.share = !!on; if (note) p.e = { ...p.e, note }; } });
+    return mm;
+  });
 }
 const pendingBusy = new Set();
 async function confirmPending(pid, edits) {
@@ -3010,7 +3048,7 @@ async function confirmPending(pid, edits) {
         await txList(foodPath(old.dKey), l => l.filter(r => r.id !== hit.p.replacesRec));
       }
     }
-    const rec = foodRecFrom(e, photos);
+    const rec = foodRecFrom(e, photos, !!(hit.p.share || e.share));
     await txList(foodPath(e.date), l => l.concat([rec]));
     await updateChatMsg(hit.m, mm => {
       (mm.pending || []).forEach(p => { if (p && p.pid === pid) { p.status = 'confirmed'; p.recId = rec.id; p.recDk = e.date; p.e = e; } });
@@ -3058,17 +3096,25 @@ async function applyChat(d, msg, dk, urls) {
         let photos = [];
         if (carryPhotos && carryPhotos.length) photos = carryPhotos;
         else if (!photoUsed && !posturePhoto && urls.length) { photos = urls; photoUsed = true; }
-        const ent = { ...e }; delete ent.replaces;
-        const p = { pid: uid(), status: 'pending', e: ent, photos };
-        if (replacesRec) p.replacesRec = replacesRec;
-        pending.push(p);
+        const ent = { ...e }; delete ent.replaces; delete ent.confirmed;
+        if (e.confirmed) {
+          // the person already said yes in the chat to food that never got a card — record it straight away
+          if (replacesRec) { const old = findOwn(replacesRec); if (old) await txList(foodPath(old.dKey), l => l.filter(r => r.id !== replacesRec)); }
+          const rec = foodRecFrom(ent, photos, !!e.share);
+          await txList(foodPath(ent.date), l => l.concat([rec]));
+          refs.push({ t: 'food', id: rec.id, dk: ent.date });
+        } else {
+          const p = { pid: uid(), status: 'pending', e: ent, photos, share: !!e.share };
+          if (replacesRec) p.replacesRec = replacesRec;
+          pending.push(p);
+        }
       } else if (e.type === 'exercise') {
         const a = actById(e.activity);
         const mins = num(e.duration_min);
         const kcal = num(e.kcal_burned) || (a.met ? Math.round(a.met * 3.5 * num(state.profile.weightKg, 65) / 200 * mins) : 0);
         const rec = {
           id: uid(), time: e.time, activity: a.id, activityName: e.name || a.name, duration: mins, calories: kcal,
-          note: '', photos: [], shared: false, source: 'chat', intensity: e.intensity
+          note: String(e.note || '').slice(0, NOTE_MAX), photos: [], shared: !!e.share, source: 'chat', intensity: e.intensity
         };
         if (e.distance_km != null) rec.distanceKm = e.distance_km;
         if (e.sets != null) rec.sets = e.sets;
@@ -3093,6 +3139,26 @@ async function applyChat(d, msg, dk, urls) {
         }
       }
     } catch (err) { console.error('[chat apply]', err); errs.push(err); }
+  }
+  // "发朋友圈" about something already recorded, or still waiting on confirmation
+  for (const s of (Array.isArray(d.share) ? d.share : [])) {
+    try {
+      const ph = findPending(s.id);
+      if (ph && ph.p.status === 'pending') {
+        await setPendingShare(s.id, true, s.note);
+        await confirmPending(s.id);                      // asking to post it means it's the right food
+      } else {
+        const ref = await setShared(ph && ph.p.status === 'confirmed' && ph.p.recId ? ph.p.recId : s.id, true, s.note);
+        if (ref && !refs.some(x => x.id === ref.id)) refs.push(ref);   // show what was posted under the reply
+      }
+    } catch (err) { console.error('[chat share]', err); errs.push(err); }
+  }
+  for (const id of (Array.isArray(d.unshare) ? d.unshare : [])) {
+    try {
+      const ph = findPending(id);
+      if (ph && ph.p.status === 'pending') await setPendingShare(id, false);
+      else await setShared(ph && ph.p.recId ? ph.p.recId : id, false);
+    } catch (err) { console.error('[chat unshare]', err); errs.push(err); }
   }
   if (d.profile) {
     try { await saveProfile({ ...state.profile, ...d.profile }); fillSettings(); }
@@ -3215,6 +3281,23 @@ $('#chatList').addEventListener('click', e => {
   }
   const ed = e.target.closest('[data-pedit]');
   if (ed) { sheetPendingFood(ed.dataset.pedit); return; }
+  const ps = e.target.closest('[data-pshare]');
+  if (ps) {
+    const hit = findPending(ps.dataset.pshare);
+    if (hit) setPendingShare(ps.dataset.pshare, !hit.p.share).catch(err => { console.error(err); toast('操作失败，请检查网路'); });
+    return;
+  }
+  const sr = e.target.closest('[data-shr]');
+  if (sr) {
+    const hit = findOwn(sr.dataset.shr);
+    if (!hit) return;
+    const on = hit.r.shared !== true;
+    sr.disabled = true;
+    setShared(sr.dataset.shr, on)
+      .then(() => toast(on ? '已分享到朋友圈' : '已取消分享'))
+      .catch(err => { console.error('[share]', err); toast('操作失败，请检查网路'); sr.disabled = false; });
+    return;
+  }
   const no = e.target.closest('[data-pno]');
   if (no) {
     const hit = findPending(no.dataset.pno);
