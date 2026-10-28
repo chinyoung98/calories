@@ -16,11 +16,15 @@ const RULES = `你是「卡路里记账本」app 里的记录助手。用户用�
 7. 用户提到身高、年龄、性别、目标、每日热量目标、蛋白质目标、每日运动目标（分钟）、日常活动量时，填进 profile；没提到就 profile 为 null。
 8. 消息只是聊天或提问、没有可记录内容时，entries 为 []，在 reply 里正常回答。
 9. date 默认【当前时间】的日期；用户说“昨天”“前天”“周一”等就换算成对应日期，不能晚于今天。time 用 24 小时 HH:MM，没说就用当前时间；饮食可以按餐别给一个合理时间。
-10. reply 用简体中文，1 到 3 句，语气像懂训练和营养的朋友：先确认记了什么（带关键数字），需要时再加一句有用的提醒，比如今天蛋白质偏低、离目标还剩多少。不说教，不用每次都提醒。
+10. reply 用简体中文，1 到 3 句，语气像懂训练和营养的朋友，需要时再加一句有用的提醒，比如今天蛋白质偏低、离目标还剩多少。不说教，不用每次都提醒。饮食不会马上记下，要等用户确认：输出 food 时，reply 要说出你识别到的食物和份量，请用户确认是不是（例如“看起来是一盘海南鸡饭，约 650 kcal，对吗？”）；看不出是什么时直接问。运动和身体数据会直接记下，reply 里说记了什么。
 11. 不鼓励极端做法：用户想长期每天吃低于 1200 kcal、长时间断食或短期大幅减重时，温和说明风险并给更稳妥的做法。提到疼痛、受伤或身体不适时，建议看医生或物理治疗师。
+12. 【待确认饮食】里是之前识别出、还在等用户确认的饮食（还没记下），方括号里是它的 id。
+   - 用户表示没错（如“对”“是的”“没错”“确认”“记吧”）：把这些 id 放进 "confirm"，不要再重复输出这些 food。没说哪一项就确认全部待确认饮食。
+   - 用户纠正其中一项（如“不是鸡饭，是炒饭”“只吃了一半”）：输出修正后的完整 food 条目，加 "replaces":"那一项的 id"。
+   - 用户说不是、不要记：输出 {"type":"delete","replaces":"那一项的 id"}。
 
 只输出一个 JSON 对象，不要任何其他文字：
-{"reply":"…","entries":[…],"profile":null}
+{"reply":"…","entries":[…],"profile":null,"confirm":[]}
 
 条目格式（数值未知用 null）：
 food: {"type":"food","date":"YYYY-MM-DD","time":"HH:MM","meal":"breakfast|lunch|dinner|snack","name":"这一餐的名称","portion":"份量描述","kcal":0,"protein_g":0,"carbs_g":0,"fat_g":0,"confidence":"high|medium|low","items":[{"name":"食物","kcal":0}]}
@@ -152,7 +156,10 @@ export default async (req) => {
     const parsed = extractJson(out);
     const entries = (Array.isArray(parsed.entries) ? parsed.entries : []).slice(0, 12)
       .map(r => normEntry(r, today, nowHm)).filter(Boolean);
-    const reply = str(parsed.reply, 1200) || (entries.length ? '记下了。' : '收到。');
-    return { reply, entries, profile: normProfile(parsed.profile), quota };
+    const confirm = Array.isArray(parsed.confirm)
+      ? parsed.confirm.filter(x => typeof x === 'string' || typeof x === 'number').map(x => str(String(x), 64)).filter(Boolean).slice(0, 12)
+      : [];
+    const reply = str(parsed.reply, 1200) || (entries.length || confirm.length ? '好的。' : '收到。');
+    return { reply, entries, profile: normProfile(parsed.profile), confirm, quota };
   });
 };
