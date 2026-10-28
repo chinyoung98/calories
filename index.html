@@ -6,26 +6,43 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="theme-color" content="#F7F5EF">
+<meta name="theme-color" content="#FFFFFF">
 <title>卡路里记账本</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧾</text></svg>">
 <style>
+/* ============================================================
+   Look: notes-app style (小红书风) — light grey page, white cards, one brand red.
+   Red = action / selected / liked. Green / orange / red keep their meaning for
+   "under / near / over the calorie goal". The three day rings are red / orange / blue.
+   ============================================================ */
 :root{
-  --forest:#2F5D45;
-  --forest-soft:#E6EFE9;
-  --gold:#B4842C;
-  --gold-soft:#F6EEDC;
-  --rust:#A6432C;
-  --rust-soft:#F7E7E2;
-  --line:#DCD8CC;
-  --line-soft:#EDEAE1;
-  --paper:#F7F5EF;
+  --red:#FF2442;
+  --red-press:#E81B38;
+  --red-soft:#FFF0F2;
+  --good:#16A36B;
+  --good-soft:#E8F6EF;
+  --warn:#F29A1F;
+  --warn-ink:#C47500;
+  --warn-soft:#FEF3E2;
+  --sky:#3D8BFF;
+  --sky-soft:#EAF3FF;
+  --tagblue:#2E5C9A;
+  --ink:#333333;
+  --ink-2:#666666;
+  --ink-3:#999999;
+  --line:#E8E8E8;
+  --line-soft:#F2F2F2;
+  --paper:#F5F5F5;            /* page background */
   --card:#FFFFFF;
-  --ink:#22201B;
-  --ink-2:#5C574C;
-  --ink-3:#918B7C;
-  --radius:14px;
-  --tabh:64px;
+  /* legacy names still used by inline chart / ring styles */
+  --forest:var(--good);
+  --forest-soft:var(--good-soft);
+  --gold:var(--warn);
+  --gold-soft:var(--warn-soft);
+  --rust:var(--red);
+  --rust-soft:var(--red-soft);
+  --radius:12px;
+  --tabh:52px;
   --safe-b:env(safe-area-inset-bottom, 0px);
   --safe-t:env(safe-area-inset-top, 0px);
 }
@@ -34,429 +51,465 @@ html,body{margin:0;padding:0;height:100%}
 body{
   background:var(--paper);
   color:var(--ink);
-  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
-  font-size:16px;line-height:1.5;
+  font-family:"PingFang SC","HarmonyOS Sans SC","MiSans","Hiragino Sans GB","Microsoft YaHei",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  font-size:15px;line-height:1.5;
   overscroll-behavior-y:none;
+  -webkit-font-smoothing:antialiased;
 }
-button,input,select,textarea{font-family:inherit;font-size:16px;color:inherit}
+button,input,select,textarea{font-family:inherit;font-size:15px;color:inherit}
 button{cursor:pointer;border:none;background:none}
 input,textarea{-webkit-appearance:none;appearance:none}
-.mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-variant-numeric:tabular-nums}
-
-/* ---------- barcode ornament ---------- */
-.barcode{display:flex;gap:2px;align-items:flex-end;height:22px;opacity:.5;overflow:hidden}
-.barcode i{display:block;background:var(--ink);width:2px;height:100%;border-radius:1px}
-.barcode i.w{width:4px}
-.barcode i.s{height:60%}
-.barcode i.t{height:80%}
+:focus-visible{outline:2px solid var(--red);outline-offset:2px}
+.mono{font-variant-numeric:tabular-nums}
+.barcode{display:none}
 
 /* ---------- layout ---------- */
 #app{min-height:100%;display:flex;flex-direction:column}
 .screen{display:none;flex:1;flex-direction:column}
 .screen.on{display:flex}
-.page{display:none;padding:calc(var(--safe-t) + 12px) 16px calc(var(--tabh) + var(--safe-b) + 84px)}
+.page{display:none;padding:0 12px calc(var(--tabh) + var(--safe-b) + 28px);max-width:760px;width:100%;margin:0 auto}
 .page.on{display:block}
 
-.hd{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:14px;gap:12px}
-.hd h1{margin:0;font-size:26px;letter-spacing:-.4px}
-.hd .sub{color:var(--ink-3);font-size:13px;margin-top:2px}
+/* top bar: white, centred title, like a notes app */
+.hd{position:sticky;top:0;z-index:30;margin:0 -12px 12px;
+  padding:calc(var(--safe-t) + 10px) 76px 9px;min-height:calc(var(--safe-t) + 50px);
+  background:rgba(255,255,255,.97);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--line-soft);display:flex;justify-content:center;align-items:center}
+.hd > div:first-child{text-align:center;min-width:0}
+.hd h1{margin:0;font-size:17px;font-weight:600;line-height:1.3}
+.hd .sub{color:var(--ink-3);font-size:11.5px;line-height:1.3;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hd-act{position:absolute;right:10px;bottom:9px;height:30px;padding:0 12px;border-radius:99px;
+  border:1px solid var(--line);font-size:13px;font-weight:500;color:var(--ink)}
+.hd-act:active{background:var(--paper)}
 
-.card{
-  background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
-  padding:16px;margin-bottom:14px;
-}
+.card{background:var(--card);border-radius:var(--radius);padding:14px;margin-bottom:10px}
 .card.flat{padding:0;overflow:hidden}
-.sect-t{
-  display:flex;align-items:center;justify-content:space-between;
-  font-size:12px;letter-spacing:1.6px;color:var(--ink-3);text-transform:uppercase;
-  margin:22px 2px 8px;font-weight:600;
-}
+.sect-t{display:flex;align-items:baseline;justify-content:space-between;gap:10px;
+  font-size:16px;font-weight:600;color:var(--ink);margin:20px 4px 10px}
+.sect-t > span:last-child:not(:first-child){font-size:12.5px;font-weight:400;color:var(--ink-3)}
+.sect-t .cnt{font-size:13px;font-weight:400;color:var(--ink-3);margin-left:4px;font-variant-numeric:tabular-nums}
+.sect-t .lnk-add{font-size:13px;font-weight:500;color:var(--red);padding:2px 0}
 
-/* ---------- receipt summary ---------- */
+/* ---------- summary (今日结算 / 身材 / 月度) ---------- */
 .receipt{position:relative}
-.receipt .rc-top{display:flex;justify-content:space-between;align-items:center;padding-bottom:12px;border-bottom:1px dashed var(--line)}
-.receipt .rc-title{font-size:13px;letter-spacing:2px;color:var(--ink-3);font-weight:600}
-.rc-row{display:flex;justify-content:space-between;align-items:baseline;padding:9px 0;border-bottom:1px dotted var(--line-soft)}
+.receipt .rc-top,.rc-top{display:flex;justify-content:space-between;align-items:center;padding-bottom:8px}
+.rc-title{font-size:15px;color:var(--ink);font-weight:600}
+.rc-row{display:flex;justify-content:space-between;align-items:baseline;padding:9px 0;border-bottom:1px solid var(--line-soft)}
 .rc-row:last-of-type{border-bottom:none}
-.rc-row .k{color:var(--ink-2);font-size:15px}
-.rc-row .v{font-size:17px;font-weight:600}
-.rc-total{margin-top:10px;padding-top:14px;border-top:2px solid var(--ink);display:flex;justify-content:space-between;align-items:baseline}
-.rc-total .k{font-size:14px;letter-spacing:1.4px;color:var(--ink-2);font-weight:600}
-.rc-total .v{font-size:34px;font-weight:700;letter-spacing:-1px}
-.rc-total .u{font-size:14px;color:var(--ink-3);font-weight:500;margin-left:4px}
-.pos{color:var(--forest)} .warn{color:var(--gold)} .neg{color:var(--rust)}
-.bar{height:8px;border-radius:99px;background:var(--line-soft);overflow:hidden;margin-top:14px}
-.bar>i{display:block;height:100%;border-radius:99px;background:var(--forest);transition:width .35s ease}
-.bar>i.warn{background:var(--gold)} .bar>i.neg{background:var(--rust)}
+.rc-row .k{color:var(--ink-2);font-size:14px}
+.rc-row .v{font-size:16px;font-weight:600;font-variant-numeric:tabular-nums}
+.rc-total{margin-top:6px;padding-top:12px;border-top:1px solid var(--line);display:flex;justify-content:space-between;align-items:baseline}
+.rc-total .k{font-size:14px;color:var(--ink-2);font-weight:500}
+.rc-total .v{font-size:32px;font-weight:700;letter-spacing:-.5px;font-variant-numeric:tabular-nums}
+.rc-total .u{font-size:13px;color:var(--ink-3);font-weight:400;margin-left:4px}
+.pos{color:var(--good)} .warn{color:var(--warn-ink)} .neg{color:var(--red)}
+.bar{height:6px;border-radius:99px;background:var(--line-soft);overflow:hidden;margin-top:12px}
+.bar>i{display:block;height:100%;border-radius:99px;background:var(--good);transition:width .35s ease}
+.bar>i.warn{background:var(--warn)} .bar>i.neg{background:var(--red)}
 
 /* ---------- list rows ---------- */
-.row{display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid var(--line-soft);text-align:left;width:100%;background:none}
+.row{display:flex;align-items:center;gap:12px;padding:13px 14px;border-bottom:1px solid var(--line-soft);text-align:left;width:100%;background:none}
 .row:last-child{border-bottom:none}
-.row:active{background:var(--paper)}
-.row .ic{width:38px;height:38px;flex:none;border-radius:10px;display:grid;place-items:center;font-size:19px;background:var(--forest-soft)}
-.row .ic.ex{background:var(--gold-soft)}
+.row:active{background:#FAFAFA}
+.row .ic{width:40px;height:40px;flex:none;border-radius:50%;display:grid;place-items:center;font-size:19px;background:var(--red-soft)}
+.row .ic.ex{background:var(--warn-soft)}
 .row .mid{flex:1;min-width:0}
-.row .nm{display:block;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row .nm{display:block;font-weight:500;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .row .mt{display:block;font-size:12px;color:var(--ink-3);margin-top:2px}
-.row .val{font-weight:700;font-size:16px;white-space:nowrap}
-/* the user's 备注 under a today-page row (.note is the centered hint class — different thing) */
-.r-note{display:block;font-size:12.5px;color:var(--ink-3);margin-top:4px;line-height:1.45;
+.row .val{font-weight:600;font-size:15px;white-space:nowrap;font-variant-numeric:tabular-nums}
+.r-note{display:block;font-size:12.5px;color:var(--ink-2);margin-top:4px;line-height:1.45;
   white-space:pre-wrap;overflow-wrap:anywhere}
-.row .del{flex:none;width:32px;height:32px;border-radius:8px;color:var(--ink-3);display:grid;place-items:center;font-size:18px;line-height:1}
-.row .del:active{background:var(--rust-soft);color:var(--rust)}
+.row .del{flex:none;width:32px;height:32px;border-radius:50%;color:var(--ink-3);display:grid;place-items:center;font-size:16px;line-height:1}
+.row .del:active{background:var(--red-soft);color:var(--red)}
 .chips{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}
-.chip{font-size:11px;padding:2px 8px;border-radius:99px;background:var(--paper);border:1px solid var(--line);color:var(--ink-2)}
-.empty{padding:30px 16px;text-align:center;color:var(--ink-3);font-size:14px}
+.chip{font-size:11px;padding:2px 8px;border-radius:99px;background:var(--paper);color:var(--ink-2)}
+.empty{padding:32px 16px;text-align:center;color:var(--ink-3);font-size:14px;line-height:1.7}
 
-/* ---------- tab bar ---------- */
+/* ---------- bottom bar: text tabs + red plus ---------- */
 .tabs{
   position:fixed;left:0;right:0;bottom:0;z-index:40;
-  height:calc(var(--tabh) + var(--safe-b));padding-bottom:var(--safe-b);
-  background:rgba(247,245,239,.94);backdrop-filter:blur(12px);
-  border-top:1px solid var(--line);display:flex;
+  height:calc(var(--tabh) + var(--safe-b));padding:0 4px var(--safe-b);
+  background:#fff;border-top:1px solid var(--line-soft);display:flex;align-items:stretch;
 }
-.tabs button{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;color:var(--ink-3);font-size:11px;font-weight:600}
-.tabs button .g{font-size:20px;line-height:1}
-.tabs button.on{color:var(--forest)}
-
-/* ---------- FAB ---------- */
-.fab{
-  position:fixed;right:18px;bottom:calc(var(--tabh) + var(--safe-b) + 18px);z-index:41;
-  width:60px;height:60px;border-radius:50%;background:var(--forest);color:#fff;
-  font-size:32px;line-height:1;display:grid;place-items:center;
-  box-shadow:0 8px 22px rgba(47,93,69,.36);
-}
-.fab:active{transform:scale(.94)}
+.tabs button{flex:1;max-width:150px;display:flex;align-items:center;justify-content:center;color:var(--ink-3);font-size:16px;font-weight:500;transition:color .15s}
+.tabs{justify-content:center}
+.tabs button.on{color:var(--ink);font-weight:700;font-size:17px}
+.tabs .plus span{width:48px;height:34px;border-radius:11px;background:var(--red);display:grid;place-items:center;color:#fff;transition:transform .12s}
+.tabs .plus svg{width:20px;height:20px}
+.tabs .plus:active span{transform:scale(.92);background:var(--red-press)}
+.tabs .plus.on span{box-shadow:0 0 0 3px var(--red-soft)}
+.fab{display:none !important}
 
 /* ---------- sheet / modal ---------- */
-.mask{position:fixed;inset:0;z-index:50;background:rgba(34,32,27,.42);display:none}
+.mask{position:fixed;inset:0;z-index:50;background:rgba(0,0,0,.45);display:none}
 .mask.on{display:block}
 .sheet{
-  position:fixed;left:0;right:0;bottom:0;z-index:51;
-  background:var(--paper);border-radius:20px 20px 0 0;
-  padding:8px 16px calc(20px + var(--safe-b));
+  position:fixed;left:0;right:0;bottom:0;z-index:51;max-width:760px;margin:0 auto;
+  background:#fff;border-radius:16px 16px 0 0;
+  padding:6px 16px calc(20px + var(--safe-b));
   max-height:92vh;overflow-y:auto;display:none;
-  box-shadow:0 -8px 40px rgba(0,0,0,.16);
 }
 .sheet.on{display:block;animation:up .24s cubic-bezier(.2,.8,.3,1)}
-@keyframes up{from{transform:translateY(18px);opacity:.4}to{transform:none;opacity:1}}
-.grab{width:38px;height:4px;border-radius:99px;background:var(--line);margin:6px auto 12px}
+@keyframes up{from{transform:translateY(24px);opacity:.5}to{transform:none;opacity:1}}
+@media (prefers-reduced-motion:reduce){.sheet.on{animation:none}}
+.grab{width:36px;height:4px;border-radius:99px;background:var(--line);margin:4px auto 10px}
 .sh-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
-.sh-hd h2{margin:0;font-size:20px}
-.x{width:34px;height:34px;border-radius:50%;background:var(--line-soft);display:grid;place-items:center;font-size:16px;color:var(--ink-2)}
+.sh-hd h2{margin:0;font-size:18px;font-weight:600}
+.x{width:32px;height:32px;border-radius:50%;background:var(--paper);display:grid;place-items:center;font-size:14px;color:var(--ink-2)}
+.sheet .card{border:1px solid var(--line-soft)}
 
-.opt{display:flex;align-items:center;gap:14px;width:100%;padding:16px;background:var(--card);border:1px solid var(--line);border-radius:var(--radius);margin-bottom:10px;text-align:left}
-.opt:active{background:var(--forest-soft)}
-.opt .g{font-size:24px;width:44px;height:44px;flex:none;border-radius:12px;background:var(--forest-soft);display:grid;place-items:center}
+.opt{display:flex;align-items:center;gap:14px;width:100%;padding:14px;background:var(--paper);border-radius:var(--radius);margin-bottom:8px;text-align:left}
+.opt:active{background:var(--line-soft)}
+.opt .g{font-size:22px;width:44px;height:44px;flex:none;border-radius:50%;background:#fff;display:grid;place-items:center}
 .opt .t{font-weight:600}
 .opt .d{font-size:12px;color:var(--ink-3);margin-top:1px}
 
 label.f{display:block;margin-bottom:12px}
-label.f .lb{font-size:12px;letter-spacing:1px;color:var(--ink-3);font-weight:600;margin-bottom:5px;display:block;text-transform:uppercase}
+label.f .lb{font-size:13px;color:var(--ink-2);font-weight:500;margin-bottom:6px;display:block}
 .in{
-  width:100%;padding:13px 14px;border:1px solid var(--line);border-radius:11px;
-  background:var(--card);font-size:16px;outline:none;
+  width:100%;padding:12px 14px;border:1px solid transparent;border-radius:10px;
+  background:var(--paper);font-size:15px;outline:none;
 }
-.in:focus{border-color:var(--forest);box-shadow:0 0 0 3px var(--forest-soft)}
-/* multi-line variant of .in, for the 备注 / 心情 field */
-textarea.in{min-height:74px;resize:vertical;line-height:1.45;display:block}
+.in:focus{background:#fff;border-color:var(--ink-3)}
+textarea.in{min-height:74px;resize:vertical;line-height:1.5;display:block}
 .g2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
 .btn{
-  width:100%;padding:15px;border-radius:12px;background:var(--forest);color:#fff;
+  width:100%;padding:13px;border-radius:99px;background:var(--red);color:#fff;
   font-size:16px;font-weight:600;margin-top:6px;
 }
-.btn:active{opacity:.85}
+.btn:active{background:var(--red-press)}
 .btn[disabled]{opacity:.45}
-.btn.ghost{background:none;border:1px solid var(--line);color:var(--ink-2)}
-.btn.danger{background:none;border:1px solid var(--rust);color:var(--rust);margin-top:10px}
-.note{font-size:12px;color:var(--ink-3);text-align:center;margin-top:10px;line-height:1.5}
-.tag{display:inline-block;font-size:11px;font-weight:700;padding:3px 9px;border-radius:99px;letter-spacing:.5px}
-.tag.hi{background:var(--forest-soft);color:var(--forest)}
-.tag.md{background:var(--gold-soft);color:var(--gold)}
-.tag.lo{background:var(--rust-soft);color:var(--rust)}
+.btn.ghost{background:#fff;border:1px solid var(--line);color:var(--ink)}
+.btn.ghost:active{background:var(--paper)}
+.btn.danger{background:#fff;border:1px solid var(--line);color:var(--red);margin-top:10px}
+.note{font-size:12px;color:var(--ink-3);text-align:center;margin-top:12px;line-height:1.6}
+.tag{display:inline-block;font-size:11px;font-weight:600;padding:1px 7px;border-radius:4px;vertical-align:1px}
+.tag.hi{background:var(--red-soft);color:var(--red)}
+.tag.ok{background:var(--good-soft);color:var(--good)}
+.tag.md{background:var(--warn-soft);color:var(--warn-ink)}
+.tag.lo{background:var(--paper);color:var(--ink-2)}
 
 /* activity picker */
 .acts{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px}
-.act{padding:11px 3px;border:1px solid var(--line);border-radius:12px;background:var(--card);text-align:center}
+.act{padding:11px 3px;border-radius:12px;background:var(--paper);text-align:center;border:1px solid transparent}
 .act .g{font-size:21px;display:block;line-height:1.2}
-.act .n{font-size:10.5px;color:var(--ink-2);margin-top:3px;display:block}
-.act.on{border-color:var(--forest);background:var(--forest-soft)}
-.act.on .n{color:var(--forest);font-weight:700}
+.act .n{font-size:11px;color:var(--ink-2);margin-top:3px;display:block}
+.act.on{border-color:var(--red);background:var(--red-soft)}
+.act.on .n{color:var(--red);font-weight:600}
 
 /* loading */
 .load{padding:46px 16px;text-align:center}
-.spin{width:38px;height:38px;border:3px solid var(--line);border-top-color:var(--forest);border-radius:50%;margin:0 auto 16px;animation:sp .8s linear infinite}
+.spin{width:34px;height:34px;border:3px solid var(--line-soft);border-top-color:var(--red);border-radius:50%;margin:0 auto 16px;animation:sp .8s linear infinite}
 @keyframes sp{to{transform:rotate(360deg)}}
 
 /* calendar */
 .cal-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
-.cal-nav .m{font-size:18px;font-weight:700}
-.cal-nav button{width:38px;height:38px;border-radius:10px;border:1px solid var(--line);background:var(--card);font-size:16px;color:var(--ink-2)}
+.cal-nav .m{font-size:17px;font-weight:600}
+.cal-nav button{width:34px;height:34px;border-radius:50%;background:var(--paper);font-size:16px;color:var(--ink-2)}
 .dow{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;margin-bottom:5px}
-.dow span{text-align:center;font-size:11px;color:var(--ink-3);font-weight:600}
+.dow span{text-align:center;font-size:11px;color:var(--ink-3)}
 .cal{display:grid;grid-template-columns:repeat(7,1fr);gap:5px}
-.cell{aspect-ratio:1;border-radius:9px;background:var(--line-soft);display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:12px;color:var(--ink-3);border:1px solid transparent}
+.cell{aspect-ratio:1;border-radius:50%;background:var(--paper);display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:12px;color:var(--ink-3);border:1.5px solid transparent}
 .cell.void{background:none}
-.cell.d-g{background:var(--forest);color:#fff}
-.cell.d-y{background:var(--gold);color:#fff}
-.cell.d-r{background:var(--rust);color:#fff}
+.cell.d-g{background:var(--good);color:#fff}
+.cell.d-y{background:var(--warn);color:#fff}
+.cell.d-r{background:var(--red);color:#fff}
 .cell.today{border-color:var(--ink)}
-.cell b{font-size:13px;font-weight:700}
-.cell i{font-size:9px;font-style:normal;opacity:.85;margin-top:1px}
+.cell b{font-size:13px;font-weight:600}
+.cell i{font-size:8.5px;font-style:normal;opacity:.9;margin-top:0}
 .legend{display:flex;gap:14px;justify-content:center;margin-top:12px;font-size:11px;color:var(--ink-3);flex-wrap:wrap}
 .legend span{display:flex;align-items:center;gap:5px}
-.legend em{width:9px;height:9px;border-radius:3px;display:block}
+.legend em{width:8px;height:8px;border-radius:50%;display:block}
 
 /* onboarding */
-#ob{padding:calc(var(--safe-t) + 56px) 22px 40px;justify-content:center;max-width:460px;margin:0 auto;width:100%}
-#ob .logo{font-size:46px;text-align:center;margin-bottom:6px}
-#ob h1{text-align:center;font-size:28px;margin:0 0 6px;letter-spacing:-.5px}
-#ob .tl{text-align:center;color:var(--ink-3);font-size:14px;margin-bottom:30px}
+#scr-ob{background:#fff}
+#ob{padding:calc(var(--safe-t) + 56px) 24px 40px;justify-content:center;max-width:440px;margin:0 auto;width:100%}
+#ob .logo{font-size:44px;text-align:center;margin-bottom:8px}
+#ob h1{text-align:center;font-size:24px;font-weight:700;margin:0 0 6px}
+#ob .tl{text-align:center;color:var(--ink-3);font-size:14px;margin-bottom:28px}
+#ob .card{padding:0;background:none}
 .ob-step{display:none}
 .ob-step.on{display:block}
-.seg{display:flex;gap:4px;padding:4px;background:var(--line-soft);border-radius:12px;margin-bottom:14px}
-.seg button{flex:1;padding:10px;border-radius:9px;font-size:15px;font-weight:600;color:var(--ink-3)}
-.seg button.on{background:var(--card);color:var(--forest);box-shadow:0 1px 3px rgba(0,0,0,.08)}
-.code-in{text-align:center;font-size:30px;letter-spacing:8px;font-weight:700;padding:16px;text-transform:uppercase}
-.err{color:var(--rust);font-size:13px;text-align:center;margin-top:10px;min-height:18px}
-.code-box{background:var(--ink);color:var(--paper);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px}
-.code-box .cl{font-size:11px;letter-spacing:2px;opacity:.6;margin-bottom:8px}
-.code-box .cv{font-size:34px;letter-spacing:8px;font-weight:700}
+.code-in{text-align:center;font-size:28px;letter-spacing:8px;font-weight:700;padding:16px;text-transform:uppercase}
+.err{color:var(--red);font-size:13px;text-align:center;margin-top:10px;min-height:18px}
+.code-box{background:var(--red-soft);color:var(--red);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px}
+.code-box .cl{font-size:12px;margin-bottom:6px;color:var(--ink-2)}
+.code-box .cv{font-size:32px;letter-spacing:8px;font-weight:700}
 .toast{
-  position:fixed;left:50%;bottom:calc(var(--tabh) + var(--safe-b) + 90px);transform:translateX(-50%);
-  background:var(--ink);color:var(--paper);padding:11px 20px;border-radius:99px;font-size:14px;
+  position:fixed;left:50%;bottom:calc(var(--tabh) + var(--safe-b) + 80px);transform:translateX(-50%);
+  background:rgba(0,0,0,.78);color:#fff;padding:10px 18px;border-radius:10px;font-size:14px;
   z-index:80;opacity:0;pointer-events:none;transition:opacity .2s;white-space:nowrap;
 }
 .toast.on{opacity:1}
 
+/* underline tabs (登入/注册, 昨日/今日, 月度/身材/小组) */
+.seg{display:flex;gap:22px;margin-bottom:14px;border-bottom:1px solid var(--line-soft)}
+.seg button{position:relative;padding:10px 0 11px;font-size:15px;font-weight:500;color:var(--ink-3)}
+.seg button.on{color:var(--ink);font-weight:600}
+.seg button.on::after{content:'';position:absolute;left:50%;bottom:-1px;width:22px;height:2.5px;margin-left:-11px;border-radius:2px;background:var(--red)}
+
 /* ---------- photo tray (composer) ---------- */
 .tray{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px}
-.tray .th{position:relative;aspect-ratio:1;border-radius:10px;overflow:hidden;border:1px solid var(--line)}
+.tray .th{position:relative;aspect-ratio:1;border-radius:8px;overflow:hidden}
 .tray .th img{width:100%;height:100%;object-fit:cover;display:block}
 .tray .th .rm{position:absolute;top:3px;right:3px;width:22px;height:22px;border-radius:50%;
-  background:rgba(34,32,27,.72);color:#fff;font-size:12px;line-height:1;display:grid;place-items:center}
-.tray .add{aspect-ratio:1;border:1px dashed var(--line);border-radius:10px;background:var(--card);
+  background:rgba(0,0,0,.55);color:#fff;font-size:12px;line-height:1;display:grid;place-items:center}
+.tray .add{aspect-ratio:1;border-radius:8px;background:var(--paper);
   display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;color:var(--ink-3)}
 .tray .add .g{font-size:19px;line-height:1}
 .tray .add .n{font-size:10px}
-.tray .add:active{background:var(--forest-soft)}
+.tray .add:active{background:var(--line-soft)}
 
 /* ---------- share switch ---------- */
-.sw{display:flex;align-items:center;gap:12px;padding:13px 14px;border:1px solid var(--line);
-  border-radius:11px;background:var(--card);margin-bottom:12px;width:100%;text-align:left}
+.sw{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:10px;background:var(--paper);margin-bottom:12px;width:100%;text-align:left}
 .sw .mid{flex:1;min-width:0}
 .sw .t{display:block;font-weight:600;font-size:15px}
 .sw .d{display:block;font-size:11.5px;color:var(--ink-3);margin-top:1px}
-.sw .kn{flex:none;width:46px;height:27px;border-radius:99px;background:var(--line);position:relative;transition:background .18s}
-.sw .kn::after{content:'';position:absolute;top:3px;left:3px;width:21px;height:21px;border-radius:50%;
-  background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:transform .18s}
-.sw.on .kn{background:var(--forest)}
-.sw.on .kn::after{transform:translateX(19px)}
+.sw .kn{flex:none;width:46px;height:28px;border-radius:99px;background:#DCDCDC;position:relative;transition:background .18s}
+.sw .kn::after{content:'';position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;
+  background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.2);transition:transform .18s}
+.sw.on .kn{background:var(--red)}
+.sw.on .kn::after{transform:translateX(18px)}
 
-/* ---------- feed post (FB-style card) ---------- */
-.post{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);margin-bottom:12px;overflow:hidden}
-.p-hd{display:flex;align-items:center;gap:10px;padding:13px 14px 9px}
-.av{width:40px;height:40px;flex:none;border-radius:50%;display:grid;place-items:center;
-  background:var(--forest);color:#fff;font-weight:700;font-size:17px}
-.av.ex{background:var(--gold)}
-.p-nm{font-weight:600;font-size:15px}
-.p-tm{font-size:11.5px;color:var(--ink-3);margin-top:1px}
-.p-body{padding:0 14px 11px}
-.p-ttl{font-size:15.5px}
-.p-cal{font-weight:700}
-.p-meta{font-size:12px;color:var(--ink-3);margin-top:3px}
-/* the post's own words — reads like a FB status caption. Only rendered when non-empty. */
-.p-note{font-size:15px;line-height:1.5;margin-top:9px;white-space:pre-wrap;overflow-wrap:anywhere}
-.p-stat{display:flex;align-items:center;justify-content:space-between;padding:9px 14px;
-  font-size:12.5px;color:var(--ink-3);border-bottom:1px solid var(--line-soft)}
-.p-stat .lk{display:flex;align-items:center;gap:5px}
-.p-stat .bub{width:17px;height:17px;border-radius:50%;background:var(--forest);color:#fff;
-  font-size:9px;display:grid;place-items:center}
-.p-acts{display:flex;padding:3px 6px}
-.p-act{flex:1;padding:9px;border-radius:8px;font-size:14px;font-weight:600;color:var(--ink-2);
-  display:flex;align-items:center;justify-content:center;gap:6px}
-.p-act:active{background:var(--paper)}
-.p-act.on{color:var(--forest)}
-.p-cm{display:none;border-top:1px solid var(--line-soft);padding:10px 14px 12px;background:var(--paper)}
-.p-cm.on{display:block}
-.cm{display:flex;gap:8px;margin-bottom:9px}
-.cm .av{width:30px;height:30px;font-size:13px;background:var(--ink-3)}
-.cm .bd{background:var(--card);border:1px solid var(--line);border-radius:13px;padding:7px 11px;min-width:0}
-.cm .cn{display:block;font-size:12.5px;font-weight:600;color:var(--ink-2)}
-.cm .ct{display:block;font-size:14px;word-break:break-word;white-space:pre-wrap;margin-top:1px}
-.cm .cd{display:block;font-size:10.5px;color:var(--ink-3);margin-top:3px}
-.cm-in{display:flex;gap:8px;align-items:center}
-.cm-in input{flex:1;padding:10px 13px;border:1px solid var(--line);border-radius:99px;background:var(--card);outline:none;font-size:15px;min-width:0}
-.cm-in input:focus{border-color:var(--forest)}
-.cm-in button{flex:none;width:40px;height:40px;border-radius:50%;background:var(--forest);color:#fff;font-size:16px;display:grid;place-items:center}
-.cm-in button[disabled]{opacity:.4}
-.cm-none{font-size:13px;color:var(--ink-3);text-align:center;padding:4px 0 10px}
+/* ---------- 朋友圈: two-column waterfall of note cards ---------- */
+#pg-feed{padding-left:5px;padding-right:5px}
+#pg-feed .hd{margin-left:-5px;margin-right:-5px;margin-bottom:6px}
+.wf{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:5px;align-items:start}
+.wf-col{display:flex;flex-direction:column;gap:5px;min-width:0}
+.nc{display:block;width:100%;background:#fff;border-radius:8px;overflow:hidden;text-align:left;padding:0;cursor:pointer}
+.nc-cv{position:relative;display:block;background:var(--line-soft);overflow:hidden}
+.nc-cv img{display:block;width:100%;height:100%;object-fit:cover}
+.nc-n{position:absolute;top:6px;right:6px;font-size:10.5px;line-height:1;padding:4px 6px;border-radius:99px;background:rgba(0,0,0,.4);color:#fff}
+.nc-tc{display:flex;flex-direction:column;justify-content:center;align-items:flex-start;gap:4px;padding:16px 14px;height:100%}
+.nc-tc .e{font-size:26px;line-height:1.1}
+.nc-tc .big{font-size:24px;font-weight:700;line-height:1.15;letter-spacing:-.3px;color:#222;font-variant-numeric:tabular-nums}
+.nc-tc .s{font-size:12.5px;color:rgba(0,0,0,.55)}
+.nc-tc .q{font-size:16px;font-weight:600;line-height:1.45;color:#222;display:-webkit-box;-webkit-line-clamp:5;-webkit-box-orient:vertical;overflow:hidden}
+.nc-bd{display:block;padding:8px 9px 9px}
+.nc-t{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font-size:14px;line-height:1.4;font-weight:500;color:var(--ink);margin-bottom:8px;overflow-wrap:anywhere}
+.nc-ft{display:flex;align-items:center;gap:5px;font-size:11.5px;color:var(--ink-2)}
+.av{width:36px;height:36px;flex:none;border-radius:50%;display:grid;place-items:center;
+  background:#FF8A8A;color:#fff;font-weight:600;font-size:15px}
+.nc-ft .av{width:18px;height:18px;font-size:10px}
+.nc-nm{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lk{display:inline-flex;align-items:center;gap:3px;color:var(--ink-2);padding:3px 0 3px 6px;font-size:12px;font-variant-numeric:tabular-nums}
+.lk svg{width:15px;height:15px;flex:none}
+.lk.on{color:var(--red)}
+.wf-empty{grid-column:1 / -1;background:#fff;border-radius:12px}
 
-/* ---------- FB-style photo grid ---------- */
-.ph{display:grid;gap:3px;background:var(--line-soft)}
-.pc{position:relative;overflow:hidden;background:var(--line-soft);padding:0;display:block}
-.pc img{width:100%;height:100%;object-fit:cover;display:block}
-.pc .more{position:absolute;inset:0;background:rgba(34,32,27,.55);color:#fff;
-  display:grid;place-items:center;font-size:26px;font-weight:700}
-.ph.n1{grid-template-columns:1fr}
-.ph.n1 .pc{aspect-ratio:4/3}
-.ph.n2{grid-template-columns:1fr 1fr}
-.ph.n2 .pc{aspect-ratio:1}
-.ph.n3{grid-template-columns:2fr 1fr;grid-template-rows:1fr 1fr;aspect-ratio:3/2}
-.ph.n3 .pc:first-child{grid-row:1 / 3}
-.ph.n4{grid-template-columns:1fr 1fr}
-.ph.n4 .pc{aspect-ratio:1}
+/* note detail (sheet) */
+.nd-au{display:flex;align-items:center;gap:10px;margin:2px 0 12px}
+.nd-au .nm{font-size:15px;font-weight:500}
+.nd-au .tm{display:block;font-size:11.5px;color:var(--ink-3)}
+.nd-au .x{margin-left:auto}
+.nd-ph{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;margin:0 -16px 8px;background:#F7F7F7;scrollbar-width:none}
+.nd-ph::-webkit-scrollbar{display:none}
+.nd-ph .pc{flex:none;width:100%;scroll-snap-align:center;aspect-ratio:3/4;max-height:58vh;padding:0;background:#F7F7F7}
+.nd-ph .pc img{width:100%;height:100%;object-fit:contain;display:block}
+.nd-dots{display:flex;justify-content:center;gap:5px;margin:0 0 10px}
+.nd-dots i{width:5px;height:5px;border-radius:50%;background:var(--line)}
+.nd-dots i.on{background:var(--red)}
+.nd-t{font-size:17px;font-weight:600;line-height:1.45;margin:4px 0 6px;overflow-wrap:anywhere}
+.nd-tx{font-size:15px;line-height:1.7;white-space:pre-wrap;overflow-wrap:anywhere;margin:0 0 6px}
+.nd-tags{display:flex;flex-wrap:wrap;gap:4px 10px;font-size:14.5px;color:var(--tagblue);margin:4px 0 0}
+.nd-kv{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin:12px 0 0}
+.nd-kv span{background:var(--paper);border-radius:10px;padding:8px 6px;text-align:center;font-size:11.5px;color:var(--ink-3)}
+.nd-kv b{display:block;font-size:16px;font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums}
+.nd-when{font-size:12px;color:var(--ink-3);margin:12px 0 0}
+.nd-cmh{font-size:13px;color:var(--ink-2);margin:14px 0 10px;padding-top:14px;border-top:1px solid var(--line-soft)}
+.nd-bar{position:sticky;bottom:calc(-20px - var(--safe-b));margin:12px -16px calc(-20px - var(--safe-b));
+  padding:9px 16px calc(9px + var(--safe-b));background:#fff;border-top:1px solid var(--line-soft);
+  display:flex;align-items:center;gap:12px}
+.nd-bar input{flex:1;min-width:0;padding:9px 14px;border:none;border-radius:99px;background:var(--paper);outline:none;font-size:14px}
+.nd-bar .send{flex:none;height:34px;padding:0 14px;border-radius:99px;background:var(--red);color:#fff;font-size:14px;font-weight:600}
+.nd-bar .send[disabled]{opacity:.35}
+.nd-bar .lk{font-size:13.5px;padding:4px 2px}
+.nd-bar .lk svg{width:20px;height:20px}
+
+/* comments */
+.cm{display:flex;gap:10px;margin-bottom:14px}
+.cm .av{width:30px;height:30px;font-size:12px}
+.cm .bd{min-width:0;flex:1}
+.cm .cn{display:block;font-size:12.5px;color:var(--ink-3)}
+.cm .ct{display:block;font-size:14.5px;word-break:break-word;white-space:pre-wrap;margin-top:2px;line-height:1.5}
+.cm .cd{display:block;font-size:11px;color:var(--ink-3);margin-top:3px}
+.cm-none{font-size:13px;color:var(--ink-3);text-align:center;padding:6px 0 4px}
 
 /* ---------- lightbox ---------- */
 /* NOTE: .lb is already taken — it's the form-label class (label.f .lb). Hence .lbx. */
-.lbx{position:fixed;inset:0;z-index:90;background:rgba(12,11,9,.96);display:none;
+.lbx{position:fixed;inset:0;z-index:90;background:#000;display:none;
   flex-direction:column;padding-top:var(--safe-t);padding-bottom:var(--safe-b)}
 .lbx.on{display:flex}
 .lb-hd{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;color:#fff;flex:none}
 .lb-hd .n{font-size:14px;opacity:.75}
 .lb-hd .x{background:rgba(255,255,255,.14);color:#fff}
 .lb-bd{flex:1;display:flex;align-items:center;justify-content:center;min-height:0;padding:0 8px}
-.lb-bd img{max-width:100%;max-height:100%;object-fit:contain;border-radius:6px}
+.lb-bd img{max-width:100%;max-height:100%;object-fit:contain}
 .lb-ft{display:flex;justify-content:center;gap:8px;padding:14px;flex:none}
 .lb-ft button{width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,.14);color:#fff;font-size:19px}
 .lb-ft button[disabled]{opacity:.3}
 
 /* ---------- Google sign-in ---------- */
-.gbtn{display:flex;align-items:center;justify-content:center;gap:10px;background:var(--card);color:var(--ink);
-  border:1px solid var(--line);margin:0 0 14px}
+.gbtn{display:flex;align-items:center;justify-content:center;gap:10px;background:#fff;color:var(--ink);
+  border:1px solid var(--line);margin:0 0 16px}
+.gbtn:active{background:var(--paper)}
 .gbtn svg{width:18px;height:18px;flex:none}
-.or{display:flex;align-items:center;gap:10px;color:var(--ink-3);font-size:12px;margin:0 0 14px}
-.or::before,.or::after{content:'';flex:1;height:1px;background:var(--line)}
+.or{display:flex;align-items:center;gap:10px;color:var(--ink-3);font-size:12px;margin:0 0 6px}
+.or::before,.or::after{content:'';flex:1;height:1px;background:var(--line-soft)}
+
+/* ---------- 「我」: profile header + tabs ---------- */
+#pg-month .hd,#pg-body .hd,#pg-friends .hd{display:none}
+.me-hd{margin:0 -12px 12px;padding:calc(var(--safe-t) + 22px) 18px 0;background:#fff}
+.me-top{display:flex;align-items:center;gap:14px}
+.me-av{width:68px;height:68px;flex:none;border-radius:50%;display:grid;place-items:center;color:#fff;font-size:28px;font-weight:600}
+.me-id{min-width:0}
+.me-id b{display:block;font-size:20px;font-weight:700;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.me-id span{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--ink-3);margin-top:3px}
+.me-id button{font-size:11.5px;color:var(--ink-2);padding:1px 8px;border-radius:99px;border:1px solid var(--line)}
+.me-st{display:flex;align-items:center;gap:20px;margin:18px 0 14px}
+.me-st span{font-size:12px;color:var(--ink-3);display:flex;align-items:baseline;gap:4px}
+.me-st span b{font-size:16px;font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums}
+.me-edit{margin-left:auto;height:30px;padding:0 14px;border-radius:99px;border:1px solid var(--line);font-size:13px;font-weight:500}
+.me-hd .seg{margin:0 -18px;padding:0 18px;justify-content:center;gap:34px;border-bottom:1px solid var(--line-soft)}
 
 /* ---------- daily rings + score (今日 / day sheet) ---------- */
-.day-top{display:grid;grid-template-columns:128px minmax(0,1fr);gap:16px;align-items:center}
-.rings{position:relative;width:128px;height:128px}
-.rings svg{width:128px;height:128px;display:block}
+.day-top{display:grid;grid-template-columns:124px minmax(0,1fr);gap:16px;align-items:center}
+.rings{position:relative;width:124px;height:124px}
+.rings svg{width:124px;height:124px;display:block}
 .ring-t{fill:none;stroke:var(--line-soft)}
 .ring-b{fill:none;stroke-linecap:round}
 .rings .sc{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1}
-.rings .sc b{font-size:30px;font-weight:700;letter-spacing:-1px}
-.rings .sc span{font-size:10px;color:var(--ink-3);margin-top:4px;letter-spacing:1px}
-.rl{display:grid;grid-template-columns:9px minmax(0,1fr);column-gap:8px;align-items:center;margin-bottom:8px}
+.rings .sc b{font-size:30px;font-weight:700;letter-spacing:-.5px}
+.rings .sc span{font-size:11px;color:var(--ink-3);margin-top:4px}
+.rl{display:grid;grid-template-columns:8px minmax(0,1fr);column-gap:8px;align-items:center;margin-bottom:9px}
 .rl:last-child{margin-bottom:0}
-.rl i{width:9px;height:9px;border-radius:50%;grid-row:span 2}
-.rl span{font-size:11.5px;color:var(--ink-3);line-height:1.2}
-.rl b{font-size:16px;font-weight:700;line-height:1.25;overflow-wrap:anywhere}
-.rl b small{font-size:11.5px;font-weight:500;color:var(--ink-3)}
-.dx{display:flex;flex-wrap:wrap;gap:4px 14px;margin-top:12px;padding-top:10px;border-top:1px dashed var(--line);font-size:12.5px;color:var(--ink-3)}
-.dx b{color:var(--ink);font-size:14px;margin-right:2px}
+.rl i{width:8px;height:8px;border-radius:50%;grid-row:span 2}
+.rl span{font-size:12px;color:var(--ink-3);line-height:1.2}
+.rl b{font-size:16px;font-weight:600;line-height:1.3;overflow-wrap:anywhere}
+.rl b small{font-size:11.5px;font-weight:400;color:var(--ink-3)}
+.dx{display:flex;flex-wrap:wrap;gap:4px 14px;margin-top:12px;padding-top:10px;border-top:1px solid var(--line-soft);font-size:12.5px;color:var(--ink-3)}
+.dx b{color:var(--ink);font-size:14px;margin-right:2px;font-weight:600}
 .parts{display:flex;flex-wrap:wrap;gap:5px;margin-top:10px}
-.parts span{font-size:11px;padding:2px 8px;border-radius:99px;background:var(--paper);border:1px solid var(--line);color:var(--ink-2)}
+.parts span{font-size:11px;padding:2px 8px;border-radius:99px;background:var(--paper);color:var(--ink-2)}
 
 /* ---------- AI 日报 ---------- */
 .rp-hd{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}
-.rp-hd .seg{margin:0;flex:none}
-.rp-hd .seg button{padding:6px 12px;font-size:13px}
+.rp-hd .seg{margin:0;flex:none;border:none;gap:16px}
+.rp-hd .seg button{padding:4px 0 7px;font-size:13.5px}
 .rp-meta{font-size:11.5px;color:var(--ink-3)}
-.rp-h{font-size:17px;font-weight:700;margin:0 0 6px;line-height:1.35;text-wrap:balance}
-.rp-s{font-size:14.5px;color:var(--ink-2);margin:0 0 10px;line-height:1.6}
+.rp-h{font-size:17px;font-weight:600;margin:0 0 6px;line-height:1.4;text-wrap:balance}
+.rp-s{font-size:14.5px;color:var(--ink-2);margin:0 0 10px;line-height:1.65}
 .rp-l{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
-.rp-l li{display:grid;grid-template-columns:auto minmax(0,1fr);gap:8px;align-items:baseline;font-size:14px;line-height:1.5}
-.rp-l li b{font-size:11px;padding:2px 7px;border-radius:6px;white-space:nowrap}
-.k-good b{background:var(--forest-soft);color:var(--forest)}
-.k-imp b{background:var(--gold-soft);color:var(--gold)}
-.k-next b{background:var(--rust-soft);color:var(--rust)}
-.rp-empty{font-size:13.5px;color:var(--ink-3);line-height:1.6}
-.btn.sm{width:auto;padding:9px 16px;font-size:14px;margin-top:12px}
+.rp-l li{display:grid;grid-template-columns:auto minmax(0,1fr);gap:8px;align-items:baseline;font-size:14px;line-height:1.55}
+.rp-l li b{font-size:11px;font-weight:600;padding:1px 7px;border-radius:4px;white-space:nowrap}
+.k-good b{background:var(--good-soft);color:var(--good)}
+.k-imp b{background:var(--warn-soft);color:var(--warn-ink)}
+.k-next b{background:var(--red-soft);color:var(--red)}
+.rp-empty{font-size:13.5px;color:var(--ink-3);line-height:1.65}
+.btn.sm{width:auto;padding:8px 18px;font-size:14px;margin-top:12px}
 
 /* ---- 训练 ---- */
 .mbar{display:grid;grid-template-columns:40px minmax(0,1fr) 46px;align-items:center;gap:10px;padding:5px 0}
-.mbar .mk{font-size:13.5px;color:var(--ink-2);font-weight:600}
+.mbar .mk{font-size:13.5px;color:var(--ink-2);font-weight:500}
 .mbar .bar{margin-top:0}
-.mbar .mv{font-size:12.5px;color:var(--ink-3);text-align:right}
-.row.lift .ic{font-size:14px;font-weight:700;color:var(--forest)}
+.mbar .mv{font-size:12.5px;color:var(--ink-3);text-align:right;font-variant-numeric:tabular-nums}
+.row.lift .ic{font-size:14px;font-weight:600;color:var(--red)}
 .spark{flex:none;display:block}
-.c-sub{font-size:11.5px;letter-spacing:1.4px;color:var(--ink-3);font-weight:700;margin:14px 0 8px}
+.c-sub{font-size:14px;color:var(--ink);font-weight:600;margin:16px 0 8px}
+.co-hd{display:flex;align-items:center;gap:10px;width:100%;padding:0;text-align:left;min-height:28px}
+.co-peek{flex:1;min-width:0;font-size:13px;color:var(--ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:right}
+.co-chev{width:18px;height:18px;flex:none;color:var(--ink-3);transition:transform .2s}
+.co-hd[aria-expanded="true"]{margin-bottom:10px}
+.co-hd[aria-expanded="true"] .co-chev{transform:rotate(180deg)}
+.mod{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.mod li{display:grid;grid-template-columns:auto minmax(0,1fr);gap:10px;align-items:baseline;font-size:14px;line-height:1.5;padding:9px 12px;border-radius:10px;background:var(--paper)}
+.mod li b{font-weight:600;white-space:nowrap}
+.mod li span{color:var(--ink-2)}
 .prog{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
-.prog li{display:flex;flex-direction:column;gap:2px;padding:9px 12px;border-radius:10px;background:var(--paper);font-size:14px}
-.prog li b{font-size:14px}
+.prog li{display:flex;flex-direction:column;gap:2px;padding:10px 12px;border-radius:10px;background:var(--paper);font-size:14px}
+.prog li b{font-size:14px;font-weight:600}
 .prog li span{color:var(--ink-2);font-size:13.5px;line-height:1.5}
-.prog li strong{color:var(--forest)}
+.prog li strong{color:var(--red);font-weight:600}
 .prog li em{display:block;font-style:normal;color:var(--ink-3);font-size:12.5px}
-.pday{border:1px solid var(--line-soft);border-radius:12px;padding:10px 12px;margin-bottom:8px}
-.pday.today{border-color:var(--forest);box-shadow:0 0 0 1px var(--forest) inset}
+.pday{border-radius:12px;padding:10px 12px;margin-bottom:8px;background:var(--paper);border:1.5px solid transparent}
+.pday.today{background:#fff;border-color:var(--red)}
 .pday-h{display:flex;align-items:center;gap:8px;margin-bottom:4px;font-size:14px}
-.pday-h b{font-size:15px}
+.pday-h b{font-size:15px;font-weight:600}
 .pday-h > span:last-child{color:var(--ink-2);font-size:13px;min-width:0}
-.pitem{padding:7px 0;border-top:1px dashed var(--line-soft)}
+.pitem{padding:8px 0;border-top:1px solid rgba(0,0,0,.05)}
 .pday-h + .pitem{border-top:none}
 .pi-top{display:flex;justify-content:space-between;gap:10px;align-items:baseline}
-.pi-n{font-weight:600;font-size:14px}
-.pi-s{font-size:13px;color:var(--forest);font-weight:700;white-space:nowrap}
+.pi-n{font-weight:500;font-size:14px}
+.pi-s{font-size:13px;color:var(--red);font-weight:600;white-space:nowrap;font-variant-numeric:tabular-nums}
 .pi-m{font-size:12.5px;color:var(--ink-2);margin-top:1px}
 .pi-c{font-size:12.5px;color:var(--ink-3);margin-top:2px;line-height:1.45}
 .dots{display:inline-flex;gap:4px;margin-right:6px;vertical-align:middle}
-.dots i{width:6px;height:6px;border-radius:50%;background:var(--ink-3);animation:blink 1.2s infinite both}
+.dots i{width:6px;height:6px;border-radius:50%;background:var(--red);animation:blink 1.2s infinite both}
 .dots i:nth-child(2){animation-delay:.2s}.dots i:nth-child(3){animation-delay:.4s}
 @keyframes blink{0%,80%,100%{opacity:.25}40%{opacity:1}}
+@media (prefers-reduced-motion:reduce){.dots i{animation:none;opacity:.6}}
 .cell[data-day]{cursor:pointer}
 
 /* ---------- 记录 chat ---------- */
-#pg-chat{padding-bottom:calc(var(--tabh) + var(--safe-b) + 150px)}
+#pg-chat{padding-bottom:calc(var(--tabh) + var(--safe-b) + 140px)}
 .chat{display:flex;flex-direction:column;gap:12px}
 .msg{display:flex;flex-direction:column;gap:5px;min-width:0}
 .msg.me{align-items:flex-end}
 .msg.ai{align-items:flex-start}
-.bub{max-width:min(86%,520px);padding:9px 13px;border-radius:16px;white-space:pre-wrap;overflow-wrap:anywhere;font-size:15px;line-height:1.5}
-.msg.me .bub{background:var(--forest);color:#fff;border-bottom-right-radius:5px}
-.msg.ai .bub{background:var(--card);border:1px solid var(--line);border-bottom-left-radius:5px}
-.msg.ai .bub.err{border-style:dashed;color:var(--ink-2)}
+.bub{max-width:min(84%,520px);padding:9px 13px;border-radius:18px;white-space:pre-wrap;overflow-wrap:anywhere;font-size:15px;line-height:1.55}
+.msg.me .bub{background:var(--red);color:#fff;border-bottom-right-radius:6px}
+.msg.ai .bub{background:#fff;border-bottom-left-radius:6px}
+.msg.ai .bub.err{background:none;border:1px dashed var(--line);color:var(--ink-2)}
 .msg .tm{font-size:11px;color:var(--ink-3)}
-.msg .pics{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;max-width:86%}
-.msg .pics img{width:110px;height:110px;object-fit:cover;border-radius:12px;display:block;background:var(--line-soft)}
+.msg .pics{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;max-width:84%}
+.msg .pics img{width:108px;height:108px;object-fit:cover;border-radius:10px;display:block;background:var(--line-soft)}
 .msg .rec{width:min(100%,520px);margin:0}
 .msg .rec .row{padding:10px 12px}
-.msg .rec .row .ic{width:32px;height:32px;font-size:16px}
-.ic.bd{background:var(--rust-soft)}
-.day-sep{align-self:center;font-size:11.5px;color:var(--ink-3);background:var(--line-soft);padding:2px 10px;border-radius:99px;font-weight:600}
-.lnk{color:var(--forest);font-weight:700;text-decoration:underline;text-underline-offset:3px;padding:0;font-size:inherit}
+.msg .rec .row .ic{width:34px;height:34px;font-size:16px}
+.ic.bd{background:var(--sky-soft)}
+.day-sep{align-self:center;font-size:11.5px;color:var(--ink-3);padding:2px 10px}
+.lnk{color:var(--red);font-weight:600;padding:0;font-size:inherit}
 .ex-chips{display:flex;flex-wrap:wrap;gap:7px;margin-top:4px}
 .ex-chips .lb{width:100%;font-size:12px;color:var(--ink-3)}
-.ex-chip{font-size:13px;padding:6px 11px;border-radius:99px;border:1px solid var(--line);background:var(--card);color:var(--ink-2);text-align:left}
-.ex-chip:active{background:var(--forest-soft)}
+.ex-chip{font-size:13px;padding:6px 12px;border-radius:99px;background:#fff;color:var(--ink);text-align:left}
+.ex-chip:active{background:var(--line-soft)}
 .composer{position:fixed;left:0;right:0;bottom:calc(var(--tabh) + var(--safe-b));z-index:39;
-  background:rgba(247,245,239,.97);backdrop-filter:blur(12px);border-top:1px solid var(--line);padding:8px 12px}
+  background:#fff;border-top:1px solid var(--line-soft);padding:8px 12px}
 .cp-row{display:flex;align-items:flex-end;gap:8px;max-width:720px;margin:0 auto}
-.cp-row textarea{flex:1;min-width:0;resize:none;height:44px;max-height:132px;padding:10px 13px;border:1px solid var(--line);
-  border-radius:14px;background:var(--card);outline:none;line-height:1.4;font-size:16px}
-.cp-row textarea:focus{border-color:var(--forest)}
-.cp-cam{flex:none;width:44px;height:44px;border-radius:14px;border:1px solid var(--line);background:var(--card);font-size:20px;display:grid;place-items:center}
-.cp-send{flex:none;height:44px;padding:0 16px;border-radius:14px;background:var(--forest);color:#fff;font-weight:700}
-.cp-send[disabled]{opacity:.4}
+.cp-row textarea{flex:1;min-width:0;resize:none;height:40px;max-height:132px;padding:9px 14px;border:none;
+  border-radius:20px;background:var(--paper);outline:none;line-height:1.45;font-size:15px}
+.cp-cam{flex:none;width:40px;height:40px;border-radius:50%;background:var(--paper);font-size:19px;display:grid;place-items:center}
+.cp-send{flex:none;height:40px;padding:0 16px;border-radius:99px;background:var(--red);color:#fff;font-weight:600}
+.cp-send[disabled]{opacity:.35}
 .cp-pend{display:flex;gap:8px;max-width:720px;margin:0 auto 8px;overflow-x:auto;padding-top:6px}
 .cp-pend .th{position:relative;flex:none}
-.cp-pend img{width:58px;height:58px;object-fit:cover;border-radius:10px;display:block}
-.cp-pend button{position:absolute;top:-6px;right:-6px;width:22px;height:22px;border-radius:50%;background:var(--ink);color:var(--paper);font-size:12px;line-height:1;display:grid;place-items:center}
+.cp-pend img{width:58px;height:58px;object-fit:cover;border-radius:8px;display:block}
+.cp-pend button{position:absolute;top:-6px;right:-6px;width:22px;height:22px;border-radius:50%;background:rgba(0,0,0,.6);color:#fff;font-size:12px;line-height:1;display:grid;place-items:center}
 .cp-hint{max-width:720px;margin:6px auto 0;font-size:11px;color:var(--ink-3);text-align:center}
 /* pending food waiting for confirmation */
-.pf-hd{padding:9px 12px;font-size:12px;font-weight:600;color:var(--gold);background:var(--gold-soft);border-bottom:1px solid var(--line-soft)}
+.pf-hd{padding:9px 12px;font-size:12.5px;font-weight:500;color:var(--warn-ink);background:var(--warn-soft)}
 .pf{border-bottom:1px solid var(--line-soft)}
 .pf:last-child{border-bottom:none}
 .pf .row{border-bottom:none;padding-bottom:6px}
 .pf .chips{margin-top:5px}
-.pf-acts{display:flex;flex-wrap:wrap;gap:6px;padding:0 12px 12px 56px}
-.pf-acts button{padding:7px 13px;border-radius:99px;border:1px solid var(--line);background:var(--card);font-size:13.5px;font-weight:600;color:var(--ink-2)}
+.pf-acts{display:flex;flex-wrap:wrap;gap:6px;padding:0 12px 12px 58px}
+.pf-acts button{padding:6px 14px;border-radius:99px;border:1px solid var(--line);background:#fff;font-size:13.5px;font-weight:500;color:var(--ink)}
 .pf-acts button:active{background:var(--paper)}
-.pf-acts .pf-ok{background:var(--forest);border-color:var(--forest);color:#fff}
+.pf-acts .pf-ok{background:var(--red);border-color:var(--red);color:#fff}
 .pf-acts button[disabled]{opacity:.5}
 .pf-done .nm s{color:var(--ink-3)}
-.pf-all{display:block;width:100%;padding:11px;border-top:1px solid var(--line-soft);color:var(--forest);font-weight:700;font-size:14px;background:var(--forest-soft)}
+.pf-all{display:block;width:100%;padding:11px;border-top:1px solid var(--line-soft);color:var(--red);font-weight:600;font-size:14px;background:var(--red-soft)}
 /* 朋友圈 share toggle under chat records */
 .rr{border-bottom:1px solid var(--line-soft)}
 .rr:last-child{border-bottom:none}
 .rr .row{border-bottom:none;padding-bottom:4px}
-.rr-acts{display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding:0 12px 10px 56px}
-.shr{padding:5px 11px;border-radius:99px;border:1px solid var(--line);background:var(--card);font-size:12.5px;font-weight:600;color:var(--ink-2)}
-.shr.on{border-color:var(--forest);background:var(--forest-soft);color:var(--forest)}
+.rr-acts{display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding:0 12px 10px 58px}
+.shr{padding:4px 11px;border-radius:99px;border:1px solid var(--line);background:#fff;font-size:12.5px;font-weight:500;color:var(--ink-2)}
+.shr.on{border-color:var(--red);background:var(--red-soft);color:var(--red)}
 .shr[disabled]{opacity:.5}
-.pf-acts .shr{padding:5px 11px;font-size:12.5px}
-.pf-acts .shr.on{border-color:var(--forest);background:var(--forest-soft);color:var(--forest)}
+.pf-acts .shr{padding:4px 11px;font-size:12.5px}
+.pf-acts .shr.on{border-color:var(--red);background:var(--red-soft);color:var(--red)}
 .rr-note{font-size:12.5px;color:var(--ink-2);overflow-wrap:anywhere}
 </style>
 </head>
@@ -558,7 +611,7 @@ textarea.in{min-height:74px;resize:vertical;line-height:1.45;display:block}
           <h1>今日</h1>
           <div class="sub" id="todayDate">—</div>
         </div>
-        <div class="barcode" id="bc1"></div>
+        <button class="hd-act" data-manual type="button">手动添加</button>
       </div>
 
       <div class="card" id="dayCard"></div>
@@ -567,7 +620,7 @@ textarea.in{min-height:74px;resize:vertical;line-height:1.45;display:block}
       <div class="card receipt">
         <div class="rc-top">
           <span class="rc-title">今日结算</span>
-          <span class="mono" style="font-size:12px;color:var(--ink-3)" id="rcNo">#000000</span>
+          <span class="rp-meta" id="rcNo" hidden></span>
         </div>
         <div class="rc-row"><span class="k">每日目标</span><span class="v mono" id="sGoal">0</span></div>
         <div class="rc-row"><span class="k">已摄入</span><span class="v mono" id="sIn">0</span></div>
@@ -580,10 +633,10 @@ textarea.in{min-height:74px;resize:vertical;line-height:1.45;display:block}
         <div class="bar"><i id="sBar" style="width:0%"></i></div>
       </div>
 
-      <div class="sect-t"><span>饮食记录</span><span class="mono" id="cntFood">0</span></div>
+      <div class="sect-t"><span>饮食 <span class="cnt" id="cntFood">0</span></span><button class="lnk-add" data-manual type="button">＋ 添加</button></div>
       <div class="card flat" id="listFood"></div>
 
-      <div class="sect-t"><span>运动记录</span><span class="mono" id="cntEx">0</span></div>
+      <div class="sect-t"><span>运动 <span class="cnt" id="cntEx">0</span></span><button class="lnk-add" data-manual type="button">＋ 添加</button></div>
       <div class="card flat" id="listEx"></div>
     </div>
 
@@ -591,7 +644,7 @@ textarea.in{min-height:74px;resize:vertical;line-height:1.45;display:block}
     <div class="page" id="pg-chat">
       <div class="hd">
         <div><h1>记录</h1><div class="sub">说一句或拍张照，AI 帮你分类记账</div></div>
-        <div class="barcode" id="bc6"></div>
+        <button class="hd-act" data-manual type="button">手动添加</button>
       </div>
       <div class="chat" id="chatList"></div>
       <div class="composer">
@@ -609,9 +662,8 @@ textarea.in{min-height:74px;resize:vertical;line-height:1.45;display:block}
     <div class="page" id="pg-month">
       <div class="hd">
         <div><h1>月度</h1><div class="sub">每日净卡路里概览</div></div>
-        <div class="barcode" id="bc2"></div>
       </div>
-      <div class="seg me-seg"></div>
+      <div class="me-hd"></div>
 
       <div class="card">
         <div class="cal-nav">
@@ -645,9 +697,8 @@ textarea.in{min-height:74px;resize:vertical;line-height:1.45;display:block}
     <div class="page" id="pg-body">
       <div class="hd">
         <div><h1>身材</h1><div class="sub">仅自己可见</div></div>
-        <div class="barcode" id="bc3"></div>
       </div>
-      <div class="seg me-seg"></div>
+      <div class="me-hd"></div>
 
       <div class="card receipt">
         <div class="rc-top"><span class="rc-title">最新记录</span><span class="mono" style="font-size:12px;color:var(--ink-3)" id="bLast">—</span></div>
@@ -669,7 +720,6 @@ textarea.in{min-height:74px;resize:vertical;line-height:1.45;display:block}
     <div class="page" id="pg-train">
       <div class="hd">
         <div><h1>训练</h1><div class="sub" id="trSub">力量训练记录 · AI 教练</div></div>
-        <div class="barcode" id="bc7"></div>
       </div>
       <div class="card" id="trWeek"></div>
       <div class="card" id="trCoach"></div>
@@ -677,14 +727,13 @@ textarea.in{min-height:74px;resize:vertical;line-height:1.45;display:block}
       <div class="card flat" id="trLifts"></div>
       <div class="sect-t"><span>最近训练</span></div>
       <div class="card flat" id="trSessions"></div>
-      <div class="note">在「记录」里说「卧推 60kg 4×8，深蹲 80kg 4×6」就会记进来。<br>AI 建议仅供参考；有疼痛或伤病请先咨询医生或物理治疗师。</div>
+      <div class="note">点下方红色 ＋，说「卧推 60kg 4×8，深蹲 80kg 4×6」就会记进来。<br>AI 建议仅供参考；有疼痛或伤病请先咨询医生或物理治疗师。</div>
     </div>
 
     <!-- ---- 朋友圈 ---- -->
     <div class="page" id="pg-feed">
       <div class="hd">
         <div><h1>朋友圈</h1><div class="sub" id="feedSub">—</div></div>
-        <div class="barcode" id="bc5"></div>
       </div>
       <div id="feed"></div>
     </div>
@@ -693,9 +742,8 @@ textarea.in{min-height:74px;resize:vertical;line-height:1.45;display:block}
     <div class="page" id="pg-friends">
       <div class="hd">
         <div><h1>小组</h1><div class="sub" id="fSub">—</div></div>
-        <div class="barcode" id="bc4"></div>
       </div>
-      <div class="seg me-seg"></div>
+      <div class="me-hd"></div>
 
       <div class="card">
         <div class="rc-top" style="border:none;padding:0 0 10px">
@@ -769,7 +817,7 @@ textarea.in{min-height:74px;resize:vertical;line-height:1.45;display:block}
           </label>
         </div>
         <button class="btn" id="stSave">保存设定</button>
-        <div class="note">体重用于估算运动消耗；蛋白质目标留空时按体重 × 1.6g 计算。这些也可以直接在「记录」里跟 AI 说。</div>
+        <div class="note">体重用于估算运动消耗；蛋白质目标留空时按体重 × 1.6g 计算。这些也可以点下方 ＋ 直接跟 AI 说。</div>
       </div>
 
       <div class="sect-t"><span>帐号</span></div>
@@ -784,12 +832,12 @@ textarea.in{min-height:74px;resize:vertical;line-height:1.45;display:block}
     </div>
 
     <!-- tab bar -->
-    <nav class="tabs">
-      <button class="on" data-tab="today"><span class="g">🧾</span>今日</button>
-      <button data-tab="chat"><span class="g">💬</span>记录</button>
-      <button data-tab="train"><span class="g">🏋️</span>训练</button>
-      <button data-tab="feed"><span class="g">🌏</span>朋友圈</button>
-      <button data-tab="me"><span class="g">👤</span>我</button>
+    <nav class="tabs" aria-label="主导航">
+      <button class="on" data-tab="today">今日</button>
+      <button data-tab="train">训练</button>
+      <button class="plus" data-tab="chat" aria-label="记录：说一句或拍张照"><span><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 3v14M3 10h14" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" fill="none"/></svg></span></button>
+      <button data-tab="feed">朋友圈</button>
+      <button data-tab="me">我</button>
     </nav>
     <button class="fab" id="fab">+</button>
   </div>
@@ -962,7 +1010,8 @@ const state = {
   exercise: {},               // ym -> { dKey -> { memberId -> [rec] } }
   body: {},                   // ym -> { dKey -> rec }
   social: {},                 // postId -> { likes:{uid:true}, comments:{cid:{...}} }
-  openComments: {},           // postId -> true (comment drawer expanded)
+  postSheet: null,            // postId shown in the note-detail sheet
+  feedMap: {},                // postId -> post (backs the note-detail sheet)
   cmDraft: {},                // postId -> unsent comment text (survives re-render)
   feedPhotos: {},             // postId -> [url] (backs the lightbox)
   listeners: {},              // path -> ref (for detach)
@@ -1375,7 +1424,7 @@ $('#stOut').onclick = async () => {
 };
 
 /* ---------- tabs ---------- */
-// 「我」groups three pages behind a segmented control: 月度 / 身材 / 小组.
+// 「我」is a profile page: header (avatar, 小组号, stats) + tabs 月度 / 身材 / 小组.
 const ME_PAGES = { month: '月度', body: '身材', friends: '小组' };
 function openTab(t) {
   if (t === 'me') t = state.meSub || 'month';
@@ -1384,15 +1433,44 @@ function openTab(t) {
   const tabKey = ME_PAGES[t] ? 'me' : t;
   $$('.tabs button').forEach(x => x.classList.toggle('on', x.dataset.tab === tabKey));
   $$('.page').forEach(p => p.classList.toggle('on', p.id === 'pg-' + t));
-  $$('.me-seg').forEach(seg => {
-    seg.innerHTML = Object.keys(ME_PAGES).map(k => `<button class="${k === t ? 'on' : ''}" data-me="${k}">${ME_PAGES[k]}</button>`).join('');
-  });
-  $('#fab').style.display = t === 'chat' ? 'none' : '';
   window.scrollTo(0, 0);
   if (t === 'chat') state.chatForceBottom = true;
   if (t === 'train') ensureTrainingMonths();
   renderAll();
 }
+// Profile header for the three 「我」pages: who you are, your group, and what you've posted.
+function renderMeHeader() {
+  if (!state.profile || !ME_PAGES[state.tab]) return;
+  const p = state.profile, t = state.tab;
+  const mine = feedPosts().filter(x => x.mid === UID);
+  const liked = mine.reduce((n, x) => n + Object.keys(((state.social[x.pid] || {}).likes) || {}).length, 0);
+  const ym = ymOf(new Date()), days = new Set();
+  [state.food[ym] || {}, state.exercise[ym] || {}].forEach(m => Object.keys(m).forEach(dk => {
+    const l = m[dk] && m[dk][UID];
+    if (Array.isArray(l) && l.length) days.add(dk);
+  }));
+  const html = `<div class="me-top">
+      <span class="me-av" style="background:${avColor(UID)}">${esc(initial(p.displayName))}</span>
+      <div class="me-id"><b>${esc(p.displayName)}</b>
+        <span>小组号：${esc(p.groupCode)}<button data-copycode type="button">复制</button></span></div>
+    </div>
+    <div class="me-st">
+      <span><b>${mine.length}</b>笔记</span><span><b>${liked}</b>获赞</span><span><b>${days.size}</b>本月打卡</span>
+      <button class="me-edit" data-editprofile type="button">编辑资料</button>
+    </div>
+    <div class="seg" role="tablist">${Object.keys(ME_PAGES).map(k =>
+      `<button class="${k === t ? 'on' : ''}" data-me="${k}" role="tab" aria-selected="${k === t}">${ME_PAGES[k]}</button>`).join('')}</div>`;
+  $$('.me-hd').forEach(el => { el.innerHTML = html; });
+}
+document.addEventListener('click', e => {
+  if (e.target.closest('[data-copycode]')) { copyText(state.profile.groupCode); return; }
+  if (e.target.closest('[data-editprofile]')) {
+    openTab('friends');
+    const el = $('#stName');
+    if (el) { el.scrollIntoView({ block: 'center' }); el.focus({ preventScroll: true }); }
+  }
+});
+
 $$('.tabs button').forEach(b => { b.onclick = () => openTab(b.dataset.tab); });
 document.addEventListener('click', e => { const m = e.target.closest('[data-me]'); if (m) openTab(m.dataset.me); });
 function goTab(t) { openTab(t); }
@@ -1401,6 +1479,7 @@ function goTab(t) { openTab(t); }
    RENDER — TODAY
    ============================================================ */
 function renderAll() {
+  renderMeHeader();
   renderToday(); renderDayCard(); renderReportCard(); renderChat();
   renderMonth(); renderBody(); renderFriends(); renderFeed(); renderTraining();
   if (state.daySheet) renderDaySheet();
@@ -1577,7 +1656,7 @@ function lineChart(series, goal, daysInMonth) {
   const pts = series.map(p => `${X(p.d).toFixed(1)},${Y(p.net).toFixed(1)}`).join(' ');
   const area = series.length > 1
     ? `<polygon points="${X(series[0].d).toFixed(1)},${(PT+ih).toFixed(1)} ${pts} ${X(series[series.length-1].d).toFixed(1)},${(PT+ih).toFixed(1)}"
-        fill="var(--forest)" opacity=".08"/>` : '';
+        fill="var(--red)" opacity=".07"/>` : '';
 
   const gy = Y(goal);
   const ticks = [hi, (hi + lo) / 2, lo].map(v =>
@@ -1599,11 +1678,11 @@ function lineChart(series, goal, daysInMonth) {
   return `<svg viewBox="0 0 ${W} ${H}" width="100%" height="${H}" role="img" aria-label="当月每日净卡路里趋势">
     ${ticks}
     ${gy > PT && gy < PT + ih ? `<line x1="${PL}" y1="${gy.toFixed(1)}" x2="${W - PR}" y2="${gy.toFixed(1)}"
-      stroke="var(--gold)" stroke-width="1.4" stroke-dasharray="4 3"/>
+      stroke="var(--ink-3)" stroke-width="1.2" stroke-dasharray="4 3"/>
       <text x="${W - PR}" y="${(gy - 4).toFixed(1)}" text-anchor="end" font-size="9"
-        fill="var(--gold)">目标 ${Math.round(goal)}</text>` : ''}
+        fill="var(--ink-3)">目标 ${Math.round(goal)}</text>` : ''}
     ${area}
-    <polyline points="${pts}" fill="none" stroke="var(--forest)" stroke-width="2"
+    <polyline points="${pts}" fill="none" stroke="var(--red)" stroke-width="2"
       stroke-linejoin="round" stroke-linecap="round"/>
     ${dots}${xlab}
   </svg>`;
@@ -1666,10 +1745,10 @@ function weightChart(series, daysInMonth) {
      <line x1="${PL}" y1="${Y(v).toFixed(1)}" x2="${W - PR}" y2="${Y(v).toFixed(1)}"
        stroke="var(--line-soft)"/>`).join('');
   const dots = series.map(p =>
-    `<circle cx="${X(p.d).toFixed(1)}" cy="${Y(p.net).toFixed(1)}" r="2.8" fill="var(--gold)"/>`).join('');
+    `<circle cx="${X(p.d).toFixed(1)}" cy="${Y(p.net).toFixed(1)}" r="2.8" fill="var(--sky)"/>`).join('');
   return `<svg viewBox="0 0 ${W} ${H}" width="100%" height="${H}" role="img" aria-label="本月体重趋势">
     ${ticks}
-    <polyline points="${pts}" fill="none" stroke="var(--gold)" stroke-width="2"
+    <polyline points="${pts}" fill="none" stroke="var(--sky)" stroke-width="2"
       stroke-linejoin="round" stroke-linecap="round"/>
     ${dots}
   </svg>`;
@@ -1692,7 +1771,7 @@ function renderFriends() {
 
   $('#listRoster').innerHTML = rows.length ? rows.map(r => `
     <div class="row">
-      <span class="ic">${esc(r.name.slice(0, 1))}</span>
+      <span class="ic" style="background:${avColor(r.id)};color:#fff;font-size:16px;font-weight:600">${esc(initial(r.name))}</span>
       <span class="mid">
         <span class="nm">${esc(r.name)}${r.id === UID ? ' <span class="tag hi">我</span>' : ''}</span>
         <span class="mt">摄入 ${Math.round(r.inC)} · 消耗 ${Math.round(r.outC)}</span>
@@ -1734,21 +1813,154 @@ function feedPosts() {
   return out.sort((a, b) => b.ts - a.ts);
 }
 
-/* FB-style photo layout: 1 big / 2 side-by-side / 3 = one big + two stacked / 4+ grid with +N */
-function photoGrid(photos, pid) {
-  const n = photos.length;
-  if (!n) return '';
-  const cls = n === 1 ? 'n1' : n === 2 ? 'n2' : n === 3 ? 'n3' : 'n4';
-  const show = n <= 3 ? photos : photos.slice(0, 4);
-  return `<div class="ph ${cls}">${show.map((u, i) => `<button class="pc" data-lb="${esc(pid)}" data-i="${i}">
-    <img src="${esc(u)}" loading="lazy" alt="照片 ${i + 1}">
-    ${n > 4 && i === 3 ? `<span class="more">+${n - 4}</span>` : ''}
-  </button>`).join('')}</div>`;
+/* ---- note cards: two-column waterfall, newest first, each card into the shorter column ---- */
+const AV_COLORS = ['#FF7A8A', '#FFA94D', '#4DABF7', '#40C057', '#9775FA', '#F06595', '#20C997', '#FAB005'];
+const COVER_COLORS = ['#FFE3E8', '#FFEBD6', '#E3F0FF', '#E2F7EA', '#EEE8FF', '#FFF4CC'];
+function hashOf(v) { let h = 0; for (const c of String(v)) h = (h * 31 + c.codePointAt(0)) >>> 0; return h; }
+const avColor = id => AV_COLORS[hashOf(id) % AV_COLORS.length];
+const avHtml = (id, name, cls = '') => `<span class="av ${cls}" style="background:${avColor(id)}">${esc(initial(name))}</span>`;
+const HEART = on => `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20.3s-7.4-4.5-9.2-9C1.5 8 3.6 4.6 7 4.6c2 0 3.6 1.1 5 3 1.4-1.9 3-3 5-3 3.4 0 5.5 3.4 4.2 6.7-1.8 4.5-9.2 9-9.2 9z"
+  ${on ? 'fill="currentColor"' : 'fill="none" stroke="currentColor" stroke-width="1.8"'} stroke-linejoin="round"/></svg>`;
+const MEAL_EMOJI = { breakfast: '🍳', lunch: '🍱', dinner: '🍲', snack: '🧋' };
+
+function socialOf(pid) {
+  const so = state.social[pid] || {};
+  const likes = Object.keys(so.likes || {});
+  const comments = Object.keys(so.comments || {}).map(k => so.comments[k]).filter(c => c && c.text)
+    .sort((a, b) => num(a.time) - num(b.time));
+  return { likes, comments, mine: likes.indexOf(UID) >= 0 };
+}
+const likeBtn = (pid, so) => `<button class="lk ${so.mine ? 'on' : ''}" data-like="${esc(pid)}" type="button"
+  aria-label="${so.mine ? '取消赞' : '赞'}" aria-pressed="${so.mine}">${HEART(so.mine)}${so.likes.length ? so.likes.length : ''}</button>`;
+
+// What a post is called: the poster's own words if they wrote any, otherwise the record itself.
+function postFacts(p) {
+  const r = p.r, food = p.type === 'food';
+  const kcal = Math.round(num(r.calories));
+  const name = food ? (r.name || '一餐') : (r.activityName || actById(r.activity).name);
+  const line = food ? `${name} · ${kcal} kcal`
+    : `${name} ${Math.round(num(r.duration))} 分钟${r.distanceKm ? ' · ' + num(r.distanceKm) + ' km' : ''}`;
+  return { food, kcal, name, line, title: r.note ? r.note : line };
+}
+
+function noteCard(p) {
+  const r = p.r, f = postFacts(p), so = socialOf(p.pid);
+  const photos = Array.isArray(r.photos) ? r.photos : [];
+  let cover, ratio;
+  if (photos.length) {
+    ratio = 4 / 3;
+    cover = `<span class="nc-cv" style="aspect-ratio:3/4"><img src="${esc(photos[0])}" loading="lazy" alt="${esc(f.name)}">
+      ${photos.length > 1 ? `<span class="nc-n">1/${photos.length}</span>` : ''}</span>`;
+  } else {
+    // no photo: a colour card with the numbers (or the poster's words) as the cover
+    const bg = COVER_COLORS[hashOf(p.pid) % COVER_COLORS.length];
+    const emoji = f.food ? (MEAL_EMOJI[r.meal] || '🍽️') : actById(r.activity).icon;
+    const big = f.food ? `${f.kcal}<small style="font-size:13px;font-weight:500"> kcal</small>`
+      : r.distanceKm ? `${num(r.distanceKm)}<small style="font-size:13px;font-weight:500"> km</small>`
+      : `${Math.round(num(r.duration))}<small style="font-size:13px;font-weight:500"> 分钟</small>`;
+    const sub = f.food ? f.name : `${f.name} · 消耗 ${f.kcal} kcal`;
+    ratio = r.note ? 5 / 4 : 1;
+    cover = `<span class="nc-cv" style="aspect-ratio:${r.note ? '4/5' : '1/1'};background:${bg}"><span class="nc-tc">
+      <span class="e">${emoji}</span>
+      ${r.note ? `<span class="q">${esc(r.note)}</span>`
+               : `<span class="big">${big}</span><span class="s">${esc(sub)}</span>`}
+    </span></span>`;
+  }
+  const title = photos.length || !r.note ? f.title : f.line;
+  return {
+    h: ratio + (title.length > 11 ? 0.34 : 0.24),
+    html: `<div class="nc" data-open="${esc(p.pid)}" role="button" tabindex="0" aria-label="${esc(nameOf(p.mid))}：${esc(f.title)}">
+      ${cover}
+      <span class="nc-bd">
+        <span class="nc-t">${esc(title)}</span>
+        <span class="nc-ft">${avHtml(p.mid, nameOf(p.mid))}<span class="nc-nm">${esc(nameOf(p.mid))}</span>${likeBtn(p.pid, so)}</span>
+      </span>
+    </div>`
+  };
+}
+
+const feedCols = () => window.innerWidth >= 700 ? 3 : 2;
+
+function renderFeed() {
+  if (state.postSheet) renderPostSheet();
+  if (!state.profile || state.tab !== 'feed') return;
+  const posts = feedPosts();
+  $('#feedSub').textContent = posts.length
+    ? `小组 ${state.profile.groupCode} · ${posts.length} 篇笔记`
+    : `小组 ${state.profile.groupCode}`;
+  state.feedMap = {}; state.feedPhotos = {};
+  posts.forEach(p => { state.feedMap[p.pid] = p; state.feedPhotos[p.pid] = Array.isArray(p.r.photos) ? p.r.photos : []; });
+
+  if (!posts.length) {
+    $('#feed').innerHTML = `<div class="card"><div class="empty">小组的朋友圈还是空的<br>
+      记饮食或运动时打开「分享到朋友圈」，<br>或者点下方 ＋ 说「发朋友圈」，就会出现在这里</div></div>`;
+    return;
+  }
+  const n = feedCols(), cols = Array.from({ length: n }, () => ({ h: 0, html: [] }));
+  posts.forEach(p => {
+    const c = noteCard(p);
+    const col = cols.reduce((a, b) => b.h < a.h - 0.01 ? b : a);
+    col.h += c.h; col.html.push(c.html);
+  });
+  $('#feed').innerHTML = `<div class="wf" style="grid-template-columns:repeat(${n},minmax(0,1fr))">${cols.map(c => `<div class="wf-col">${c.html.join('')}</div>`).join('')}</div>`;
+}
+let feedColsNow = feedCols();
+window.addEventListener('resize', () => { if (feedCols() !== feedColsNow) { feedColsNow = feedCols(); renderFeed(); } });
+
+/* ---- note detail: photos, words, numbers, likes, comments ---- */
+function openPost(pid) {
+  if (!(state.feedMap || {})[pid]) return;
+  openSheet('<div id="postSheet"></div>');
+  state.postSheet = pid;
+  renderPostSheet();
+}
+function renderPostSheet() {
+  const box = $('#postSheet'), pid = state.postSheet;
+  const p = (state.feedMap || {})[pid];
+  if (!box || !p) return;
+  const r = p.r, f = postFacts(p), so = socialOf(pid);
+  const photos = Array.isArray(r.photos) ? r.photos : [];
+  const act = document.activeElement, typing = act && act.dataset && act.dataset.cmin === pid;
+  const kv = f.food
+    ? [['热量', f.kcal, 'kcal'], ['蛋白质', Math.round(num(r.protein)), 'g'], ['碳水', Math.round(num(r.carbs)), 'g'], ['脂肪', Math.round(num(r.fat)), 'g']]
+    : [['时长', Math.round(num(r.duration)), '分钟'], ['消耗', f.kcal, 'kcal'],
+       ...(r.distanceKm ? [['距离', num(r.distanceKm), 'km']] : []),
+       ...(liftsOf(r).length ? [['组数', liftsOf(r).reduce((s, l) => s + l.sets.length, 0), '组']] : [])];
+  const tags = f.food ? [MEAL_N[mealOf(r)] || '饮食', '饮食打卡'] : [f.name, '运动打卡'];
+  const sh = $('#sheet'), keep = sh.scrollTop;
+  box.innerHTML = `
+    <div class="nd-au">${avHtml(p.mid, nameOf(p.mid))}
+      <span><span class="nm">${esc(nameOf(p.mid))}${p.mid === UID ? ' <span class="tag hi">我</span>' : ''}</span>
+        <span class="tm">${esc(relTime(p.ts))}</span></span>
+      <button class="x" data-close type="button" aria-label="关闭">✕</button></div>
+    ${photos.length ? `<div class="nd-ph" id="ndPh">${photos.map((u, i) => `<button class="pc" data-lb="${esc(pid)}" data-i="${i}" type="button">
+        <img src="${esc(u)}" loading="lazy" alt="照片 ${i + 1}"></button>`).join('')}</div>
+      ${photos.length > 1 ? `<div class="nd-dots" id="ndDots">${photos.map((_, i) => `<i class="${i ? '' : 'on'}"></i>`).join('')}</div>` : ''}` : ''}
+    <div class="nd-t">${esc(f.food ? f.name : f.line)}</div>
+    ${r.note ? `<p class="nd-tx">${esc(r.note)}</p>` : ''}
+    ${liftsOf(r).length ? `<p class="nd-tx" style="color:var(--ink-2);font-size:14px">${esc(liftsLine(r))}</p>` : ''}
+    <div class="nd-tags">${tags.map(t => `<span>#${esc(t)}</span>`).join('')}</div>
+    <div class="nd-kv" style="grid-template-columns:repeat(${kv.length},minmax(0,1fr))">${kv.map(([k, v, u]) => `<span><b>${esc(v)}</b>${esc(k)} ${esc(u)}</span>`).join('')}</div>
+    <div class="nd-when">${esc(fmtDay(p.dKey))}${r.time ? ' ' + esc(r.time) : ''}</div>
+    <div class="nd-cmh">${so.comments.length ? `共 ${so.comments.length} 条评论` : '评论'}</div>
+    ${so.comments.length ? so.comments.map(commentHtml).join('') : '<div class="cm-none">还没有评论，说点什么吧</div>'}
+    <div class="nd-bar">
+      <input data-cmin="${esc(pid)}" placeholder="说点什么…" maxlength="200" value="${esc(state.cmDraft[pid] || '')}" aria-label="写评论">
+      <button class="send" data-send="${esc(pid)}" type="button" ${(state.cmDraft[pid] || '').trim() ? '' : 'disabled'}>发送</button>
+      ${likeBtn(pid, so)}
+    </div>`;
+  sh.scrollTop = keep;
+  const ph = $('#ndPh'), dots = $('#ndDots');
+  if (ph && dots) ph.addEventListener('scroll', () => {
+    const i = Math.round(ph.scrollLeft / Math.max(1, ph.clientWidth));
+    [...dots.children].forEach((d, k) => d.classList.toggle('on', k === i));
+  }, { passive: true });
+  if (typing) { const el = box.querySelector('[data-cmin]'); if (el) { el.focus(); el.setSelectionRange(el.value.length, el.value.length); } }
 }
 
 function commentHtml(c) {
   return `<div class="cm">
-    <span class="av">${esc(initial(c.name))}</span>
+    ${avHtml(c.uid || c.name, c.name)}
     <span class="bd">
       <span class="cn">${esc(c.name || '匿名')}</span>
       <span class="ct">${esc(c.text)}</span>
@@ -1757,116 +1969,38 @@ function commentHtml(c) {
   </div>`;
 }
 
-function postHtml(p) {
-  const r = p.r;
-  const social = state.social[p.pid] || {};
-  const likes = Object.keys(social.likes || {});
-  const comments = Object.keys(social.comments || {})
-    .map(k => social.comments[k])
-    .filter(c => c && c.text)
-    .sort((a, b) => num(a.time) - num(b.time));
-  const mine = likes.indexOf(UID) >= 0;
-  const isFood = p.type === 'food';
-  const photos = Array.isArray(r.photos) ? r.photos : [];
-  const open = !!state.openComments[p.pid];
-
-  const body = isFood
-    ? `<div class="p-ttl">${esc(r.name)} · <span class="p-cal">${Math.round(num(r.calories))} kcal</span></div>
-       <div class="p-meta">P ${Math.round(num(r.protein))}g · C ${Math.round(num(r.carbs))}g · F ${Math.round(num(r.fat))}g${
-         Array.isArray(r.items) && r.items.length > 1 ? ' · ' + r.items.length + ' 项' : ''}</div>`
-    : `<div class="p-ttl">${esc(r.activityName || actById(r.activity).name)} · <span class="p-cal neg">-${Math.round(num(r.calories))} kcal</span></div>
-       <div class="p-meta">${Math.round(num(r.duration))} 分钟${r.distanceKm ? ' · ' + num(r.distanceKm) + ' km' : ''}${liftsOf(r).length ? ' · ' + esc(liftsLine(r)) : ''}</div>`;
-
-  // The poster's own words, like a FB status caption. Omitted entirely when empty,
-  // so a note-less post shows no empty block.
-  const note = r.note ? `<div class="p-note">${esc(r.note)}</div>` : '';
-
-  const stat = (likes.length || comments.length) ? `<div class="p-stat">
-    <span class="lk">${likes.length ? `<span class="bub">👍</span>${likes.length}` : ''}</span>
-    <span>${comments.length ? comments.length + ' 则评论' : ''}</span>
-  </div>` : '';
-
-  return `<div class="post" data-post="${esc(p.pid)}">
-    <div class="p-hd">
-      <span class="av ${isFood ? '' : 'ex'}">${esc(initial(nameOf(p.mid)))}</span>
-      <span>
-        <span class="p-nm">${esc(nameOf(p.mid))}${p.mid === UID ? ' <span class="tag hi">我</span>' : ''}</span>
-        <span class="p-tm">${esc(relTime(p.ts))} · ${isFood ? '🍽️ 饮食' : '🏃 运动'}</span>
-      </span>
-    </div>
-    <div class="p-body">${body}${note}</div>
-    ${photoGrid(photos, p.pid)}
-    ${stat}
-    <div class="p-acts">
-      <button class="p-act ${mine ? 'on' : ''}" data-like="${esc(p.pid)}">${mine ? '👍' : '👍🏻'} 赞${likes.length ? ' ' + likes.length : ''}</button>
-      <button class="p-act" data-cm="${esc(p.pid)}">💬 评论${comments.length ? ' ' + comments.length : ''}</button>
-    </div>
-    <div class="p-cm ${open ? 'on' : ''}">
-      ${comments.length ? comments.map(commentHtml).join('') : '<div class="cm-none">还没有评论，来说第一句</div>'}
-      <div class="cm-in">
-        <input id="cmi_${esc(p.pid)}" data-cmin="${esc(p.pid)}" placeholder="留个言…" maxlength="200"
-               value="${esc(state.cmDraft[p.pid] || '')}">
-        <button data-send="${esc(p.pid)}">↑</button>
-      </div>
-    </div>
-  </div>`;
-}
-
-function renderFeed() {
-  if (!state.profile || state.tab !== 'feed') return;
-  const posts = feedPosts();
-  $('#feedSub').textContent = posts.length
-    ? `小组 ${state.profile.groupCode} · ${posts.length} 则公开动态`
-    : `小组 ${state.profile.groupCode} · 实时同步`;
-
-  // Remote updates re-render the whole list; keep whatever the user was typing.
-  const act = document.activeElement;
-  const focusPid = act && act.dataset && act.dataset.cmin;
-
-  $('#feed').innerHTML = posts.length
-    ? posts.map(postHtml).join('')
-    : `<div class="card"><div class="empty">朋友圈还没有动态<br><br>
-        记录饮食或运动时打开「分享到朋友圈」<br>就会出现在这里，小组成员都看得到</div></div>`;
-
-  state.feedPhotos = {};
-  posts.forEach(p => { state.feedPhotos[p.pid] = Array.isArray(p.r.photos) ? p.r.photos : []; });
-
-  if (focusPid) {
-    const el = $(`[data-cmin="${focusPid}"]`);
-    if (el) { el.focus(); el.setSelectionRange(el.value.length, el.value.length); }
-  }
-}
-
-$('#feed').addEventListener('input', e => {
-  const el = e.target.closest('[data-cmin]');
-  if (el) state.cmDraft[el.dataset.cmin] = el.value;
-});
-$('#feed').addEventListener('keydown', e => {
-  const el = e.target.closest('[data-cmin]');
-  if (el && e.key === 'Enter') { e.preventDefault(); sendComment(el.dataset.cmin); }
-});
-$('#feed').addEventListener('click', async e => {
+// One set of handlers for the waterfall and the detail sheet.
+async function onSocialClick(e) {
+  const lk = e.target.closest('[data-like]');
+  if (lk) { e.stopPropagation(); await toggleLike(lk.dataset.like); return; }
   const ph = e.target.closest('[data-lb]');
   if (ph) {
     const list = (state.feedPhotos || {})[ph.dataset.lb] || [];
     if (list.length) openLightbox(list, parseInt(ph.dataset.i, 10) || 0);
     return;
   }
-  const lk = e.target.closest('[data-like]');
-  if (lk) { await toggleLike(lk.dataset.like); return; }
-  const cm = e.target.closest('[data-cm]');
-  if (cm) {
-    const pid = cm.dataset.cm;
-    state.openComments[pid] = !state.openComments[pid];
-    renderFeed();
-    if (state.openComments[pid]) {
-      const el = $(`[data-cmin="${pid}"]`);
-      if (el) { el.focus(); el.scrollIntoView({ block: 'center', behavior: 'smooth' }); }
-    }
-    return;
-  }
   const sd = e.target.closest('[data-send]');
   if (sd) { await sendComment(sd.dataset.send); return; }
+  const op = e.target.closest('[data-open]');
+  if (op) openPost(op.dataset.open);
+}
+function onSocialInput(e) {
+  const el = e.target.closest('[data-cmin]');
+  if (!el) return;
+  state.cmDraft[el.dataset.cmin] = el.value;
+  const b = el.parentNode.querySelector('[data-send]');
+  if (b) b.disabled = !el.value.trim();
+}
+function onSocialKey(e) {
+  const el = e.target.closest('[data-cmin]');
+  if (el && e.key === 'Enter') { e.preventDefault(); sendComment(el.dataset.cmin); return; }
+  const op = e.target.closest('[data-open]');
+  if (op && (e.key === 'Enter' || e.key === ' ') && e.target === op) { e.preventDefault(); openPost(op.dataset.open); }
+}
+['#feed', '#sheetBody'].forEach(sel => {
+  $(sel).addEventListener('click', onSocialClick);
+  $(sel).addEventListener('input', onSocialInput);
+  $(sel).addEventListener('keydown', onSocialKey);
 });
 
 /* Only auth.uid may write likes/{uid} — the rules enforce that nobody likes on your behalf. */
@@ -1893,7 +2027,6 @@ async function sendComment(pid) {
     console.error('[comment]', err); toast('留言失败，请检查网路'); return;
   }
   state.cmDraft[pid] = '';
-  state.openComments[pid] = true;
   if (el) el.value = '';
   renderFeed();
 }
@@ -1960,7 +2093,7 @@ $('#stSave').onclick = async () => {
    SHEETS
    ============================================================ */
 function openSheet(html) {
-  state.daySheet = null;   // any other sheet replaces the day-report sheet
+  state.daySheet = null; state.postSheet = null;   // any other sheet replaces the day-report / note sheet
   $('#sheetBody').innerHTML = html;
   $('#mask').classList.add('on'); $('#sheet').classList.add('on');
 }
@@ -1968,15 +2101,15 @@ function closeSheet() {
   $('#mask').classList.remove('on'); $('#sheet').classList.remove('on');
   $('#sheetBody').innerHTML = '';
   tray = []; onTrayChange = null;   // drop any composer draft
-  state.daySheet = null;
+  state.daySheet = null; state.postSheet = null;
 }
 $('#mask').onclick = closeSheet;
 document.addEventListener('click', e => { if (e.target.closest('[data-close]')) closeSheet(); });
 
 const shHead = t => `<div class="sh-hd"><h2>${t}</h2><button class="x" data-close>✕</button></div>`;
 
-/* ---- FAB menu ---- */
-$('#fab').onclick = () => {
+/* ---- 手动添加 menu (今日 / 记录 top bar, 今日 section links) ---- */
+function openAddMenu() {
   openSheet(`${shHead('添加记录')}
     <button class="opt" id="mAddFood"><span class="g">🍽️</span>
       <span><span class="t">加饮食</span><span class="d">拍照识别 · 相册 · 手动输入</span></span></button>
@@ -1987,7 +2120,9 @@ $('#fab').onclick = () => {
   $('#mAddFood').onclick = sheetFoodEntry;
   $('#mAddEx').onclick = () => sheetExForm(null);
   $('#mAddBody').onclick = () => sheetBodyForm(dKeyOf(new Date()));
-};
+}
+$('#fab').onclick = openAddMenu;
+document.addEventListener('click', e => { if (e.target.closest('[data-manual]')) openAddMenu(); });
 
 /* ============================================================
    PHOTO TRAY — shared by the food and exercise composers.
@@ -2192,7 +2327,7 @@ function sheetError(msg, shots) {
 
 /* ---- food: AI confirm screen ---- */
 function sheetFoodConfirm(r, shots) {
-  const conf = { high:['hi','高'], medium:['md','中'], low:['lo','低'] }[r.confidence] || ['md','中'];
+  const conf = { high:['ok','高'], medium:['md','中'], low:['lo','低'] }[r.confidence] || ['md','中'];
   const items = Array.isArray(r.items) ? r.items : [];
   openSheet(`${shHead('确认结果')}
     <div class="tray" style="grid-template-columns:repeat(${Math.min(4, shots.length)},1fr)">
@@ -2607,9 +2742,9 @@ function dayCardHtml(dk, title) {
   const goal = num(state.profile.dailyGoal, 2000), net = t.kcal - t.burn;
   const pt = proteinTarget(), eg = exGoal();
   const rings = ringsSvg([
-    { p: t.foods && goal > 0 ? net / goal : 0, c: 'var(--gold)' },
-    { p: t.foods ? t.p / pt.v : 0, c: 'var(--forest)' },
-    { p: t.min / eg, c: 'var(--rust)' }
+    { p: t.foods && goal > 0 ? net / goal : 0, c: 'var(--red)' },
+    { p: t.foods ? t.p / pt.v : 0, c: 'var(--warn)' },
+    { p: t.min / eg, c: 'var(--sky)' }
   ]);
   const b = t.body || {};
   const extras = [
@@ -2623,9 +2758,9 @@ function dayCardHtml(dk, title) {
     <div class="day-top">
       <div class="rings">${rings}<div class="sc">${sc ? `<b class="mono${sc.score >= 80 ? ' pos' : ''}">${sc.score}</b><span>得分</span>` : `<b class="mono" style="color:var(--ink-3)">–</b><span>未记录</span>`}</div></div>
       <div>
-        <div class="rl"><i style="background:var(--gold)"></i><span>净摄入</span><b class="mono">${t.foods ? Math.round(net).toLocaleString('en-US') : '–'} <small>/ ${Math.round(goal).toLocaleString('en-US')} kcal</small></b></div>
-        <div class="rl"><i style="background:var(--forest)"></i><span>蛋白质</span><b class="mono">${t.foods ? Math.round(t.p) : '–'} <small>/ ${pt.v} g</small></b></div>
-        <div class="rl"><i style="background:var(--rust)"></i><span>运动</span><b class="mono">${Math.round(t.min)} <small>/ ${eg} 分钟</small></b></div>
+        <div class="rl"><i style="background:var(--red)"></i><span>净摄入</span><b class="mono">${t.foods ? Math.round(net).toLocaleString('en-US') : '–'} <small>/ ${Math.round(goal).toLocaleString('en-US')} kcal</small></b></div>
+        <div class="rl"><i style="background:var(--warn)"></i><span>蛋白质</span><b class="mono">${t.foods ? Math.round(t.p) : '–'} <small>/ ${pt.v} g</small></b></div>
+        <div class="rl"><i style="background:var(--sky)"></i><span>运动</span><b class="mono">${Math.round(t.min)} <small>/ ${eg} 分钟</small></b></div>
       </div>
     </div>
     ${extras ? `<div class="dx">${extras}</div>` : ''}
@@ -3467,7 +3602,7 @@ function sparkSvg(vals) {
   const W = 64, H = 22, lo = Math.min(...vals), hi = Math.max(...vals), span = hi - lo || 1;
   const pts = vals.map((v, i) => `${(i / (vals.length - 1) * (W - 4) + 2).toFixed(1)},${(H - 3 - (v - lo) / span * (H - 6)).toFixed(1)}`).join(' ');
   const last = pts.split(' ').pop().split(',');
-  return `<svg class="spark" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" aria-hidden="true"><polyline points="${pts}" fill="none" stroke="var(--forest)" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/><circle cx="${last[0]}" cy="${last[1]}" r="2.2" fill="var(--forest)"/></svg>`;
+  return `<svg class="spark" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" aria-hidden="true"><polyline points="${pts}" fill="none" stroke="var(--red)" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/><circle cx="${last[0]}" cy="${last[1]}" r="2.2" fill="var(--red)"/></svg>`;
 }
 
 function renderTraining() {
@@ -3501,7 +3636,7 @@ function renderTraining() {
       ${sparkSvg(h.map(p => p.best).filter(Boolean))}
       <span class="val mono ${diff > 0 ? 'pos' : diff < 0 ? 'neg' : ''}" style="font-size:13px">${diff > 0 ? '▲' + diff + 'kg' : diff < 0 ? '▼' + Math.abs(diff) + 'kg' : h.length + ' 次'}</span>
     </div>`;
-  }).join('') : `<div class="empty">还没有力量训练记录<br>在「记录」里说「卧推 60kg 4×8」试试</div>`;
+  }).join('') : `<div class="empty">还没有力量训练记录<br>点下方 ＋ 说「卧推 60kg 4×8」试试</div>`;
 
   const sess = S.filter(x => isStrength(x.r)).slice(-8).reverse();
   $('#trSessions').innerHTML = sess.length ? sess.map(({ dk, r }) => `<div class="row">
@@ -3518,39 +3653,57 @@ function attachCoach() {
   const path = `${ROOT}/members/${UID}/coach`;
   listen(path, val => { if (val && (!state.coach || num(val.ts) >= num(state.coach.ts))) state.coach = val; renderTraining(); });
 }
-function coachHtml() {
-  const c = state.coach, p = state.profile;
-  const missing = [!p.experience && '训练经验', !p.trainDays && '每周练几天', !p.equipment && '器材'].filter(Boolean);
-  const setup = missing.length ? `<div class="note" style="text-align:left">先在「我 → 小组 → 设定」填${missing.join('、')}，计划会更贴合你。也可以直接在「记录」里说「我是新手，每周练 3 天，只有哑铃」。</div>` : '';
-  const head = `<div class="rp-hd"><span class="rc-title">AI 教练</span>${c && c.ts ? `<span class="rp-meta">${new Date(num(c.ts)).getMonth() + 1}月${new Date(num(c.ts)).getDate()}日 生成</span>` : ''}</div>`;
-  if (state.coachBusy) return `${head}<div class="rp-empty"><span class="dots"><i></i><i></i><i></i></span>教练正在看你的训练记录、排这周的计划…（约 20–40 秒）</div>`;
-  const err = state.coachErr ? `<div class="err" style="text-align:left;margin:0 0 8px">${esc(state.coachErr)}</div>` : '';
-  if (!c || !c.headline) {
-    return `${head}${err}<div class="rp-empty">根据你的目标、训练经验、器材和最近的训练、睡眠，排出这周每天练什么、几组几次、多重、休息多久，并告诉你每个动作下次怎么加重。</div>
-      ${setup}<button class="btn sm" data-coach>生成本周训练计划</button>`;
-  }
-  const todayW = WD[new Date().getDay()];
-  const prog = (c.progression || []).map(x => `<li><b>${esc(x.name)}</b><span>${esc(x.last)} → <strong>${esc(x.next)}</strong>${x.why ? `<em>${esc(x.why)}</em>` : ''}</span></li>`).join('');
-  const plan = (c.plan || []).map(d => {
-    const isToday = d.day && d.day.indexOf(todayW) >= 0;
-    return `<div class="pday${isToday ? ' today' : ''}">
-      <div class="pday-h"><b>${esc(d.day)}</b>${isToday ? '<span class="tag hi">今天</span>' : ''}<span>${esc(d.focus)}</span></div>
-      ${(d.items || []).map(i => `<div class="pitem"><div class="pi-top"><span class="pi-n">${esc(i.name)}</span>
-        <span class="pi-s mono">${esc(i.sets)}${i.sets ? '×' : ''}${esc(i.reps)}</span></div>
-        <div class="pi-m">${[i.load, i.rest ? '休息 ' + i.rest : ''].filter(Boolean).map(esc).join(' · ')}</div>
-        ${i.cue ? `<div class="pi-c">${esc(i.cue)}</div>` : ''}</div>`).join('')}
-    </div>`;
-  }).join('');
-  const li = (cls, label, t) => `<li class="${cls}"><b>${label}</b><span>${esc(t)}</span></li>`;
-  const recov = (c.recovery || []).map(t => li('k-good', '恢复', t)).join('') + (c.cautions || []).map(t => li('k-next', '注意', t)).join('');
-  return `${head}${err}<p class="rp-h">${esc(c.headline)}</p>
-    ${c.assessment ? `<p class="rp-s">${esc(c.assessment)}</p>` : ''}
-    ${prog ? `<div class="c-sub">下次怎么加重</div><ul class="prog">${prog}</ul>` : ''}
-    ${plan ? `<div class="c-sub">接下来 7 天</div>${plan}` : ''}
-    ${recov ? `<ul class="rp-l" style="margin-top:12px">${recov}</ul>` : ''}
-    ${setup}
-    <button class="btn ghost sm" data-coach>重新生成</button>`;
+// The card answers "what should I train today?" — collapsible, remembered per device.
+let coachOpen = true;
+try { coachOpen = localStorage.getItem('coachOpen') !== '0'; } catch (e) { /* private mode: default open */ }
+function coachIsToday(c) { return !!(c && c.date === todayKey() && c.headline); }
+function coachItemHtml(i) {
+  return `<div class="pitem"><div class="pi-top"><span class="pi-n">${esc(i.name)}</span>
+    <span class="pi-s">${esc(i.sets)}${i.sets && i.reps ? '×' : ''}${esc(i.reps)}</span></div>
+    ${i.load || i.rest ? `<div class="pi-m">${[i.load, i.rest ? '休息 ' + i.rest : ''].filter(Boolean).map(esc).join(' · ')}</div>` : ''}
+    ${i.cue ? `<div class="pi-c">${esc(i.cue)}</div>` : ''}</div>`;
 }
+function coachHtml() {
+  const c = state.coach, p = state.profile, fresh = coachIsToday(c), busy = state.coachBusy;
+  const open = coachOpen || busy;
+  const missing = [!p.experience && '训练经验', !p.trainDays && '每周练几天', !p.equipment && '器材'].filter(Boolean);
+  const setup = missing.length ? `<div class="note" style="text-align:left">在「我 → 编辑资料」填${missing.join('、')}，建议会更贴合你；也可以点下方 ＋ 说「我是新手，每周练 3 天，只有哑铃」。</div>` : '';
+  const peek = busy ? '教练正在看你的记录…' : fresh ? c.headline : '看看今天适合练什么';
+  const head = `<button class="co-hd" data-coachtoggle type="button" aria-expanded="${open}">
+      <span class="rc-title">AI 教练</span>
+      <span class="co-peek">${open ? (fresh ? `${new Date(num(c.ts)).getMonth() + 1}月${new Date(num(c.ts)).getDate()}日` : '') : esc(peek)}</span>
+      <svg class="co-chev" viewBox="0 0 20 20" aria-hidden="true"><path d="M5 8l5 5 5-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>`;
+  if (!open) return head;
+  if (busy) return `${head}<div class="rp-empty"><span class="dots"><i></i><i></i><i></i></span>教练正在看你最近练了什么、睡得怎样，排今天的训练…（约 10–20 秒）</div>`;
+  const err = state.coachErr ? `<div class="err" style="text-align:left;margin:0 0 8px">${esc(state.coachErr)}</div>` : '';
+  if (!fresh) {
+    const old = c && c.headline ? `<div class="note" style="text-align:left;margin:0 0 4px">上次的建议（${new Date(num(c.ts)).getMonth() + 1}月${new Date(num(c.ts)).getDate()}日）：${esc(c.headline)}</div>` : '';
+    return `${head}${err}<div class="rp-empty">根据你最近练过的部位、隔了几天、本周的训练量和睡眠，告诉你今天适合练什么（或者该休息）、几组几次多重，以及时间不够或状态不好时怎么调整。</div>
+      ${old}${setup}<button class="btn sm" data-coach type="button">看今天练什么</button>`;
+  }
+  const items = (c.items || []).map(coachItemHtml).join('');
+  const mod = (c.modify || []).map(m => `<li>${m.when ? `<b>${esc(m.when)}</b>` : ''}<span>${esc(m.how)}</span></li>`).join('');
+  const prog = (c.progression || []).map(x => `<li><b>${esc(x.name)}</b><span>${esc(x.last)} → <strong>${esc(x.next)}</strong>${x.why ? `<em>${esc(x.why)}</em>` : ''}</span></li>`).join('');
+  const cautions = (c.cautions || []).map(t => `<li class="k-next"><b>注意</b><span>${esc(t)}</span></li>`).join('');
+  return `${head}${err}<p class="rp-h">${esc(c.headline)}</p>
+    ${c.why ? `<p class="rp-s">${esc(c.why)}</p>` : ''}
+    <div class="pday today">
+      <div class="pday-h"><b>今天</b><span class="tag ${c.rest ? 'ok' : 'hi'}">${c.rest ? '休息' : '训练'}</span><span>${esc(c.focus || '')}</span></div>
+      ${items || '<div class="pi-c" style="padding:4px 0">好好休息，散步或拉伸 10–20 分钟就好</div>'}
+    </div>
+    ${mod ? `<div class="c-sub">怎样调整</div><ul class="mod">${mod}</ul>` : ''}
+    ${prog ? `<div class="c-sub">下次怎么加重</div><ul class="prog">${prog}</ul>` : ''}
+    ${cautions ? `<ul class="rp-l" style="margin-top:12px">${cautions}</ul>` : ''}
+    ${setup}
+    <button class="btn ghost sm" data-coach type="button">重新生成</button>`;
+}
+document.addEventListener('click', e => {
+  if (!e.target.closest('[data-coachtoggle]')) return;
+  coachOpen = !coachOpen;
+  try { localStorage.setItem('coachOpen', coachOpen ? '1' : '0'); } catch (err) { /* ignore */ }
+  renderTraining();
+});
 function trainingFacts() {
   const p = state.profile, td = todayKey();
   const S = trainingSessions(28), lines = [];
@@ -3576,12 +3729,13 @@ function trainingFacts() {
 }
 async function generateCoach() {
   if (state.coachBusy) return;
-  state.coachBusy = true; state.coachErr = null; renderTraining();
+  state.coachBusy = true; state.coachErr = null; coachOpen = true; renderTraining();
   try {
     await ensureTrainingMonths();
     const out = await aiCall('coach', { facts: trainingFacts() });
-    const c = { ts: Date.now(), headline: out.headline || '', assessment: out.assessment || '', plan: out.plan || [],
-                progression: out.progression || [], recovery: out.recovery || [], cautions: out.cautions || [] };
+    const c = { ts: Date.now(), date: todayKey(), headline: out.headline || '', rest: out.rest === true, focus: out.focus || '',
+                why: out.why || '', items: out.items || [], modify: out.modify || [],
+                progression: out.progression || [], cautions: out.cautions || [] };
     await db.ref(`${ROOT}/members/${UID}/coach`).set(JSON.parse(JSON.stringify(c)));
     state.coach = c;
   } catch (e) {
@@ -3599,12 +3753,11 @@ function trainingContext() {
   lines.push('【训练概况】' + (S.length ? `最近 14 天力量训练 ${new Set(S.map(x => x.dk)).size} 天：\n` + S.slice(-6).map(({ dk, r }) => `- ${dk} ${r.activityName || '力量训练'}：${liftsLine(r)}`).join('\n') : '最近 14 天没有力量训练记录')
     + `\n训练经验：${EXP_N[state.profile.experience] || '没填'}；每周能练：${num(state.profile.trainDays, 0) || '没填'} 天；器材：${EQUIP_N[state.profile.equipment] || '没填'}`);
   const c = state.coach;
-  if (c && c.headline) {
-    const todayW = WD[new Date().getDay()];
-    const d = (c.plan || []).find(x => x.day && x.day.indexOf(todayW) >= 0);
-    lines.push(`【AI 教练计划】（${new Date(num(c.ts)).getMonth() + 1}月${new Date(num(c.ts)).getDate()}日生成）${c.headline}`
-      + (d ? `\n今天（${todayW}）：${d.focus} —— ${(d.items || []).map(i => `${i.name} ${i.sets}×${i.reps} ${i.load || ''}`.trim()).join('；')}` : `\n今天（${todayW}）计划里没有安排训练`));
-  } else lines.push('【AI 教练计划】还没有生成（用户可以到「训练」页生成本周计划）');
+  if (coachIsToday(c)) {
+    lines.push(`【AI 教练计划】今天：${c.headline}（${c.rest ? '休息日' : c.focus}）`
+      + ((c.items || []).length ? '\n' + c.items.map(i => `${i.name} ${i.sets}×${i.reps} ${i.load || ''}`.trim()).join('；') : '')
+      + ((c.modify || []).length ? '\n调整：' + c.modify.map(m => `${m.when ? m.when + '：' : ''}${m.how}`).join('；') : ''));
+  } else lines.push('【AI 教练计划】今天还没有生成（用户可以到「训练」页按「看今天练什么」）');
   return lines.join('\n');
 }
 
@@ -3615,7 +3768,7 @@ function resetState() {
   detachAll();
   state.profile = null; state.roster = {};
   state.food = {}; state.exercise = {}; state.body = {};
-  state.social = {}; state.openComments = {}; state.cmDraft = {}; state.feedPhotos = {};
+  state.social = {}; state.postSheet = null; state.feedMap = {}; state.cmDraft = {}; state.feedPhotos = {};
   state.chat = {}; state.reports = {}; state.reportsLoaded = false; state.quota = null;
   state.chatPend = []; state.chatBusy = false; state.chatLocal = null;
   state.reportBusy = null; state.reportErr = null; state.autoReportTried = false; state.daySheet = null;
