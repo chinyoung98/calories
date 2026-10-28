@@ -3546,7 +3546,7 @@ function coachHtml() {
   return `${head}${err}<p class="rp-h">${esc(c.headline)}</p>
     ${c.assessment ? `<p class="rp-s">${esc(c.assessment)}</p>` : ''}
     ${prog ? `<div class="c-sub">下次怎么加重</div><ul class="prog">${prog}</ul>` : ''}
-    ${plan ? `<div class="c-sub">本周计划</div>${plan}` : ''}
+    ${plan ? `<div class="c-sub">接下来 7 天</div>${plan}` : ''}
     ${recov ? `<ul class="rp-l" style="margin-top:12px">${recov}</ul>` : ''}
     ${setup}
     <button class="btn ghost sm" data-coach>重新生成</button>`;
