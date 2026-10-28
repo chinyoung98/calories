@@ -22,13 +22,19 @@ const RULES = `你是「卡路里记账本」app 里的记录助手。用户用�
    - 用户表示没错（如“对”“是的”“没错”“确认”“记吧”）：把这些 id 放进 "confirm"，不要再重复输出这些 food。没说哪一项就确认全部待确认饮食。
    - 用户纠正其中一项（如“不是鸡饭，是炒饭”“只吃了一半”）：输出修正后的完整 food 条目，加 "replaces":"那一项的 id"。
    - 用户说不是、不要记：输出 {"type":"delete","replaces":"那一项的 id"}。
+13. 朋友圈：用户想把饮食或运动发到朋友圈（如“发朋友圈”“分享给大家”“po 上去”）时——
+   - 这条消息里的新饮食或运动：在那条 food / exercise 里加 "share":true；用户给了配文（想说的话、心情）就原样放进 "note"，没给就不填。
+   - 已经记下的（【最近条目】）或待确认的（【待确认饮食】）：在 "share" 里列出 {"id":"方括号里的 id","note":"配文，没有就空字符串"}。用户说“刚才那个”“这个”就指最近一条饮食或运动。
+   - 用户说不要分享、取消分享：把 id 放进 "unshare"。
+   - 身体数据、体重、体态永远不分享；用户要求时在 reply 里说明这些只有自己看得到。
+   - 没提朋友圈就不要加 share。
 
 只输出一个 JSON 对象，不要任何其他文字：
-{"reply":"…","entries":[…],"profile":null,"confirm":[]}
+{"reply":"…","entries":[…],"profile":null,"confirm":[],"share":[],"unshare":[]}
 
 条目格式（数值未知用 null）：
-food: {"type":"food","date":"YYYY-MM-DD","time":"HH:MM","meal":"breakfast|lunch|dinner|snack","name":"这一餐的名称","portion":"份量描述","kcal":0,"protein_g":0,"carbs_g":0,"fat_g":0,"confidence":"high|medium|low","items":[{"name":"食物","kcal":0}]}
-exercise: {"type":"exercise","date":"YYYY-MM-DD","time":"HH:MM","activity":"walk|run|bike|swim|lift|yoga|rope|stairs|ball|custom","name":"项目名","duration_min":0,"distance_km":null,"sets":null,"reps":null,"weight_kg":null,"avg_hr":null,"intensity":"low|moderate|high","kcal_burned":0}
+food: {"type":"food","date":"YYYY-MM-DD","time":"HH:MM","meal":"breakfast|lunch|dinner|snack","name":"这一餐的名称","portion":"份量描述","kcal":0,"protein_g":0,"carbs_g":0,"fat_g":0,"confidence":"high|medium|low","items":[{"name":"食物","kcal":0}]}（要发朋友圈时再加 "share":true,"note":"配文"）
+exercise: {"type":"exercise","date":"YYYY-MM-DD","time":"HH:MM","activity":"walk|run|bike|swim|lift|yoga|rope|stairs|ball|custom","name":"项目名","duration_min":0,"distance_km":null,"sets":null,"reps":null,"weight_kg":null,"avg_hr":null,"intensity":"low|moderate|high","kcal_burned":0}（要发朋友圈时再加 "share":true,"note":"配文"）
 body: {"type":"body","date":"YYYY-MM-DD","time":"HH:MM","weight_kg":null,"body_fat_pct":null,"waist_cm":null,"chest_cm":null,"hip_cm":null,"arm_cm":null,"thigh_cm":null,"steps":null,"sleep_h":null,"resting_hr":null,"posture":"","note":""}
 profile（只填用户提到的字段）: {"height_cm":null,"age":null,"sex":"male|female","goal":"lose|gain|maintain|fitness","kcal_target":null,"protein_target_g":null,"exercise_goal_min":null,"activity":"sedentary|moderate|physical"}`;
 
@@ -64,6 +70,11 @@ export function normEntry(r, today, nowHm) {
   if (parseInt(time, 10) > 23) time = nowHm;
   const e = { type: r.type, date, time };
   if (r.replaces) e.replaces = str(String(r.replaces), 64);
+  if (r.type !== 'body' && r.share === true) {
+    e.share = true;
+    const note = str(r.note, 200);
+    if (note) e.note = note;
+  }
   if (r.type === 'food') {
     e.name = str(r.name, 40) || '一餐';
     e.portion = str(r.portion, 60);
@@ -159,7 +170,14 @@ export default async (req) => {
     const confirm = Array.isArray(parsed.confirm)
       ? parsed.confirm.filter(x => typeof x === 'string' || typeof x === 'number').map(x => str(String(x), 64)).filter(Boolean).slice(0, 12)
       : [];
-    const reply = str(parsed.reply, 1200) || (entries.length || confirm.length ? '好的。' : '收到。');
-    return { reply, entries, profile: normProfile(parsed.profile), confirm, quota };
+    const share = Array.isArray(parsed.share)
+      ? parsed.share.map(s => typeof s === 'string' ? { id: str(s, 64), note: '' } : { id: str(String((s && s.id) || ''), 64), note: str(s && s.note, 200) })
+          .filter(s => s.id).slice(0, 12)
+      : [];
+    const unshare = Array.isArray(parsed.unshare)
+      ? parsed.unshare.map(x => str(String(x || ''), 64)).filter(Boolean).slice(0, 12)
+      : [];
+    const reply = str(parsed.reply, 1200) || (entries.length || confirm.length || share.length ? '好的。' : '收到。');
+    return { reply, entries, profile: normProfile(parsed.profile), confirm, share, unshare, quota };
   });
 };
