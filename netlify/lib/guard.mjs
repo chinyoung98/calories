@@ -162,6 +162,36 @@ export function extractJson(text) {
   catch (err) { throw new HttpError(502, 'AI 回复解析失败，请再试一次'); }
 }
 
+// Like extractJson, but a reply cut off by max_tokens still yields every value
+// that was complete: cut back to the last finished element, then close the brackets.
+export function extractJsonLoose(text) {
+  try { return extractJson(text); } catch (e) { /* fall through to repair */ }
+  const s = text.indexOf('{');
+  if (s === -1) throw new HttpError(502, 'AI 回复解析失败，请再试一次');
+  const stack = [];
+  let inStr = false, esc = false, safe = -1, safeStack = null;
+  for (let i = s; i < text.length; i++) {
+    const c = text[i];
+    if (inStr) {
+      if (esc) esc = false;
+      else if (c === '\\') esc = true;
+      else if (c === '"') inStr = false;
+      continue;
+    }
+    if (c === '"') inStr = true;
+    else if (c === '{' || c === '[') stack.push(c === '{' ? '}' : ']');
+    else if (c === '}' || c === ']') {
+      stack.pop();
+      if (!stack.length) return JSON.parse(text.slice(s, i + 1));
+      safe = i + 1; safeStack = stack.slice();
+    } else if (c === ',') { safe = i; safeStack = stack.slice(); }
+  }
+  if (safe === -1) throw new HttpError(502, 'AI 回复解析失败，请再试一次');
+  const body = text.slice(s, safe).replace(/,\s*$/, '');
+  try { return JSON.parse(body + safeStack.reverse().join('')); }
+  catch (e) { throw new HttpError(502, 'AI 回复解析失败，请再试一次'); }
+}
+
 const JSON_HEADERS = { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' };
 
 export const jsonResponse = (status, obj) => new Response(JSON.stringify(obj), { status, headers: JSON_HEADERS });
