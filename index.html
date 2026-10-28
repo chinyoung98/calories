@@ -8,7 +8,10 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="theme-color" content="#FFFFFF">
 <title>卡路里记账本</title>
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧾</text></svg>">
+<link rel="icon" type="image/png" href="/icons/favicon-64.png">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-title" content="卡路里">
 <style>
 /* ============================================================
    Look: notes-app style (小红书风) — light grey page, white cards, one brand red.
@@ -225,11 +228,21 @@ textarea.in{min-height:74px;resize:vertical;line-height:1.5;display:block}
 /* onboarding */
 #scr-ob{background:#fff}
 #ob{padding:calc(var(--safe-t) + 56px) 24px 40px;justify-content:center;max-width:440px;margin:0 auto;width:100%}
-#ob .logo{font-size:44px;text-align:center;margin-bottom:8px}
+#ob .logo{display:block;width:76px;height:76px;margin:0 auto 12px;border-radius:20px}
 #ob h1{text-align:center;font-size:24px;font-weight:700;margin:0 0 6px}
 #ob .tl{text-align:center;color:var(--ink-3);font-size:14px;margin-bottom:28px}
 #ob .card{padding:0;background:none}
 .ob-step{display:none}
+/* one-time "add to home screen" guide */
+.inst-h{margin:0 0 8px;font-size:22px;font-weight:700;text-align:center}
+.inst-p{margin:0 0 18px;font-size:15px;color:var(--ink-2);text-align:center;line-height:1.6}
+.inst-steps{list-style:none;margin:0 0 14px;padding:0;display:flex;flex-direction:column;gap:10px}
+.inst-steps li{display:flex;align-items:center;gap:12px;padding:13px 14px;border-radius:12px;background:var(--paper);font-size:16px;line-height:1.5}
+.inst-n{flex:none;width:28px;height:28px;border-radius:50%;background:var(--red);color:#fff;font-size:14px;font-weight:700;display:grid;place-items:center}
+.inst-ic{display:inline-grid;place-items:center;width:30px;height:30px;margin:0 2px;border-radius:8px;background:#fff;border:1px solid var(--line);vertical-align:middle;color:var(--ink)}
+.inst-ic svg{width:18px;height:18px}
+.inst-ok{padding:18px;border-radius:12px;background:var(--good-soft);color:var(--good);font-size:16px;font-weight:600;text-align:center;line-height:1.6;margin-bottom:14px}
+.inst-warn{padding:12px 14px;border-radius:12px;background:var(--warn-soft);color:var(--warn-ink);font-size:14px;line-height:1.55;margin-bottom:10px}
 .ob-step.on{display:block}
 .code-in{text-align:center;font-size:28px;letter-spacing:8px;font-weight:700;padding:16px;text-transform:uppercase}
 .err{color:var(--red);font-size:13px;text-align:center;margin-top:10px;min-height:18px}
@@ -520,9 +533,21 @@ textarea.in{min-height:74px;resize:vertical;line-height:1.5;display:block}
   <!-- ============ ONBOARDING ============ -->
   <div class="screen on" id="scr-ob">
     <div id="ob">
-      <div class="logo">🧾</div>
+      <img class="logo" src="/icons/icon-192.png" alt="" width="76" height="76">
       <h1>卡路里记账本</h1>
       <div class="tl">和朋友一起打卡吃饭 · 运动 · 记账</div>
+
+      <!-- one-time guide before sign-in: save the site to the home screen, then sign in there -->
+      <div class="ob-step" id="obI">
+        <div class="inst">
+          <h2 class="inst-h">先把它加到手机桌面</h2>
+          <p class="inst-p">以后在桌面点图标就能打开，像 App 一样，不用再找网址。只需要做一次。</p>
+          <div id="instBody"></div>
+          <button class="btn" id="instGo" type="button" hidden>一键加到桌面</button>
+          <button class="btn ghost" id="instDone" type="button">我加好了，继续</button>
+          <div class="note" id="instNote">加好后，请从手机桌面的「卡路里」图标打开，再登录。</div>
+        </div>
+      </div>
 
       <div class="ob-step on" id="obA">
         <button class="btn gbtn" id="auGoogle" type="button">
@@ -1414,7 +1439,81 @@ function showOb(step) {
   $('#scr-main').classList.remove('on');
   $('#scr-ob').classList.add('on');
   obStep(step);
+  if (step === 'I') renderInstall();
   window.scrollTo(0, 0);
+}
+
+/* ---------- one-time guide: save the site to the home screen ----------
+   Shown once, before sign-in, so people sign in inside the home-screen app (on iPhone
+   that app keeps its own storage). Skipped when already opened from the home screen. */
+const INSTALL_KEY = 'installGuideSeen';
+const isStandalone = () => (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || navigator.standalone === true;
+function needsInstallGuide() {
+  if (isStandalone()) return false;
+  try { return localStorage.getItem(INSTALL_KEY) !== '1'; } catch (e) { return false; }
+}
+let installEvt = null, installDone = false;
+window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); installEvt = e; renderInstall(); });
+window.addEventListener('appinstalled', () => { installEvt = null; installDone = true; renderInstall(); });
+function platformOf() {
+  const ua = navigator.userAgent || '';
+  const ios = /iPhone|iPad|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  const android = /Android/.test(ua);
+  const inApp = /FBAN|FBAV|Instagram|Line\/|MicroMessenger|WhatsApp|; wv\)/.test(ua);
+  const chrome = /CriOS|Chrome\//.test(ua) && !/Edg|OPR|SamsungBrowser/.test(ua);
+  return { ios, android, inApp, chrome };
+}
+const IC = {
+  dots: '<span class="inst-ic" aria-label="三个点"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="5" r="2" fill="currentColor"/><circle cx="12" cy="12" r="2" fill="currentColor"/><circle cx="12" cy="19" r="2" fill="currentColor"/></svg></span>',
+  share: '<span class="inst-ic" aria-label="分享"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M8 7l4-4 4 4"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg></span>',
+  add: '<span class="inst-ic" aria-label="添加"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="4" y="4" width="16" height="16" rx="4"/><path d="M12 8v8M8 12h8"/></svg></span>',
+  install: '<span class="inst-ic" aria-label="安装"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M12 8v6M9 11l3 3 3-3M8 21h8"/></svg></span>'
+};
+function renderInstall() {
+  const box = $('#instBody');
+  if (!box) return;
+  const p = platformOf();
+  const li = (n, html) => `<li><span class="inst-n">${n}</span><span>${html}</span></li>`;
+  if (installDone) {
+    box.innerHTML = `<div class="inst-ok">装好了！<br>回到手机桌面，点「卡路里」图标打开，再登录。</div>`;
+    $('#instGo').hidden = true;
+    $('#instDone').textContent = '先在这里继续用';
+    return;
+  }
+  let warn = '', steps;
+  if (p.inApp) {
+    warn = '<div class="inst-warn">现在是在聊天软件里打开的，这里加不到桌面。请先换到 Chrome 打开。</div>';
+    steps = [li(1, `点右上角的 ${IC.dots} 或「…」`), li(2, '选「在 Chrome 中打开」或「在浏览器中打开」'), li(3, '打开后照这一页的说明加到桌面')];
+  } else if (p.ios) {
+    steps = [li(1, `点${p.chrome ? '地址栏右边' : '屏幕下方'}的分享图标 ${IC.share}`), li(2, `往下滑，选「添加到主屏幕」${IC.add}`), li(3, '再点右上角的「添加」')];
+  } else if (p.android) {
+    steps = installEvt
+      ? [li(1, '点下面的「一键加到桌面」'), li(2, '在弹出的窗口点「安装」')]
+      : [li(1, `点 Chrome 右上角的 ${IC.dots}`), li(2, '选「添加到主屏幕」或「安装应用」'), li(3, '再点「安装」或「添加」')];
+  } else {
+    steps = installEvt
+      ? [li(1, '点下面的「一键加到桌面」'), li(2, '在弹出的窗口点「安装」')]
+      : [li(1, `点 Chrome 地址栏右边的安装图标 ${IC.install}，或右上角的 ${IC.dots}`), li(2, '选「安装」'), li(3, '以后从桌面或开始菜单打开')];
+  }
+  box.innerHTML = warn + `<ol class="inst-steps">${steps.join('')}</ol>`;
+  $('#instGo').hidden = !installEvt;
+}
+$('#instGo').onclick = async () => {
+  if (!installEvt) return;
+  const evt = installEvt;
+  evt.prompt();
+  let choice = null;
+  try { choice = await evt.userChoice; } catch (e) { /* dismissed */ }
+  installEvt = null;
+  if (choice && choice.outcome === 'accepted') installDone = true;
+  renderInstall();
+};
+$('#instDone').onclick = () => {
+  try { localStorage.setItem(INSTALL_KEY, '1'); } catch (e) { /* private mode: just continue */ }
+  showOb('A');
+};
+if ('serviceWorker' in navigator && location.protocol === 'https:') {
+  window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js').catch(err => console.warn('[sw]', err)));
 }
 
 /* ---------- sign out ---------- */
@@ -3783,7 +3882,7 @@ firebase.auth().onAuthStateChanged(async user => {
     resetState();
     setAuthMode('in');
     $('#auEmail').value = ''; $('#auPass').value = '';
-    showOb('A');
+    showOb(needsInstallGuide() ? 'I' : 'A');
     return;
   }
 

@@ -23,3 +23,14 @@
   for = "/index.html"
   [headers.values]
     Cache-Control = "no-cache"
+
+# Home-screen app: the service worker must always be fresh, and the manifest needs its type.
+[[headers]]
+  for = "/sw.js"
+  [headers.values]
+    Cache-Control = "no-cache"
+
+[[headers]]
+  for = "/manifest.webmanifest"
+  [headers.values]
+    Content-Type = "application/manifest+json; charset=utf-8"
