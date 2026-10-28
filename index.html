@@ -364,6 +364,33 @@ textarea.in{min-height:74px;resize:vertical;line-height:1.45;display:block}
 .k-next b{background:var(--rust-soft);color:var(--rust)}
 .rp-empty{font-size:13.5px;color:var(--ink-3);line-height:1.6}
 .btn.sm{width:auto;padding:9px 16px;font-size:14px;margin-top:12px}
+
+/* ---- 训练 ---- */
+.mbar{display:grid;grid-template-columns:40px minmax(0,1fr) 46px;align-items:center;gap:10px;padding:5px 0}
+.mbar .mk{font-size:13.5px;color:var(--ink-2);font-weight:600}
+.mbar .bar{margin-top:0}
+.mbar .mv{font-size:12.5px;color:var(--ink-3);text-align:right}
+.row.lift .ic{font-size:14px;font-weight:700;color:var(--forest)}
+.spark{flex:none;display:block}
+.c-sub{font-size:11.5px;letter-spacing:1.4px;color:var(--ink-3);font-weight:700;margin:14px 0 8px}
+.prog{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.prog li{display:flex;flex-direction:column;gap:2px;padding:9px 12px;border-radius:10px;background:var(--paper);font-size:14px}
+.prog li b{font-size:14px}
+.prog li span{color:var(--ink-2);font-size:13.5px;line-height:1.5}
+.prog li strong{color:var(--forest)}
+.prog li em{display:block;font-style:normal;color:var(--ink-3);font-size:12.5px}
+.pday{border:1px solid var(--line-soft);border-radius:12px;padding:10px 12px;margin-bottom:8px}
+.pday.today{border-color:var(--forest);box-shadow:0 0 0 1px var(--forest) inset}
+.pday-h{display:flex;align-items:center;gap:8px;margin-bottom:4px;font-size:14px}
+.pday-h b{font-size:15px}
+.pday-h > span:last-child{color:var(--ink-2);font-size:13px;min-width:0}
+.pitem{padding:7px 0;border-top:1px dashed var(--line-soft)}
+.pday-h + .pitem{border-top:none}
+.pi-top{display:flex;justify-content:space-between;gap:10px;align-items:baseline}
+.pi-n{font-weight:600;font-size:14px}
+.pi-s{font-size:13px;color:var(--forest);font-weight:700;white-space:nowrap}
+.pi-m{font-size:12.5px;color:var(--ink-2);margin-top:1px}
+.pi-c{font-size:12.5px;color:var(--ink-3);margin-top:2px;line-height:1.45}
 .dots{display:inline-flex;gap:4px;margin-right:6px;vertical-align:middle}
 .dots i{width:6px;height:6px;border-radius:50%;background:var(--ink-3);animation:blink 1.2s infinite both}
 .dots i:nth-child(2){animation-delay:.2s}.dots i:nth-child(3){animation-delay:.4s}
@@ -584,6 +611,7 @@ textarea.in{min-height:74px;resize:vertical;line-height:1.45;display:block}
         <div><h1>月度</h1><div class="sub">每日净卡路里概览</div></div>
         <div class="barcode" id="bc2"></div>
       </div>
+      <div class="seg me-seg"></div>
 
       <div class="card">
         <div class="cal-nav">
@@ -619,6 +647,7 @@ textarea.in{min-height:74px;resize:vertical;line-height:1.45;display:block}
         <div><h1>身材</h1><div class="sub">仅自己可见</div></div>
         <div class="barcode" id="bc3"></div>
       </div>
+      <div class="seg me-seg"></div>
 
       <div class="card receipt">
         <div class="rc-top"><span class="rc-title">最新记录</span><span class="mono" style="font-size:12px;color:var(--ink-3)" id="bLast">—</span></div>
@@ -636,6 +665,21 @@ textarea.in{min-height:74px;resize:vertical;line-height:1.45;display:block}
       <div class="note" style="margin-top:16px">🔒 身材数据只保存在你自己的账户中，不会分享给小组成员</div>
     </div>
 
+    <!-- ---- 训练 ---- -->
+    <div class="page" id="pg-train">
+      <div class="hd">
+        <div><h1>训练</h1><div class="sub" id="trSub">力量训练记录 · AI 教练</div></div>
+        <div class="barcode" id="bc7"></div>
+      </div>
+      <div class="card" id="trWeek"></div>
+      <div class="card" id="trCoach"></div>
+      <div class="sect-t"><span>动作进步</span><span class="mono" id="trLiftCnt"></span></div>
+      <div class="card flat" id="trLifts"></div>
+      <div class="sect-t"><span>最近训练</span></div>
+      <div class="card flat" id="trSessions"></div>
+      <div class="note">在「记录」里说「卧推 60kg 4×8，深蹲 80kg 4×6」就会记进来。<br>AI 建议仅供参考；有疼痛或伤病请先咨询医生或物理治疗师。</div>
+    </div>
+
     <!-- ---- 朋友圈 ---- -->
     <div class="page" id="pg-feed">
       <div class="hd">
@@ -648,9 +692,10 @@ textarea.in{min-height:74px;resize:vertical;line-height:1.45;display:block}
     <!-- ---- 好友 ---- -->
     <div class="page" id="pg-friends">
       <div class="hd">
-        <div><h1>好友</h1><div class="sub" id="fSub">—</div></div>
+        <div><h1>小组</h1><div class="sub" id="fSub">—</div></div>
         <div class="barcode" id="bc4"></div>
       </div>
+      <div class="seg me-seg"></div>
 
       <div class="card">
         <div class="rc-top" style="border:none;padding:0 0 10px">
@@ -709,6 +754,20 @@ textarea.in{min-height:74px;resize:vertical;line-height:1.45;display:block}
             <input class="in mono" id="stExGoal" type="number" inputmode="numeric" placeholder="30">
           </label>
         </div>
+        <div class="g3">
+          <label class="f">
+            <span class="lb">训练经验</span>
+            <select class="in" id="stExp"><option value="">不填</option><option value="beginner">新手</option><option value="intermediate">有经验</option><option value="advanced">资深</option></select>
+          </label>
+          <label class="f">
+            <span class="lb">每周练几天</span>
+            <input class="in mono" id="stDays" type="number" inputmode="numeric" placeholder="3">
+          </label>
+          <label class="f">
+            <span class="lb">器材</span>
+            <select class="in" id="stEquip"><option value="">不填</option><option value="gym">健身房</option><option value="dumbbell">家里哑铃</option><option value="bodyweight">徒手</option></select>
+          </label>
+        </div>
         <button class="btn" id="stSave">保存设定</button>
         <div class="note">体重用于估算运动消耗；蛋白质目标留空时按体重 × 1.6g 计算。这些也可以直接在「记录」里跟 AI 说。</div>
       </div>
@@ -728,10 +787,9 @@ textarea.in{min-height:74px;resize:vertical;line-height:1.45;display:block}
     <nav class="tabs">
       <button class="on" data-tab="today"><span class="g">🧾</span>今日</button>
       <button data-tab="chat"><span class="g">💬</span>记录</button>
-      <button data-tab="month"><span class="g">📅</span>月度</button>
+      <button data-tab="train"><span class="g">🏋️</span>训练</button>
       <button data-tab="feed"><span class="g">🌏</span>朋友圈</button>
-      <button data-tab="body"><span class="g">⚖️</span>身材</button>
-      <button data-tab="friends"><span class="g">👥</span>好友</button>
+      <button data-tab="me"><span class="g">👤</span>我</button>
     </nav>
     <button class="fab" id="fab">+</button>
   </div>
@@ -877,7 +935,7 @@ let UID = null;
 
 /* ---------- profile (Firebase: members/{uid}/profile) ---------- */
 // Optional fields added with the 记录 chat / AI 日报. Old profiles simply lack them.
-const PROFILE_OPT = ['heightCm', 'age', 'sex', 'goal', 'activity', 'proteinTarget', 'exerciseGoal'];
+const PROFILE_OPT = ['heightCm', 'age', 'sex', 'goal', 'activity', 'proteinTarget', 'exerciseGoal', 'experience', 'trainDays', 'equipment'];
 function normProfile(p) {
   if (p && p.displayName && p.groupCode) {
     const out = { displayName: p.displayName, groupCode: p.groupCode,
@@ -920,7 +978,10 @@ const state = {
   reportView: 'yesterday',    // 今日 page report card: 'yesterday' | 'today'
   reportBusy: null,           // dKey being generated
   reportErr: null,            // { dKey, text }
-  autoReportTried: false
+  autoReportTried: false,
+  coach: null,                // AI 教练 latest plan       (members/{uid}/coach, private)
+  coachBusy: false,
+  coachErr: null
 };
 
 /* ---------- firebase paths ---------- */
@@ -1258,7 +1319,7 @@ async function finishOnboarding(name, code) {
 function boot() {
   $('#scr-ob').classList.remove('on');
   $('#scr-main').classList.add('on');
-  ['#bc1','#bc2','#bc3','#bc4','#bc5','#bc6'].forEach(s => makeBarcode($(s)));
+  ['#bc1','#bc2','#bc3','#bc4','#bc5','#bc6','#bc7'].forEach(s => makeBarcode($(s)));
 
   detachAll();
   state.monthCursor = new Date();
@@ -1269,6 +1330,7 @@ function boot() {
   attachMonth(ymOf(state.monthCursor));
   attachChat(ymOf(new Date()));
   attachReports();
+  attachCoach();
   loadQuota();
 
   fillSettings();
@@ -1292,6 +1354,9 @@ function fillSettings() {
   $('#stGoalType').value = p.goal || '';
   $('#stProt').value = p.proteinTarget || '';
   $('#stExGoal').value = p.exerciseGoal || '';
+  $('#stExp').value = p.experience || '';
+  $('#stDays').value = p.trainDays || '';
+  $('#stEquip').value = p.equipment || '';
 }
 
 /* show the onboarding screen at a given step, main screen hidden */
@@ -1310,25 +1375,34 @@ $('#stOut').onclick = async () => {
 };
 
 /* ---------- tabs ---------- */
-$$('.tabs button').forEach(b => {
-  b.onclick = () => {
-    state.tab = b.dataset.tab;
-    $$('.tabs button').forEach(x => x.classList.toggle('on', x === b));
-    $$('.page').forEach(p => p.classList.toggle('on', p.id === 'pg-' + state.tab));
-    $('#fab').style.display = state.tab === 'chat' ? 'none' : '';
-    window.scrollTo(0, 0);
-    if (state.tab === 'chat') state.chatForceBottom = true;
-    renderAll();
-  };
-});
-function goTab(t) { const b = $(`.tabs button[data-tab="${t}"]`); if (b) b.click(); }
+// 「我」groups three pages behind a segmented control: 月度 / 身材 / 小组.
+const ME_PAGES = { month: '月度', body: '身材', friends: '小组' };
+function openTab(t) {
+  if (t === 'me') t = state.meSub || 'month';
+  if (ME_PAGES[t]) state.meSub = t;
+  state.tab = t;
+  const tabKey = ME_PAGES[t] ? 'me' : t;
+  $$('.tabs button').forEach(x => x.classList.toggle('on', x.dataset.tab === tabKey));
+  $$('.page').forEach(p => p.classList.toggle('on', p.id === 'pg-' + t));
+  $$('.me-seg').forEach(seg => {
+    seg.innerHTML = Object.keys(ME_PAGES).map(k => `<button class="${k === t ? 'on' : ''}" data-me="${k}">${ME_PAGES[k]}</button>`).join('');
+  });
+  $('#fab').style.display = t === 'chat' ? 'none' : '';
+  window.scrollTo(0, 0);
+  if (t === 'chat') state.chatForceBottom = true;
+  if (t === 'train') ensureTrainingMonths();
+  renderAll();
+}
+$$('.tabs button').forEach(b => { b.onclick = () => openTab(b.dataset.tab); });
+document.addEventListener('click', e => { const m = e.target.closest('[data-me]'); if (m) openTab(m.dataset.me); });
+function goTab(t) { openTab(t); }
 
 /* ============================================================
    RENDER — TODAY
    ============================================================ */
 function renderAll() {
   renderToday(); renderDayCard(); renderReportCard(); renderChat();
-  renderMonth(); renderBody(); renderFriends(); renderFeed();
+  renderMonth(); renderBody(); renderFriends(); renderFeed(); renderTraining();
   if (state.daySheet) renderDaySheet();
 }
 
@@ -1397,6 +1471,7 @@ function renderToday() {
       <span class="mid">
         <span class="nm">${esc(r.activityName || a.name)}</span>
         <span class="mt">${esc(r.time)} · ${Math.round(num(r.duration))} 分钟${r.distanceKm ? ' · ' + num(r.distanceKm) + ' km' : ''}${sharedMark(r)}</span>
+        ${liftsOf(r).length ? `<span class="r-note">${esc(liftsLine(r))}</span>` : ''}
         ${noteRow(r)}
       </span>
       <span class="val neg">-${Math.round(num(r.calories))}</span>
@@ -1700,7 +1775,7 @@ function postHtml(p) {
        <div class="p-meta">P ${Math.round(num(r.protein))}g · C ${Math.round(num(r.carbs))}g · F ${Math.round(num(r.fat))}g${
          Array.isArray(r.items) && r.items.length > 1 ? ' · ' + r.items.length + ' 项' : ''}</div>`
     : `<div class="p-ttl">${esc(r.activityName || actById(r.activity).name)} · <span class="p-cal neg">-${Math.round(num(r.calories))} kcal</span></div>
-       <div class="p-meta">${Math.round(num(r.duration))} 分钟</div>`;
+       <div class="p-meta">${Math.round(num(r.duration))} 分钟${r.distanceKm ? ' · ' + num(r.distanceKm) + ' km' : ''}${liftsOf(r).length ? ' · ' + esc(liftsLine(r)) : ''}</div>`;
 
   // The poster's own words, like a FB status caption. Omitted entirely when empty,
   // so a note-less post shows no empty block.
@@ -1867,6 +1942,9 @@ $('#stSave').onclick = async () => {
   p.exerciseGoal = optNum('#stExGoal', 5, 300);
   p.sex = $('#stSex').value || undefined;
   p.goal = $('#stGoalType').value || undefined;
+  p.experience = $('#stExp').value || undefined;
+  p.trainDays = optNum('#stDays', 1, 7);
+  p.equipment = $('#stEquip').value || undefined;
   Object.keys(p).forEach(k => { if (p[k] === undefined) delete p[k]; });
   try {
     await saveProfile(p);
@@ -2350,7 +2428,7 @@ function sheetExForm(existing) {
       btn.disabled = true; btn.textContent = shots.length ? '上传照片中…' : '保存中…';
       try {
         const kept = {};
-        if (existing) ['distanceKm', 'sets', 'reps', 'weightKg', 'avgHr', 'intensity', 'source'].forEach(k => { if (existing[k] != null) kept[k] = existing[k]; });
+        if (existing) ['distanceKm', 'lifts', 'avgHr', 'intensity', 'source'].forEach(k => { if (existing[k] != null) kept[k] = existing[k]; });
         await upsertEx(dKeyOf(new Date()), {
           ...kept,
           id: existing ? existing.id : uid(),
@@ -2640,7 +2718,7 @@ function profileLine() {
 }
 function entryLine(kind, r) {
   if (kind === 'food') return `${MEAL_N[mealOf(r)]}：${r.name} ${Math.round(num(r.calories))}kcal，蛋白质 ${Math.round(num(r.protein))}g`;
-  return `运动：${r.activityName || actById(r.activity).name} ${Math.round(num(r.duration))}分钟 ${Math.round(num(r.calories))}kcal${r.distanceKm ? ' ' + num(r.distanceKm) + 'km' : ''}`;
+  return `运动：${r.activityName || actById(r.activity).name} ${Math.round(num(r.duration))}分钟 ${Math.round(num(r.calories))}kcal${r.distanceKm ? ' ' + num(r.distanceKm) + 'km' : ''}${liftsOf(r).length ? '（' + liftsLine(r) + '）' : ''}`;
 }
 function reportFacts(dk, sc) {
   const t = sc.t;
@@ -2805,7 +2883,8 @@ function refRowHtml(ref) {
   const a = actById(r.activity);
   return `<div class="rr"><button class="row" data-cref="exercise" data-id="${esc(r.id)}" data-dk="${esc(hit.dKey)}"><span class="ic ex">${a.icon}</span>
     <span class="mid"><span class="nm">${esc(r.activityName || a.name)}</span>
-    <span class="mt">${when} · ${Math.round(num(r.duration))} 分钟${r.distanceKm ? ' · ' + num(r.distanceKm) + ' km' : ''}</span></span>
+    <span class="mt">${when} · ${Math.round(num(r.duration))} 分钟${r.distanceKm ? ' · ' + num(r.distanceKm) + ' km' : ''}</span>
+    ${liftsOf(r).length ? `<span class="r-note">${esc(liftsLine(r))}</span>` : ''}</span>
     <span class="val neg">-${Math.round(num(r.calories))}</span></button>${shareBar}</div>`;
 }
 function chatMsgHtml(m) {
@@ -2967,7 +3046,7 @@ function chatContext(now) {
   [y, dk].forEach(d => {
     const sh = r => r.shared === true ? '（已分享到朋友圈）' : '';
     foodOf(d, UID).forEach(r => rec.push({ k: d + (r.time || ''), s: `- [${r.id}] ${d} ${r.time || ''} 饮食：${r.name}${r.portion ? '（' + r.portion + '）' : ''} ${Math.round(num(r.calories))}kcal 蛋白质${Math.round(num(r.protein))}g${sh(r)}` }));
-    exOf(d, UID).forEach(r => rec.push({ k: d + (r.time || ''), s: `- [${r.id}] ${d} ${r.time || ''} 运动：${r.activityName || actById(r.activity).name} ${Math.round(num(r.duration))}分钟 ${Math.round(num(r.calories))}kcal${r.distanceKm ? ' ' + num(r.distanceKm) + 'km' : ''}${sh(r)}` }));
+    exOf(d, UID).forEach(r => rec.push({ k: d + (r.time || ''), s: `- [${r.id}] ${d} ${r.time || ''} 运动：${r.activityName || actById(r.activity).name} ${Math.round(num(r.duration))}分钟 ${Math.round(num(r.calories))}kcal${r.distanceKm ? ' ' + num(r.distanceKm) + 'km' : ''}${liftsOf(r).length ? '（' + liftsLine(r) + '）' : ''}${sh(r)}` }));
     const b = bodyOf(d);
     if (b) { const m = bodyMeta(b); if (b.weight) m.unshift('体重 ' + b.weight + 'kg'); if (m.length) rec.push({ k: d + (b.time || ''), s: `- ${d} 身体（新数据会自动合并，不需要 id）：${m.join('；')}` }); }
   });
@@ -2976,6 +3055,7 @@ function chatContext(now) {
   const pend = pendingList().filter(x => x.p.status === 'pending' && x.p.e.date >= addDaysKey(dk, -2));
   lines.push('【待确认饮食】' + (pend.length ? '\n' + pend.map(({ p }) =>
     `- [${p.pid}] ${p.e.date} ${p.e.time || ''} ${p.e.name}${p.e.portion ? '（' + p.e.portion + '）' : ''} ${Math.round(num(p.e.kcal))}kcal`).join('\n') : '无'));
+  lines.push(trainingContext());
   return lines.join('\n');
 }
 function chatHistory() {
@@ -3117,9 +3197,7 @@ async function applyChat(d, msg, dk, urls) {
           note: String(e.note || '').slice(0, NOTE_MAX), photos: [], shared: !!e.share, source: 'chat', intensity: e.intensity
         };
         if (e.distance_km != null) rec.distanceKm = e.distance_km;
-        if (e.sets != null) rec.sets = e.sets;
-        if (e.reps != null) rec.reps = e.reps;
-        if (e.weight_kg != null) rec.weightKg = e.weight_kg;
+        if (Array.isArray(e.lifts) && e.lifts.length) rec.lifts = e.lifts;   // every set of every exercise, for 训练
         if (e.avg_hr != null) rec.avgHr = e.avg_hr;
         await txList(exPath(e.date), l => l.concat([rec]));
         refs.push({ t: 'exercise', id: rec.id, dk: e.date });
@@ -3326,6 +3404,211 @@ $('#cpPend').addEventListener('click', e => {
 });
 
 /* ============================================================
+   训练 — strength training log + AI 教练
+
+   Sets live on the exercise record itself (rec.lifts = [{ name, muscle, sets:[{reps, kg}] }]),
+   so a session counts toward 今日 / score / 朋友圈 like any other exercise.
+   The coach's latest plan is private: members/{uid}/coach.
+   ============================================================ */
+const MUSCLE_N = { chest: '胸', back: '背', legs: '腿', shoulders: '肩', arms: '手臂', core: '核心', full: '全身' };
+const EXP_N = { beginner: '新手', intermediate: '有经验', advanced: '资深' };
+const EQUIP_N = { gym: '健身房', dumbbell: '家里哑铃', bodyweight: '徒手' };
+const liftsOf = r => Array.isArray(r && r.lifts) ? r.lifts.filter(l => l && l.name && Array.isArray(l.sets) && l.sets.length) : [];
+function setsLine(l) {
+  const sets = l.sets;
+  const kgs = [...new Set(sets.map(s => s.kg == null ? null : num(s.kg)))];
+  const reps = sets.map(s => Math.round(num(s.reps)));
+  const kg = kgs.length === 1 && kgs[0] != null ? kgs[0] + 'kg ' : '';
+  if (kgs.length === 1 && new Set(reps).size === 1) return `${kg}${sets.length}×${reps[0]}`;
+  if (kgs.length === 1) return `${kg}${reps.join('/')}`;
+  return sets.map(s => `${s.kg != null ? num(s.kg) + 'kg×' : ''}${Math.round(num(s.reps))}`).join(' / ');
+}
+const liftsLine = r => liftsOf(r).map(l => `${l.name} ${setsLine(l)}`).join(' · ');
+const e1rm = (kg, reps) => kg > 0 && reps > 0 ? (reps === 1 ? kg : kg * (1 + Math.min(reps, 12) / 30)) : 0;   // Epley
+const normName = n => String(n || '').replace(/\s+/g, '').toLowerCase();
+const isStrength = r => liftsOf(r).length > 0 || r.activity === 'lift';
+function weekStartKey(dk) { const d = keyToDate(dk); d.setDate(d.getDate() - (d.getDay() + 6) % 7); return dKeyOf(d); }
+
+function trainingSessions(daysBack = 56) {
+  const from = addDaysKey(todayKey(), -daysBack), out = [];
+  Object.keys(state.exercise).forEach(ym => {
+    const days = state.exercise[ym] || {};
+    Object.keys(days).forEach(dk => {
+      if (dk < from) return;
+      const l = days[dk] && days[dk][UID];
+      if (Array.isArray(l)) l.forEach(r => { if (r) out.push({ dk, r }); });
+    });
+  });
+  return out.sort((a, b) => (a.dk + (a.r.time || '')).localeCompare(b.dk + (b.r.time || '')));
+}
+function muscleSets(sessions, from, to) {
+  const m = {};
+  sessions.forEach(({ dk, r }) => { if (dk >= from && dk <= to) liftsOf(r).forEach(l => { const k = MUSCLE_N[l.muscle] ? l.muscle : 'full'; m[k] = (m[k] || 0) + l.sets.length; }); });
+  return m;
+}
+function liftHistory(sessions) {
+  const map = {};
+  sessions.forEach(({ dk, r }) => liftsOf(r).forEach(l => {
+    const best = l.sets.reduce((b, s) => Math.max(b, e1rm(num(s.kg), num(s.reps))), 0);
+    const top = l.sets.reduce((b, s) => num(s.kg) > num(b.kg) || (num(s.kg) === num(b.kg) && num(s.reps) > num(b.reps)) ? s : b, l.sets[0]);
+    (map[normName(l.name)] ||= { name: l.name, muscle: l.muscle, hist: [] }).hist.push({ dk, l, best, top });
+  }));
+  return Object.values(map).sort((a, b) => b.hist[b.hist.length - 1].dk.localeCompare(a.hist[a.hist.length - 1].dk));
+}
+async function ensureTrainingMonths() {
+  if (!state.profile) return;
+  const t = todayKey();
+  try { await loadMonth(ymOfKey(t)); await loadMonth(ymOfKey(addDaysKey(t, -35))); } catch (e) { console.error('[training months]', e); }
+  renderTraining();
+}
+
+function sparkSvg(vals) {
+  if (vals.length < 2) return '';
+  const W = 64, H = 22, lo = Math.min(...vals), hi = Math.max(...vals), span = hi - lo || 1;
+  const pts = vals.map((v, i) => `${(i / (vals.length - 1) * (W - 4) + 2).toFixed(1)},${(H - 3 - (v - lo) / span * (H - 6)).toFixed(1)}`).join(' ');
+  const last = pts.split(' ').pop().split(',');
+  return `<svg class="spark" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" aria-hidden="true"><polyline points="${pts}" fill="none" stroke="var(--forest)" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/><circle cx="${last[0]}" cy="${last[1]}" r="2.2" fill="var(--forest)"/></svg>`;
+}
+
+function renderTraining() {
+  if (!state.profile || state.tab !== 'train') return;
+  const S = trainingSessions(56);
+  const td = todayKey(), ws = weekStartKey(td), lws = addDaysKey(ws, -7), lwe = addDaysKey(ws, -1);
+  const target = Math.round(num(state.profile.trainDays, 3)) || 3;
+  const weekDays = new Set(S.filter(x => x.dk >= ws && isStrength(x.r)).map(x => x.dk)).size;
+  const ms = muscleSets(S, ws, td), lastMs = muscleSets(S, lws, lwe);
+  const total = Object.values(ms).reduce((a, b) => a + b, 0), lastTotal = Object.values(lastMs).reduce((a, b) => a + b, 0);
+  const bars = ['chest', 'back', 'legs', 'shoulders', 'arms', 'core'].map(k => {
+    const n = ms[k] || 0, cls = n === 0 ? '' : n < 10 ? 'warn' : n <= 20 ? 'pos' : 'neg';
+    return `<div class="mbar"><span class="mk">${MUSCLE_N[k]}</span><span class="bar"><i class="${cls === 'pos' ? '' : cls}" style="width:${Math.min(100, n / 20 * 100)}%"></i></span><span class="mv mono">${n} 组</span></div>`;
+  }).join('');
+  $('#trWeek').innerHTML = `<div class="rc-top" style="border:none;padding:0 0 10px"><span class="rc-title">本周训练</span>
+      <span class="mono" style="font-size:13px"><b>${weekDays}</b> / ${target} 天</span></div>
+    ${bars}
+    <div class="note" style="text-align:left;margin-top:10px">每个肌群每周建议 10–20 组（绿色）。本周共 ${total} 组${lastTotal ? `，上周 ${lastTotal} 组` : ''}。</div>`;
+
+  $('#trCoach').innerHTML = coachHtml();
+
+  const lifts = liftHistory(S);
+  $('#trLiftCnt').textContent = lifts.length ? lifts.length + ' 个动作' : '';
+  $('#trLifts').innerHTML = lifts.length ? lifts.slice(0, 10).map(x => {
+    const h = x.hist, last = h[h.length - 1], first = h[0];
+    const diff = last.best && first.best && h.length > 1 ? Math.round((last.best - first.best) * 10) / 10 : 0;
+    return `<div class="row lift">
+      <span class="ic">${MUSCLE_N[x.muscle] ? MUSCLE_N[x.muscle].slice(0, 1) : '练'}</span>
+      <span class="mid"><span class="nm">${esc(x.name)}</span>
+        <span class="mt">${esc(last.dk.slice(5))} · ${esc(setsLine(last.l))}${last.best ? ` · 估算最大 ${Math.round(last.best)}kg` : ''}</span></span>
+      ${sparkSvg(h.map(p => p.best).filter(Boolean))}
+      <span class="val mono ${diff > 0 ? 'pos' : diff < 0 ? 'neg' : ''}" style="font-size:13px">${diff > 0 ? '▲' + diff + 'kg' : diff < 0 ? '▼' + Math.abs(diff) + 'kg' : h.length + ' 次'}</span>
+    </div>`;
+  }).join('') : `<div class="empty">还没有力量训练记录<br>在「记录」里说「卧推 60kg 4×8」试试</div>`;
+
+  const sess = S.filter(x => isStrength(x.r)).slice(-8).reverse();
+  $('#trSessions').innerHTML = sess.length ? sess.map(({ dk, r }) => `<div class="row">
+      <span class="ic ex">🏋️</span>
+      <span class="mid"><span class="nm">${esc(r.activityName || '力量训练')}</span>
+        <span class="mt">${esc(fmtDay(dk))} · ${Math.round(num(r.duration))} 分钟 · ${liftsOf(r).reduce((n, l) => n + l.sets.length, 0)} 组</span>
+        ${liftsOf(r).length ? `<span class="r-note">${esc(liftsLine(r))}</span>` : ''}</span>
+      <span class="val neg">-${Math.round(num(r.calories))}</span></div>`).join('')
+    : `<div class="empty">最近 8 周没有力量训练</div>`;
+}
+
+/* ---- AI 教练 ---- */
+function attachCoach() {
+  const path = `${ROOT}/members/${UID}/coach`;
+  listen(path, val => { if (val && (!state.coach || num(val.ts) >= num(state.coach.ts))) state.coach = val; renderTraining(); });
+}
+function coachHtml() {
+  const c = state.coach, p = state.profile;
+  const missing = [!p.experience && '训练经验', !p.trainDays && '每周练几天', !p.equipment && '器材'].filter(Boolean);
+  const setup = missing.length ? `<div class="note" style="text-align:left">先在「我 → 小组 → 设定」填${missing.join('、')}，计划会更贴合你。也可以直接在「记录」里说「我是新手，每周练 3 天，只有哑铃」。</div>` : '';
+  const head = `<div class="rp-hd"><span class="rc-title">AI 教练</span>${c && c.ts ? `<span class="rp-meta">${new Date(num(c.ts)).getMonth() + 1}月${new Date(num(c.ts)).getDate()}日 生成</span>` : ''}</div>`;
+  if (state.coachBusy) return `${head}<div class="rp-empty"><span class="dots"><i></i><i></i><i></i></span>教练正在看你的训练记录、排这周的计划…（约 20–40 秒）</div>`;
+  const err = state.coachErr ? `<div class="err" style="text-align:left;margin:0 0 8px">${esc(state.coachErr)}</div>` : '';
+  if (!c || !c.headline) {
+    return `${head}${err}<div class="rp-empty">根据你的目标、训练经验、器材和最近的训练、睡眠，排出这周每天练什么、几组几次、多重、休息多久，并告诉你每个动作下次怎么加重。</div>
+      ${setup}<button class="btn sm" data-coach>生成本周训练计划</button>`;
+  }
+  const todayW = WD[new Date().getDay()];
+  const prog = (c.progression || []).map(x => `<li><b>${esc(x.name)}</b><span>${esc(x.last)} → <strong>${esc(x.next)}</strong>${x.why ? `<em>${esc(x.why)}</em>` : ''}</span></li>`).join('');
+  const plan = (c.plan || []).map(d => {
+    const isToday = d.day && d.day.indexOf(todayW) >= 0;
+    return `<div class="pday${isToday ? ' today' : ''}">
+      <div class="pday-h"><b>${esc(d.day)}</b>${isToday ? '<span class="tag hi">今天</span>' : ''}<span>${esc(d.focus)}</span></div>
+      ${(d.items || []).map(i => `<div class="pitem"><div class="pi-top"><span class="pi-n">${esc(i.name)}</span>
+        <span class="pi-s mono">${esc(i.sets)}${i.sets ? '×' : ''}${esc(i.reps)}</span></div>
+        <div class="pi-m">${[i.load, i.rest ? '休息 ' + i.rest : ''].filter(Boolean).map(esc).join(' · ')}</div>
+        ${i.cue ? `<div class="pi-c">${esc(i.cue)}</div>` : ''}</div>`).join('')}
+    </div>`;
+  }).join('');
+  const li = (cls, label, t) => `<li class="${cls}"><b>${label}</b><span>${esc(t)}</span></li>`;
+  const recov = (c.recovery || []).map(t => li('k-good', '恢复', t)).join('') + (c.cautions || []).map(t => li('k-next', '注意', t)).join('');
+  return `${head}${err}<p class="rp-h">${esc(c.headline)}</p>
+    ${c.assessment ? `<p class="rp-s">${esc(c.assessment)}</p>` : ''}
+    ${prog ? `<div class="c-sub">下次怎么加重</div><ul class="prog">${prog}</ul>` : ''}
+    ${plan ? `<div class="c-sub">本周计划</div>${plan}` : ''}
+    ${recov ? `<ul class="rp-l" style="margin-top:12px">${recov}</ul>` : ''}
+    ${setup}
+    <button class="btn ghost sm" data-coach>重新生成</button>`;
+}
+function trainingFacts() {
+  const p = state.profile, td = todayKey();
+  const S = trainingSessions(28), lines = [];
+  lines.push(`【今天】${td} ${WD[new Date().getDay()]}`);
+  lines.push(`【用户资料】${profileLine()}`);
+  lines.push(`【训练设定】训练经验：${EXP_N[p.experience] || '没填（按新手到有经验之间安排）'}；每周能练 ${num(p.trainDays, 0) || '没填（按 3'} 天${num(p.trainDays, 0) ? '' : '）'}；器材：${EQUIP_N[p.equipment] || '没填（按健身房）'}`);
+  const str = S.filter(x => liftsOf(x.r).length);
+  lines.push('【最近 4 周力量训练】' + (str.length ? '\n' + str.map(({ dk, r }) =>
+    `- ${dk} ${WD[keyToDate(dk).getDay()]} ${r.activityName || '力量训练'}（${Math.round(num(r.duration))} 分钟）：${liftsOf(r).map(l => `${l.name}[${MUSCLE_N[l.muscle] || '全身'}] ${setsLine(l)}`).join('；')}`).join('\n') : '无'));
+  const other = S.filter(x => !liftsOf(x.r).length && x.dk >= addDaysKey(td, -14));
+  lines.push('【最近 2 周其他运动】' + (other.length ? '\n' + other.map(({ dk, r }) => `- ${dk} ${entryLine('exercise', r)}`).join('\n') : '无'));
+  const ws = weekStartKey(td), fmt = m => ['chest', 'back', 'legs', 'shoulders', 'arms', 'core'].map(k => `${MUSCLE_N[k]} ${m[k] || 0}`).join('，');
+  lines.push(`【每周各肌群组数】本周（${ws} 起）：${fmt(muscleSets(S, ws, td))}；上周：${fmt(muscleSets(S, addDaysKey(ws, -7), addDaysKey(ws, -1)))}`);
+  const hist = liftHistory(trainingSessions(56)).slice(0, 10);
+  if (hist.length) lines.push('【动作历史（最近 3 次）】\n' + hist.map(x => `- ${x.name}：` + x.hist.slice(-3).map(h => `${h.dk.slice(5)} ${setsLine(h.l)}`).join('；')).join('\n'));
+  const last7 = Array.from({ length: 7 }, (_, i) => bodyOf(addDaysKey(td, -i))).filter(Boolean);
+  const avg = k => { const v = last7.map(b => num(b[k], NaN)).filter(Number.isFinite); return v.length ? Math.round(v.reduce((a, b) => a + b, 0) / v.length * 10) / 10 : null; };
+  const lw = latestWeight(td);
+  lines.push(`【恢复与身体】近 7 天平均睡眠 ${avg('sleepH') ?? '没有记录'} 小时，平均步数 ${avg('steps') ?? '没有记录'}，静息心率 ${avg('restingHr') ?? '没有记录'}；最近体重 ${lw ? lw.w + 'kg（' + lw.dk + '）' : num(p.weightKg, 65) + 'kg（设定）'}`);
+  const t = dayTotals(td);
+  lines.push(`【今天饮食】已摄入 ${Math.round(t.kcal)} kcal、蛋白质 ${Math.round(t.p)}g`);
+  return lines.join('\n');
+}
+async function generateCoach() {
+  if (state.coachBusy) return;
+  state.coachBusy = true; state.coachErr = null; renderTraining();
+  try {
+    await ensureTrainingMonths();
+    const out = await aiCall('coach', { facts: trainingFacts() });
+    const c = { ts: Date.now(), headline: out.headline || '', assessment: out.assessment || '', plan: out.plan || [],
+                progression: out.progression || [], recovery: out.recovery || [], cautions: out.cautions || [] };
+    await db.ref(`${ROOT}/members/${UID}/coach`).set(JSON.parse(JSON.stringify(c)));
+    state.coach = c;
+  } catch (e) {
+    console.error('[coach]', e);
+    state.coachErr = e.message || '生成失败，请再试一次';
+  } finally {
+    state.coachBusy = false; renderTraining();
+  }
+}
+document.addEventListener('click', e => { if (e.target.closest('[data-coach]')) generateCoach(); });
+
+// What the chat sees about training, so "今天练什么" gets an answer grounded in real sessions and the plan.
+function trainingContext() {
+  const td = todayKey(), S = trainingSessions(14).filter(x => liftsOf(x.r).length), lines = [];
+  lines.push('【训练概况】' + (S.length ? `最近 14 天力量训练 ${new Set(S.map(x => x.dk)).size} 天：\n` + S.slice(-6).map(({ dk, r }) => `- ${dk} ${r.activityName || '力量训练'}：${liftsLine(r)}`).join('\n') : '最近 14 天没有力量训练记录')
+    + `\n训练经验：${EXP_N[state.profile.experience] || '没填'}；每周能练：${num(state.profile.trainDays, 0) || '没填'} 天；器材：${EQUIP_N[state.profile.equipment] || '没填'}`);
+  const c = state.coach;
+  if (c && c.headline) {
+    const todayW = WD[new Date().getDay()];
+    const d = (c.plan || []).find(x => x.day && x.day.indexOf(todayW) >= 0);
+    lines.push(`【AI 教练计划】（${new Date(num(c.ts)).getMonth() + 1}月${new Date(num(c.ts)).getDate()}日生成）${c.headline}`
+      + (d ? `\n今天（${todayW}）：${d.focus} —— ${(d.items || []).map(i => `${i.name} ${i.sets}×${i.reps} ${i.load || ''}`.trim()).join('；')}` : `\n今天（${todayW}）计划里没有安排训练`));
+  } else lines.push('【AI 教练计划】还没有生成（用户可以到「训练」页生成本周计划）');
+  return lines.join('\n');
+}
+
+/* ============================================================
    START — routing is driven entirely by auth state
    ============================================================ */
 function resetState() {
@@ -3336,6 +3619,7 @@ function resetState() {
   state.chat = {}; state.reports = {}; state.reportsLoaded = false; state.quota = null;
   state.chatPend = []; state.chatBusy = false; state.chatLocal = null;
   state.reportBusy = null; state.reportErr = null; state.autoReportTried = false; state.daySheet = null;
+  state.coach = null; state.coachBusy = false; state.coachErr = null;
   obName = ''; obNewCode = '';
 }
 

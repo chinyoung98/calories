@@ -6,7 +6,8 @@
 - `netlify/functions/analyze-food.mjs` — 「加饮食」拍照识别
 - `netlify/functions/chat-log.mjs` — 「记录」聊天：一句话 / 照片 → 饮食、运动、身体数据
 - `netlify/functions/daily-report.mjs` — AI 日报
-- `netlify/lib/guard.mjs` — 三个 function 共用：验证 Firebase 登入、每人每日 AI 次数、呼叫 Anthropic
+- `netlify/functions/coach.mjs` — AI 教练：根据训练记录排每周计划、给加重建议
+- `netlify/lib/guard.mjs` — 所有 AI function 共用：验证 Firebase 登入、每人每日 AI 次数、呼叫 Anthropic
 - `netlify.toml` — Netlify 设定（functions 目录、publish 根目录、无 build command）
 
 技术栈：vanilla HTML + Firebase Auth + Firebase Realtime Database + Firebase Storage（皆 v8 compat CDN）+ Netlify Functions。
@@ -14,7 +15,9 @@
 
 功能：今日记账、**今日概览**（热量 / 蛋白质 / 运动三个环 + 0–100 得分）、**AI 日报**（每天第一次打开自动写前一天的）、
 **记录**（用聊天的方式记饮食、运动、体重、体态，也能读华为运动健康 / Strava 截图）、AI 拍照识别（一餐可多张照片）、
-运动、月度（点日期看那天的得分和日报）、身材（私密）、好友、**朋友圈**（FB 风格动态墙 + 赞 + 评论）。
+运动、**训练**（力量训练每组的次数和重量、每肌群每周组数、动作进步曲线、**AI 教练**每周计划）、月度（点日期看那天的得分和日报）、身材（私密）、小组、**朋友圈**（FB 风格动态墙 + 赞 + 评论）。
+
+底部导航：**今日 · 记录 · 训练 · 朋友圈 · 我**；「我」里面再分 月度 / 身材 / 小组（设定在小组页）。
 
 ---
 
@@ -323,6 +326,8 @@ calorie_ledger/
         {ym}/
           {dKey}/
             {uid}: [ {id,time,activity,activityName,duration,calories,
+                      lifts?:[{ name, muscle:'chest'|'back'|'legs'|'shoulders'|'arms'|'core'|'full',
+                                sets:[{ reps, kg? }] }],          # 力量训练每一组；徒手动作没有 kg
                       photos:["url",...], shared:true/false}, ... ]
       social/                          # 赞和评论：组员写得到的地方
         {postId}/                      # "food_2026-07-16_ab12cd34"（type + 日期 + 记录 id）
@@ -333,7 +338,9 @@ calorie_ledger/
   members/
     {uid}/
       profile: { displayName, groupCode, dailyGoal, weightKg,     # 私密
-                 heightCm?, age?, sex?, goal?, proteinTarget?, exerciseGoal? }
+                 heightCm?, age?, sex?, goal?, proteinTarget?, exerciseGoal?,
+                 experience?:'beginner'|'intermediate'|'advanced', trainDays?:1-7,
+                 equipment?:'gym'|'dumbbell'|'bodyweight' }
       body/                                                      # 私密，不进 group、不进朋友圈
         {ym}/
           {dKey}: { weight, bodyFat, waist, note, time,
@@ -346,13 +353,16 @@ calorie_ledger/
                                  e:{ AI 识别的饮食 }, photos:[url], replacesRec?, recId?, recDk? }] }, ... ]
       reports/                                                   # 私密：AI 日报
         {dKey}: { date, ts, partial, score, sig, headline, summary, good:[], improve:[], tomorrow }
+      coach: { ts, headline, assessment,                         # 私密：AI 教练最新一份计划
+               plan:[{ day, focus, items:[{ name, sets, reps, load, rest, cue }] }],
+               progression:[{ name, last, next, why }], recovery:[], cautions:[] }
   usage/
     {uid}/
       {YYYY-MM-DD}: 次数                                          # 马来西亚时间换日
 ```
 
 **聊天建立的记录**跟手动输入的存在**同一个地方**（`food` / `exercise` / `body`），所以今日、月度、好友战况都直接算得到。
-额外带 `source:'chat'`，饮食多了 `meal`（早午晚餐）、`portion`、`confidence`；运动可能多了 `distanceKm`、`sets`、`reps`、`weightKg`、`avgHr`、`intensity`。
+额外带 `source:'chat'`，饮食多了 `meal`（早午晚餐）、`portion`、`confidence`；运动可能多了 `distanceKm`、`lifts`（力量训练每一组）、`avgHr`、`intensity`。
 聊天记的饮食和运动 **`shared` 一律是 `false`**，不会自己跑进朋友圈；要分享就到今日页点那一条打开开关。
 
 **照片**：只有 Storage 的 `downloadURL` 字串进 Database，**base64 绝不进 DB**。
@@ -381,11 +391,12 @@ profile 存在 `members/{uid}/profile`，所以换设备、换浏览器登入同
 | 引导 | 设暱称 → 创建小组（产生 6 位代码）或加入小组（检查 roster 是否存在） |
 | 今日 | **今日概览**（三个环 + 得分 + 步数 / 睡眠 / 静息心率）、**AI 日报**（昨日 / 今日切换）；目标 / 已摄入 / 已消耗 / 净值 / 剩余；饮食与运动清单（点击编辑、✕ 删除）；有照片显示 `📷 N`、已公开显示 `🌏 已分享`；右下角 + |
 | 记录 | 聊天：打字或发照片（最多 4 张）→ AI 拆成饮食 / 运动 / 身体记录。**识别出的饮食先显示成「请确认」卡片**：点「对，记下」（或在聊天里回「对」）才写进资料库；「修改」可以改名称、份量、热量、营养、餐别、日期再记下；「不是」会取消这一项，并在输入框带出「不是…，是」让你直接说正确的食物。运动和身体数据直接记下。说「刚才那碗面只吃了一半」会产生一张修正卡，确认后才替换原本那条。**朋友圈**：确认卡上可以点「也分享到朋友圈」；已记下的饮食 / 运动下面有「分享到朋友圈」开关；也可以直接说「晚餐炒粿条，发朋友圈：今天好满足」或「刚才跑步那个发朋友圈」，配文会存进那条记录的备注、显示成朋友圈贴文的文字。身体数据永远不分享。会读华为运动健康 / Strava 截图的锻炼、步数、睡眠。底下显示今天还能用几次 AI |
+| 训练 | **本周训练**：练了几天 / 设定的每周天数，胸、背、腿、肩、手臂、核心各几组（每肌群每周 10–20 组为绿色，少于 10 组金色，超过 20 组锈红）。**AI 教练**：按目标、训练经验、器材、最近 4 周每一组、每肌群组数、睡眠 / 步数 / 静息心率排出这周每天练什么（组数 × 次数、重量或 RPE、休息、动作要点），今天那天会框起来；「下次怎么加重」按渐进超负荷给每个练过的动作具体重量；还有恢复和注意事项。按一次用一次 AI。**动作进步**：每个动作最近一次的组数、Epley 估算最大重量（`kg × (1 + 次数 ÷ 30)`）和小折线。**最近训练**：最近 8 次力量训练 |
 | 月度 | 月历上色（ratio<0.85 绿、0.85–1.05 金、>1.05 锈红、无资料灰）＋ 手写 inline SVG 折线图；**点任何一天**看那天的得分、三个环和日报 |
 | 朋友圈 | FB 风格动态墙：小组所有 `shared:true` 的饮食/运动，时间倒序；暱称首字母圆头像 + 相对时间；照片 FB 排版；赞（自己按过会高亮）+ 评论（可展开留言）；全程 `.on('value')` 实时更新 |
 | 身材 | 体重 / 体脂 / 腰围 / 备注，存 `members/{uid}/body`，私密，**永不进朋友圈** |
 | 好友 | roster 名单 + 每人今日摄入/消耗，group 节点是 `.on('value')` 监听，组员更新自动刷新 |
-| 设定 | 改暱称、改每日目标、复制小组代码、显示已登入 Email、登出 |
+| 设定 | 改暱称、改每日目标、身高 / 年龄 / 目标 / 蛋白质 / 运动目标、**训练经验 / 每周练几天 / 器材**（AI 教练用）、复制小组代码、显示已登入 Email、登出 |
 
 **朋友圈照片排版（FB 风格）**：1 张＝大图 4:3；2 张＝并排各 1:1；3 张＝左边一大、右边两小；
 4 张以上＝ 2×2 格状，第 4 格盖上 `+N` 表示还有几张。点任一张开全萤幕看图，可左右翻页。
@@ -398,14 +409,20 @@ profile 存在 `members/{uid}/profile`，所以换设备、换浏览器登入同
 记录 20（记了几个餐别，有身体数据 +2）· 热量 30（净摄入 ÷ 每日目标，0.8–1.05 满分；三餐都记了但总摄入低于 1200 不给高分）·
 蛋白质 25（÷ 蛋白质目标，没设就用体重 × 1.6g）· 运动 25（÷ 每日运动目标，没设就 30 分钟）。
 
+**记训练**：在「记录」里说「卧推 60kg 4×8，深蹲 80kg 4×6」或「引体向上 8、7、6」，AI 会把每一组拆成 `lifts`，
+自动判断练的是哪个肌群、按每组约 2.5 分钟估时长、用力量训练的 MET 算消耗。说「我是新手，每周练 3 天，只有哑铃」会更新训练设定。
+问「今天练什么」「卧推卡在 60kg 怎么办」时，聊天会带上最近 14 天的训练和 AI 教练计划，像私人教练一样回答（动作、组数 × 次数、重量、休息、要点）；
+提到疼痛或受伤会先建议停下来看医生或物理治疗师。
+
 **AI 日报**：每天第一次打开 App 时，自动写前一天的日报（标题、点评、做得好、可改进、明天做一件事），并在「记录」里推一则通知。
 多台设备同时打开时，用 RTDB transaction 在 `reports/{dKey}` 先抢一个 `pending` 标记，只有一台会真的去生成。
 今天的「今日点评」要自己按；前一天的完整版第二天会自动覆盖掉当天的点评。
 
-**AI 次数上限**：每人每天预设 **30 次**（拍照识别、聊天、日报都算一次）。要改的话在 Netlify 环境变数加 `AI_DAILY_LIMIT`。
+**AI 次数上限**：每人每天预设 **30 次**（拍照识别、聊天、日报、AI 教练都算一次）。要改的话在 Netlify 环境变数加 `AI_DAILY_LIMIT`。
 所有 AI function 都要求 `Authorization: Bearer <Firebase ID token>`，用 Google 的公开金钥验证（不需要 npm 套件），
 没登入的人打不到你的 Anthropic key。可选的环境变数：`ANTHROPIC_VISION_MODEL`（有照片时，预设 `claude-sonnet-4-6`）、
-`ANTHROPIC_FAST_MODEL`（纯文字聊天，预设 `claude-haiku-4-5`）、`ANTHROPIC_REPORT_MODEL`（日报，预设 `claude-sonnet-4-6`）。
+`ANTHROPIC_FAST_MODEL`（纯文字聊天，预设 `claude-haiku-4-5`）、`ANTHROPIC_REPORT_MODEL`（日报，预设 `claude-sonnet-4-6`）、
+`ANTHROPIC_COACH_MODEL`（AI 教练，预设 `claude-sonnet-4-6`）。
 
 **AI 识别流程（一餐可多张照片）**：前端最多选 6 张 → 各自压缩（最长边 **1280px**、jpeg quality 0.82）→
 把整批 base64 放进 `images` 阵列，**一次** POST 到 `/.netlify/functions/analyze-food` →
